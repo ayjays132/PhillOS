@@ -294,6 +294,7 @@ npx serve dist
 ```
 
 Visit the local URL on your network once to cache the files. After that the OS continues to function even if the server goes offline. Rebuild the project and replace the files on the USB or server to update.
+The service worker also caches responses from the `/phonebridge/*` endpoint using a Network First strategy so basic phone integration keeps working when temporarily disconnected.
 
 ## Project Structure
 
