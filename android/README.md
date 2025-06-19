@@ -11,7 +11,14 @@ Google Play Store compatibility is achieved by installing the open-source **micr
 ## Usage
 
 1. Ensure Waydroid is installed on your Linux system and that `adb` is available.
-2. Start the container:
+2. (First time only) create the Waydroid container:
+
+   ```bash
+   sudo waydroid init
+   ```
+
+   This downloads the base Android image and sets up the LXC container.
+3. Start the container:
 
    ```bash
    ts-node controller.ts start
@@ -75,3 +82,42 @@ OFFLINE=1 ./setup-playstore.sh
 ```
 
 The same process applies to `setup-microg.sh`.
+
+### Copying Cached APKs
+
+If you plan to install the Play Store on a machine without internet
+connectivity, run the installer once on an online system to populate the
+`android/downloads/` directory. Copy this directory along with
+`package_versions.json` to the target system. The installer will reuse
+the cached files when `OFFLINE=1` is set.
+
+### Verifying Play Store Offline
+
+After installing microG and the Play Store stub you can confirm that
+everything works without internet access:
+
+1. Start the container normally:
+
+   ```bash
+   ts-node controller.ts start
+   ```
+
+2. Launch **microG Settings** inside Waydroid and open the **Self-Check**
+   screen. All items should show as *OK*.
+3. Open the Play Store icon. Even offline it should load and display
+   your account information if you signed in previously.
+4. If the store opens without crashing your setup is complete and you
+   can sideload additional APKs using `adb install` as needed.
+
+## Troubleshooting
+
+* **`adb` cannot find the device** – Run `adb connect 127.0.0.1:5555`
+  followed by `adb devices`. If the device remains offline try
+  `adb kill-server` then reconnect.
+* **Container fails to start** – Check the output of `waydroid log`
+  for errors and verify that both `waydroid container start` and
+  `waydroid session start` succeed.
+* **Permission errors with `adb`** – Some commands require root inside
+  the container. Use `adb root` before running the installer scripts.
+* **Display window does not appear** – Make sure Waydroid's session
+  service is running and use `waydroid show-full-ui` to open the UI.
