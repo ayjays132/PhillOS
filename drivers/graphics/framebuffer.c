@@ -21,8 +21,13 @@ void init_framebuffer(framebuffer_info_t *info)
     fb_height = info->height;
     fb_pitch = info->pitch;
 
-    map_identity_range(fb_base, fb_size);
-    fb_ptr = (uint8_t*)(uintptr_t)fb_base;
+    if (paging_is_initialized()) {
+        map_identity_range(fb_base, fb_size);
+        fb_ptr = (uint8_t*)(uintptr_t)fb_base;
+    } else {
+        debug_puts("paging not initialized, framebuffer not mapped\n");
+        fb_ptr = NULL;
+    }
 
     debug_puts("GOP framebuffer base=");
     debug_puthex64(fb_base);
