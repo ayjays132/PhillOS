@@ -43,6 +43,13 @@ gpu_vendor_t detect_gpu_vendor(void)
     return GPU_VENDOR_UNKNOWN;
 }
 
+static gpu_driver_t *active_driver = NULL;
+
+gpu_driver_t *gpu_get_active_driver(void)
+{
+    return active_driver;
+}
+
 void init_gpu_driver(void)
 {
     gpu_vendor_t vendor = detect_gpu_vendor();
@@ -69,6 +76,8 @@ void init_gpu_driver(void)
     debug_puts(name);
     debug_putc('\n');
 
-    if (drv && drv->init)
+    if (drv && drv->init) {
+        active_driver = drv;
         drv->init();
+    }
 }
