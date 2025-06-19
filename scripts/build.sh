@@ -12,6 +12,12 @@ if [ -f external/vkd3d/Makefile ]; then
     make -C external/vkd3d
 fi
 
+# Build libphone for the bridge service
+if [ -f drivers/phone/Makefile ]; then
+    make -C drivers/phone
+    cp drivers/phone/libphone.so .
+fi
+
 # Build bootloader and kernel
 make -C bootloader OUT_DIR=../dist/bootloader
 
