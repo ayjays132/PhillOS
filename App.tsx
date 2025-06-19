@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail } from 'lucide-react';
+import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail, BrainCircuit } from 'lucide-react';
 import { StatusBar } from './components/StatusBar';
 import { Dock } from './components/Dock';
 import { MobileBottomNavigationBar } from './components/MobileBottomNavigationBar';
 import { HomeDashboard } from './components/HomeDashboard';
 import { PlaceholderAppView } from './components/PlaceholderAppView';
+import { AgentConsole } from './components/AgentConsole';
 import { OnboardingStepper } from './components/onboarding/OnboardingStepper';
 import { ConversationalSettingsView } from './components/settings/ConversationalSettingsView';
 import { useResponsive } from './hooks/useResponsive';
@@ -17,6 +18,7 @@ import { NavItem } from './types';
 const navItems: NavItem[] = [
   { id: 'home', label: 'Home', path: '/home', icon: LayoutGrid },
   { id: 'copilot', label: 'AI CoPilot', path: '/copilot', icon: BotMessageSquare },
+  { id: 'agent', label: 'Agent', path: '/agent', icon: BrainCircuit },
   { id: 'files', label: 'Files', path: '/files', icon: Files },
   { id: 'mail', label: 'Mail', path: '/mail', icon: Mail },
   { id: 'gaming', label: 'Gaming', path: '/gaming', icon: MonitorPlay },
@@ -50,6 +52,7 @@ const App: React.FC = () => {
           <Route path="/" element={isOnboardingComplete ? <Navigate to="/home" replace /> : <Navigate to="/onboarding" replace />} />
           <Route path="/home" element={<HomeDashboard />} />
           <Route path="/copilot" element={<PlaceholderAppView appName="AI CoPilot" icon={BotMessageSquare} message="AI CoPilot integrated into Home Dashboard widgets." />} />
+          <Route path="/agent" element={<AgentConsole />} />
           <Route path="/files" element={<PlaceholderAppView appName="File Explorer" icon={Files} />} />
           <Route path="/mail" element={<PlaceholderAppView appName="Mail Client" icon={Mail} />} />
           <Route path="/gaming" element={<PlaceholderAppView appName="Gaming Hub" icon={MonitorPlay} />} />
