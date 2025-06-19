@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail, BrainCircuit } from 'lucide-react';
+import { BotMessageSquare, BrainCircuit, Files, Mail, MonitorPlay, Settings } from 'lucide-react';
 import { StatusBar } from './components/StatusBar';
 import { Dock } from './components/Dock';
 import { MobileBottomNavigationBar } from './components/MobileBottomNavigationBar';
@@ -13,22 +13,14 @@ import { ConversationalSettingsView } from './components/settings/Conversational
 import { useResponsive } from './hooks/useResponsive';
 import { useDeviceType } from './hooks/useDeviceType';
 import { useOnboarding } from './hooks/useOnboarding';
-import { NavItem } from './types';
+import { useDock } from './hooks/useDock';
 
-const navItems: NavItem[] = [
-  { id: 'home', label: 'Home', path: '/home', icon: LayoutGrid },
-  { id: 'copilot', label: 'AI CoPilot', path: '/copilot', icon: BotMessageSquare },
-  { id: 'agent', label: 'Agent', path: '/agent', icon: BrainCircuit },
-  { id: 'files', label: 'Files', path: '/files', icon: Files },
-  { id: 'mail', label: 'Mail', path: '/mail', icon: Mail },
-  { id: 'gaming', label: 'Gaming', path: '/gaming', icon: MonitorPlay },
-  { id: 'settings', label: 'Settings', path: '/settings', icon: Settings },
-];
 
 const App: React.FC = () => {
   const { isMobileLayout } = useResponsive();
   const { deviceType } = useDeviceType();
   const { isOnboardingComplete } = useOnboarding();
+  const { navItems } = useDock();
   const location = useLocation();
 
 
@@ -64,7 +56,7 @@ const App: React.FC = () => {
         isMobileLayout && deviceType !== 'steamdeck' && deviceType !== 'vr' ? (
           <MobileBottomNavigationBar navItems={navItems} deviceType={deviceType} />
         ) : (
-          <Dock navItems={navItems} deviceType={deviceType} />
+          <Dock deviceType={deviceType} />
         )
       )}
     </div>
