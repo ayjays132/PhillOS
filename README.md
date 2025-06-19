@@ -107,6 +107,19 @@ PhillOS leverages the Google Gemini API for its AI CoPilot feature. To enable th
         *   **Never commit your API key directly into the source code or share it publicly.**
         *   The application (`App.tsx` and `AICoPilotWidget.tsx`) includes checks and will display a warning if the API key appears to be missing or invalid, limiting AI CoPilot functionality.
 
+## Using a Local Qwen Model via Ollama
+
+PhillOS supports running the AI CoPilot entirely on-device using the Qwen3‑1.7B model. This requires [Ollama](https://ollama.com/) to be installed locally.
+
+1. **Install Ollama**
+    * Follow the instructions for your platform at <https://ollama.com/download> and ensure `ollama` is available on your `PATH`.
+2. **Download the Qwen model**
+    * Run `ollama pull qwen:1.7b` to download the model files.
+3. **Start the Ollama service**
+    * Launch `ollama serve` in a terminal. The PhillOS UI will connect to `http://localhost:11434` by default.
+
+When you choose the *Local-First AI* option during onboarding, the CoPilot widget will use this local model and no API key is required.
+
 ## Getting Started
 
 1.  **Prerequisites**:
