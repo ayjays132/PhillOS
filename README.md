@@ -1,7 +1,7 @@
 
 # PhillOS - Living Glass AI-Native OS Concept
 
-[![PhillOS Concept UI](https://user-images.githubusercontent.com/1234567/200000000-placeholder-image.png)](#) <!-- Replace with an actual screenshot URL if available -->
+[![PhillOS Concept UI](https://user-images.githubusercontent.com/1234567/200000000-placeholder-image.png)](#)
 
 **PhillOS represents a profound paradigm shift in operating system design, moving beyond traditional command-response interfaces to an intelligent, proactive, and deeply personalized user experience. This React-based prototype demonstrates core aspects of the "Living Glass" UI/UX and foundational AI-driven interactions envisioned for PhillOS.**
 
