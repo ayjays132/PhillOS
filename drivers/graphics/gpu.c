@@ -2,6 +2,7 @@
 #include "nvidia.h"
 #include "amd.h"
 #include "intel.h"
+#include "vkd3d.h"
 #include "../../kernel/debug.h"
 
 static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
@@ -80,4 +81,6 @@ void init_gpu_driver(void)
         active_driver = drv;
         drv->init();
     }
+
+    init_vkd3d(vendor);
 }
