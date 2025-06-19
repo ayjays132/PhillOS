@@ -110,8 +110,9 @@ When you choose the *Local-First AI* option during onboarding, the CoPilot widge
 ## Cross‑Device Awareness
 
 PhillOS detects whether it is running on a phone, desktop, Steam Deck or a VR capable browser.
-The `useDeviceType` hook inspects the user agent and WebXR support to classify the current device.
+The `useDeviceType` hook now also tracks orientation and basic input capabilities. It inspects the user agent, WebXR support, current screen orientation and connected gamepads to classify the environment.
 Navigation components adjust icon sizes and spacing automatically. When running on a Steam Deck or in VR, the Dock is displayed vertically along the left edge with larger icons. Desktop users see the traditional centered Dock, while mobile devices continue to use the bottom navigation bar.
+Game controllers can navigate these elements with the arrow keys or D‑pad and benefit from increased padding for easier selection.
 
 ## Voice Interaction
 

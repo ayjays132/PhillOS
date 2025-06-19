@@ -18,7 +18,7 @@ import { useDock } from './hooks/useDock';
 
 const App: React.FC = () => {
   const { isMobileLayout } = useResponsive();
-  const { deviceType } = useDeviceType();
+  const { deviceType, orientation, hasGamepad } = useDeviceType();
   const { isOnboardingComplete } = useOnboarding();
   const { navItems } = useDock();
   const location = useLocation();
@@ -54,9 +54,9 @@ const App: React.FC = () => {
       </main>
       {showChrome && (
         isMobileLayout && deviceType !== 'steamdeck' && deviceType !== 'vr' ? (
-          <MobileBottomNavigationBar navItems={navItems} deviceType={deviceType} />
+          <MobileBottomNavigationBar navItems={navItems} deviceType={deviceType} hasGamepad={hasGamepad} />
         ) : (
-          <Dock deviceType={deviceType} />
+          <Dock deviceType={deviceType} orientation={orientation} hasGamepad={hasGamepad} />
         )
       )}
     </div>
