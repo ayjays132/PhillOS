@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 import { HashRouter } from 'react-router-dom';
 import { StorageProvider } from './contexts/StorageProvider';
+import { CloudSyncProvider } from './contexts/CloudSyncContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 const rootElement = document.getElementById('root');
@@ -17,9 +18,11 @@ root.render(
   <React.StrictMode>
     <HashRouter>
       <StorageProvider>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
+        <CloudSyncProvider>
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
+        </CloudSyncProvider>
       </StorageProvider>
     </HashRouter>
   </React.StrictMode>

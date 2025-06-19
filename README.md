@@ -107,6 +107,15 @@ PhillOS supports running the AI CoPilot entirely on-device using the Qwen3‑1.7
 
 After the initial download PhillOS can function entirely offline. When you choose the *Local-First AI* option during onboarding, the CoPilot widget will use this local model and no API key is required.
 
+## Cloud Sync via WebDAV
+
+PhillOS can optionally synchronize your settings with a WebDAV server. Provide the endpoint and credentials when building or running the app using these environment variables:
+
+- `VITE_WEBDAV_URL` – base URL where `settings.json` will be stored
+- `VITE_WEBDAV_USERNAME` and `VITE_WEBDAV_PASSWORD` – credentials for Basic Auth
+
+Enable or disable Cloud Sync from the Settings panel. Changes are queued locally while offline and pushed automatically once a connection is available.
+
 ## Cross‑Device Awareness
 
 PhillOS detects whether it is running on a phone, desktop, Steam Deck or a VR capable browser.

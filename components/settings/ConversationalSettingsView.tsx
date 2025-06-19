@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Settings, Send, MessageSquare, Bot } from 'lucide-react';
 import { GlassCard } from '../GlassCard';
+import { CloudSyncToggle } from "./CloudSyncToggle";
 
 interface SettingsMessage {
   id: string;
@@ -54,6 +55,9 @@ export const ConversationalSettingsView: React.FC = () => {
       <div className="flex items-center p-4 border-b border-white/10 bg-black/5 sticky top-0 z-10">
         <Settings size={24} className="text-cyan-300 mr-3" />
         <h1 className="text-xl sm:text-2xl font-bold">Conversational Settings</h1>
+        <div className="ml-auto">
+          <CloudSyncToggle />
+        </div>
       </div>
 
       <div className="flex-grow p-4 space-y-4 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
