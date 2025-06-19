@@ -534,6 +534,27 @@ This is where the WINE, Proton, and DirectX12 integration comes in, supercharged
     * **AI-Powered Anti-Cheat (for competitive online games):** Deeper OS-level integration of AI-driven anomaly detection to identify and prevent cheating more effectively.
     * **Voice Control & Commands in-game:** "Open map," "Check inventory," "Quick save," all via voice.
 
+### Using the Proton Launcher
+
+PhillOS includes a small Node service for starting Windows games through Proton or Wine.
+The launcher lives in `backend/protonLauncher.ts` and can be used directly:
+
+```ts
+import { createProtonLauncher } from './backend/protonLauncher';
+
+const launcher = createProtonLauncher({
+  protonDir: '/opt/steam/compatibilitytools.d',
+  version: 'Proton-9.0',
+  prefix: '~/.local/share/proton-prefixes/my-game'
+});
+
+launcher.launch('/path/to/Game.exe');
+```
+
+For convenience a simple React interface is available at the **Gaming Hub** route.
+Open `/gaming` while running the development server to choose an executable,
+set the Proton version and prefix, and launch the game from the browser.
+
 ## First-Time User Experience (Onboarding)
 
 The onboarding process is critical for setting up the AI's understanding of the user.

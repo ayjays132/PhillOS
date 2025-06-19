@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { BotMessageSquare, BrainCircuit, Files, Mail, MonitorPlay, Settings } from 'lucide-react';
+import { BotMessageSquare, BrainCircuit, Files, Mail, Settings } from 'lucide-react';
 import { StatusBar } from './components/StatusBar';
 import { Dock } from './components/Dock';
 import { MobileBottomNavigationBar } from './components/MobileBottomNavigationBar';
 import { HomeDashboard } from './components/HomeDashboard';
 import { PlaceholderAppView } from './components/PlaceholderAppView';
+import { ProtonLauncher } from './components/ProtonLauncher';
 import { AgentConsole } from './components/AgentConsole';
 import { OnboardingStepper } from './components/onboarding/OnboardingStepper';
 import { ConversationalSettingsView } from './components/settings/ConversationalSettingsView';
@@ -47,7 +48,7 @@ const App: React.FC = () => {
           <Route path="/agent" element={<AgentConsole />} />
           <Route path="/files" element={<PlaceholderAppView appName="File Explorer" icon={Files} />} />
           <Route path="/mail" element={<PlaceholderAppView appName="Mail Client" icon={Mail} />} />
-          <Route path="/gaming" element={<PlaceholderAppView appName="Gaming Hub" icon={MonitorPlay} />} />
+          <Route path="/gaming" element={<ProtonLauncher />} />
           <Route path="/settings" element={<ConversationalSettingsView />} />
           <Route path="*" element={isOnboardingComplete ? <Navigate to="/home" replace /> : <Navigate to="/onboarding" replace />} />
         </Routes>
