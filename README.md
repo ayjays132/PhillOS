@@ -476,6 +476,8 @@ target URL.
 
 Enter your phone's Bluetooth MAC address in the **Phone Status** widget and press **Connect**. The service relies on `bluetoothctl` so you can also pair manually. Once paired the bridge works entirely offline over the local Bluetooth link.
 
+Open the **Phone** app from the dock to send SMS messages or initiate calls. The app uses the phone bridge behind the scenes and can generate short SMS drafts with the local AI model. Phone settings will be configurable in a future update.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
