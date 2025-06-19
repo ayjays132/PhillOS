@@ -15,6 +15,7 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [Technology Stack](#technology-stack)
 - [Current Prototype Features](#current-prototype-features)
 - [Getting Started](#getting-started)
+- [Building the Bootloader & Kernel](#building-the-bootloader--kernel)
 - [Project Structure](#project-structure)
 - [Key Architectural Components](#key-architectural-components)
 - [Future Vision (Conceptual)](#future-vision-conceptual)
@@ -151,6 +152,53 @@ Most modern browsers support these APIs, but they may require an HTTPS context a
 5.  **Explore PhillOS**:
     *   You will be guided through the new, in-depth onboarding process.
     *   Interact with the dashboard widgets and navigation. Experience the "Living Glass" aesthetic.
+
+## Building the Bootloader & Kernel
+
+PhillOS ships with a minimal bootloader and kernel written in C. Building them
+requires a cross&#8209;compiler and EFI development libraries.
+
+### Required Packages
+
+* `x86_64-elf-gcc` (cross compiler)
+* `binutils`
+* `gnu-efi`
+
+The exact package names vary by distribution:
+
+```bash
+# Debian/Ubuntu
+sudo apt install build-essential binutils gnu-efi
+# build or install a cross compiler (many guides use an x86_64-elf-gcc build script)
+
+# Arch Linux
+sudo pacman -S x86_64-elf-gcc x86_64-elf-binutils gnu-efi
+
+# Fedora
+sudo dnf install x86_64-elf-gcc binutils gnu-efi
+```
+
+### Build Steps
+
+Run the provided script to compile the bootloader and kernel:
+
+```bash
+cd bootloader
+./build.sh
+```
+
+The resulting `BOOTX64.EFI` file will appear in `bootloader/build`.
+
+### Running in QEMU
+
+You can test the image using QEMU's UEFI firmware:
+
+```bash
+qemu-system-x86_64 -drive format=raw,file=fat:rw:bootloader/build \
+  -bios /usr/share/OVMF/OVMF_CODE.fd
+```
+
+This starts QEMU with the generated EFI file as the boot volume.
 
 ## Project Structure
 
