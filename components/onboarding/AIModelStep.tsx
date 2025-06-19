@@ -16,7 +16,7 @@ export const AIModelStep: React.FC<AIModelStepProps> = ({ onNext, onBack, curren
       id: 'local' as AIModelPreference,
       icon: ShieldCheck,
       title: 'Local-First AI',
-      description: 'Prioritizes on-device processing for maximum privacy and offline capability. Core OS features and personalization run locally.',
+      description: 'Prioritizes on-device processing for maximum privacy and offline capability. Run `./scripts/setup-ollama.sh` to install the Qwen model and start the local service.',
       badge: 'Recommended',
       badgeColor: 'bg-green-600/90',
       borderColor: 'border-green-500',

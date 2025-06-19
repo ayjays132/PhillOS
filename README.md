@@ -101,13 +101,11 @@ PhillOS supports running the AI CoPilot entirely on-device using the Qwen3‑1.7
 
 1. **Install Ollama**
     * Follow the instructions for your platform at <https://ollama.com/download> and ensure `ollama` is available on your `PATH`.
-2. **Download the Qwen model**
-    * Run `ollama pull qwen3:1.7b` (or your chosen model) to download the model files.
-3. **Start the Ollama service**
-    * Launch `ollama serve` in a terminal. The PhillOS UI will connect to `http://localhost:11434` by default.
-    * If you pulled a model with a different name, set `VITE_LOCAL_AI_MODEL` to that name when running or building the app.
+2. **Prepare the Qwen model**
+    * Run `./scripts/setup-ollama.sh` to download `qwen3:1.7b` and start `ollama serve`. Pass a model name as the first argument to use a different one.
+    * If you pulled a model with a different name, set `VITE_LOCAL_AI_MODEL` to that name when building or running the app.
 
-When you choose the *Local-First AI* option during onboarding, the CoPilot widget will use this local model and no API key is required.
+After the initial download PhillOS can function entirely offline. When you choose the *Local-First AI* option during onboarding, the CoPilot widget will use this local model and no API key is required.
 
 ## Cross‑Device Awareness
 
