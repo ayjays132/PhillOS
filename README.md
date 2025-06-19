@@ -160,34 +160,45 @@ requires a cross&#8209;compiler and EFI development libraries.
 
 ### Required Packages
 
+Building the bootloader uses a cross‑compiler and several utilities:
+
+* `make`
 * `x86_64-elf-gcc` (cross compiler)
 * `binutils`
 * `gnu-efi`
+* `dosfstools` (for `mkfs.fat`)
+* `mtools` (for `mcopy`/`mmd`)
+* `grub-mkrescue`
 
 The exact package names vary by distribution:
 
 ```bash
 # Debian/Ubuntu
-sudo apt install build-essential binutils gnu-efi
+sudo apt install build-essential make mtools dosfstools \
+    grub-efi-amd64-bin grub-common binutils gnu-efi
 # build or install a cross compiler (many guides use an x86_64-elf-gcc build script)
 
 # Arch Linux
-sudo pacman -S x86_64-elf-gcc x86_64-elf-binutils gnu-efi
+sudo pacman -S make mtools dosfstools grub x86_64-elf-gcc \
+    x86_64-elf-binutils gnu-efi
 
 # Fedora
-sudo dnf install x86_64-elf-gcc binutils gnu-efi
+sudo dnf install make mtools dosfstools grub2-tools \
+    x86_64-elf-gcc binutils gnu-efi
 ```
 
 ### Build Steps
 
-Run the provided script to compile the bootloader and kernel:
+Run `make` in the `bootloader` directory to build the EFI file and
+create an EFI System Partition image:
 
 ```bash
 cd bootloader
-./build.sh
+make            # builds BOOTX64.EFI and esp.img
+make iso        # optional - creates phillos.iso
 ```
 
-The resulting `BOOTX64.EFI` file will appear in `bootloader/build`.
+The resulting artifacts will appear in `bootloader/build`.
 
 ### Running in QEMU
 
