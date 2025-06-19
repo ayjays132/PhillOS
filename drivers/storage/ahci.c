@@ -207,12 +207,14 @@ void init_ahci(void)
 
 int ahci_read(uint64_t lba, uint32_t count, void *buffer)
 {
-    (void)lba; (void)count; (void)buffer;
-    return -1; /* TODO: implement sector read */
+    if (!boot_port)
+        return -1;
+    return port_rw(boot_port, lba, count, buffer, 0);
 }
 
 int ahci_write(uint64_t lba, uint32_t count, const void *buffer)
 {
-    (void)lba; (void)count; (void)buffer;
-    return -1; /* TODO: implement sector write */
+    if (!boot_port)
+        return -1;
+    return port_rw(boot_port, lba, count, (void *)buffer, 1);
 }
