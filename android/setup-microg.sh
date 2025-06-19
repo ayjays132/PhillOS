@@ -3,23 +3,33 @@
 # Requires 'adb' and 'curl' available on the host.
 set -euo pipefail
 
+# Set OFFLINE=1 to skip network downloads. All APKs must then exist in
+# the downloads directory.
+OFFLINE="${OFFLINE:-0}"
+
+fetch() {
+  local url="$1"
+  local out="$2"
+  if [ -f "$out" ]; then
+    echo "Using cached $out"
+    return 0
+  fi
+  if [ "$OFFLINE" = "1" ]; then
+    echo "Offline mode enabled and $out is missing" >&2
+    exit 1
+  fi
+  curl -L -o "$out" "$url"
+}
+
 WORKDIR="$(dirname "$0")/downloads"
 mkdir -p "$WORKDIR"
 cd "$WORKDIR"
 
 # Download microG and F-Droid if not already present
-if [ ! -f F-Droid.apk ]; then
-  curl -L -o F-Droid.apk https://f-droid.org/F-Droid.apk
-fi
-if [ ! -f GmsCore.apk ]; then
-  curl -L -o GmsCore.apk https://github.com/microg/GmsCore/releases/latest/download/GmsCore.apk
-fi
-if [ ! -f GsfProxy.apk ]; then
-  curl -L -o GsfProxy.apk https://github.com/microg/GsfProxy/releases/latest/download/GsfProxy.apk
-fi
-if [ ! -f FakeStore.apk ]; then
-  curl -L -o FakeStore.apk https://github.com/microg/FakeStore/releases/latest/download/FakeStore.apk
-fi
+fetch https://f-droid.org/F-Droid.apk F-Droid.apk
+fetch https://github.com/microg/GmsCore/releases/latest/download/GmsCore.apk GmsCore.apk
+fetch https://github.com/microg/GsfProxy/releases/latest/download/GsfProxy.apk GsfProxy.apk
+fetch https://github.com/microg/FakeStore/releases/latest/download/FakeStore.apk FakeStore.apk
 
 # Ensure waydroid is running
 waydroid container start || true
