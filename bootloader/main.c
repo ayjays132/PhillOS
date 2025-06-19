@@ -117,6 +117,23 @@ static EFI_STATUS load_kernel(EFI_HANDLE image, void **entry)
     return EFI_SUCCESS;
 }
 
+static EFI_STATUS setup_kernel_stack(UINT64 *stack_top)
+{
+    UINT64 stack_base = 0x200000; /* 2 MiB */
+    UINTN pages = 16; /* 64 KiB stack */
+    EFI_STATUS status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAddress,
+                                          EfiLoaderData, pages, &stack_base);
+    if (EFI_ERROR(status)) {
+        stack_base = 0;
+        status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages,
+                                   EfiLoaderData, pages, &stack_base);
+        if (EFI_ERROR(status))
+            return status;
+    }
+
+    *stack_top = stack_base + pages * 4096;
+    return EFI_SUCCESS;
+}
 static EFI_STATUS exit_boot(EFI_HANDLE image)
 {
     EFI_STATUS status;
@@ -152,6 +169,13 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
         return status;
     }
 
+    UINT64 stack_top = 0;
+    status = setup_kernel_stack(&stack_top);
+    if (EFI_ERROR(status)) {
+        Print(L"Failed to allocate kernel stack: %r\n", status);
+        return status;
+    }
+
     status = exit_boot(ImageHandle);
     if (EFI_ERROR(status)) {
         Print(L"Failed to exit boot services: %r\n", status);
@@ -159,7 +183,12 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
     }
 
     void (*kernel_entry)(void) = entry;
-    kernel_entry();
+    __asm__ volatile(
+        "mov %0, %%rsp\n"
+        "jmp *%1\n"
+        :
+        : "r"(stack_top), "r"(kernel_entry)
+        : "memory");
 
     return EFI_SUCCESS;
 }
