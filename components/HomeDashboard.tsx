@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { GlassCard } from './GlassCard';
 import { WidgetConfig, StratumConfig } from '../types';
 import { 
@@ -14,6 +14,7 @@ import { GamingModeWidget } from './widgets/GamingModeWidget';
 import { UserProfileWidget } from './widgets/UserProfileWidget';
 import { PersonalizedNewsWidget } from './widgets/PersonalizedNewsWidget';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { useWidgetLayout } from '../hooks/useWidgetLayout';
 
 const strataConfig: StratumConfig[] = [
   {
@@ -125,79 +126,20 @@ const WidgetHost: React.FC<{
 };
 
 
-interface WidgetOrder {
-  [stratumId: string]: string[];
-}
-
-const STORAGE_KEY = 'phillos_widget_order';
-
-function applyOrder(strata: StratumConfig[], order: WidgetOrder | null): StratumConfig[] {
-  if (!order) return strata;
-  return strata.map((s) => {
-    const ids = order[s.id];
-    if (!ids) return s;
-    const map = new Map(s.widgets.map((w) => [w.id, w]));
-    const arranged: WidgetConfig[] = [];
-    ids.forEach((id) => {
-      const w = map.get(id);
-      if (w) arranged.push(w);
-    });
-    s.widgets.forEach((w) => {
-      if (!ids.includes(w.id)) arranged.push(w);
-    });
-    return { ...s, widgets: arranged };
-  });
-}
-
-function persistOrder(strata: StratumConfig[]) {
-  const order: WidgetOrder = {};
-  strata.forEach((s) => {
-    order[s.id] = s.widgets.map((w) => w.id);
-  });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
-  } catch {
-    // ignore
-  }
-}
 
 export const HomeDashboard: React.FC = () => {
-  const [strata, setStrata] = useState<StratumConfig[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as WidgetOrder;
-        return applyOrder(strataConfig, parsed);
-      }
-    } catch {
-      // ignore
-    }
-    return strataConfig;
-  });
+  const { orderedWidgets, moveWidget } = useWidgetLayout(strataConfig);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     if (result.source.droppableId !== result.destination.droppableId) return;
-    const stratumId = result.source.droppableId;
-    const from = result.source.index;
-    const to = result.destination.index;
-    setStrata((prev) => {
-      const next = prev.map((s) => {
-        if (s.id !== stratumId) return s;
-        const widgets = Array.from(s.widgets);
-        const [moved] = widgets.splice(from, 1);
-        widgets.splice(to, 0, moved);
-        return { ...s, widgets };
-      });
-      persistOrder(next);
-      return next;
-    });
+    moveWidget(result.source.droppableId, result.source.index, result.destination.index);
   };
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="space-y-4 sm:space-y-6">
-        {strata.map((stratum) => (
+        {strataConfig.map((stratum) => (
           <section key={stratum.id} aria-labelledby={stratum.id + '-title'}>
             {stratum.title && (
               <h2 id={stratum.id + '-title'} className="text-xl sm:text-2xl font-bold text-white/80 mb-3 ml-1">{stratum.title}</h2>
@@ -220,7 +162,7 @@ export const HomeDashboard: React.FC = () => {
                     }
                   `}
                 >
-                  {stratum.widgets.map((widget, index) => (
+                  {orderedWidgets(stratum).map((widget, index) => (
                     <WidgetHost key={widget.id} widget={widget} index={index} stratumId={stratum.id} />
                   ))}
                   {provided.placeholder}
