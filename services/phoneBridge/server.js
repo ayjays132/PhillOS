@@ -1,12 +1,9 @@
 import express from 'express';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 import ffi from 'ffi-napi';
 import ref from 'ref-napi';
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
-
-const execAsync = promisify(exec);
 
 const app = express();
 app.use(express.json());
@@ -46,14 +43,26 @@ try {
   console.log('SerialPort init error:', err.message);
 }
 
-async function runCtl(cmd) {
-  try {
-    const { stdout } = await execAsync(`bluetoothctl ${cmd}`);
-    return stdout;
-  } catch (err) {
-    console.error(err);
-    throw new Error('bluetoothctl failed');
-  }
+async function runCtl(args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn('bluetoothctl', args);
+    let output = '';
+    child.stdout.on('data', d => {
+      output += d;
+    });
+    child.stderr.on('data', d => {
+      output += d;
+    });
+    child.on('error', reject);
+    child.on('close', code => {
+      if (code === 0) {
+        resolve(output);
+      } else {
+        console.error(output);
+        reject(new Error('bluetoothctl failed'));
+      }
+    });
+  });
 }
 
 function sendAT(cmd, expect = /OK|ERROR/) {
@@ -90,9 +99,12 @@ function sendAT(cmd, expect = /OK|ERROR/) {
 
 app.post('/connect', async (req, res) => {
   const { address } = req.body || {};
-  if (!address) return res.status(400).json({ error: 'address required' });
+  const addrRe = /^[0-9A-F:]+$/i;
+  if (!address || !addrRe.test(address)) {
+    return res.status(400).json({ error: 'invalid address' });
+  }
   try {
-    await runCtl(`connect ${address}`);
+    await runCtl(['connect', address]);
     connectedDevice = address;
     res.json({ connected: true });
   } catch (err) {
@@ -103,7 +115,7 @@ app.post('/connect', async (req, res) => {
 app.post('/disconnect', async (_req, res) => {
   if (connectedDevice) {
     try {
-      await runCtl(`disconnect ${connectedDevice}`);
+      await runCtl(['disconnect', connectedDevice]);
     } catch {
       // ignore
     }
@@ -119,11 +131,11 @@ app.post('/pair', async (req, res) => {
     return res.json({ success: ret === 0 });
   }
   try {
-    if (name) await runCtl(`system-alias ${name}`);
-    await runCtl('pairable on');
-    await runCtl('discoverable on');
-    await runCtl('agent NoInputNoOutput');
-    await runCtl('default-agent');
+    if (name) await runCtl(['system-alias', name]);
+    await runCtl(['pairable', 'on']);
+    await runCtl(['discoverable', 'on']);
+    await runCtl(['agent', 'NoInputNoOutput']);
+    await runCtl(['default-agent']);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'pairing failed' });
