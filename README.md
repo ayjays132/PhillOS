@@ -397,7 +397,7 @@ See [android/README.md](android/README.md) for additional details.
 
 ## DirectX 12 on Vulkan
 
-PhillOS uses the open source **vkd3d-proton** layer to translate DirectX 12 calls into Vulkan. During boot the kernel initializes this library after detecting the GPU vendor so both native applications and Proton/Wine games can run without network access. See [docs/vkd3d.md](docs/vkd3d.md) for setup instructions.
+PhillOS uses the open source **vkd3d-proton** layer to translate DirectX 12 calls into Vulkan. During boot the kernel initializes this library after detecting the GPU vendor. A small ELF loader maps `libvkd3d-proton.so` and exposes its symbols so both native applications and Proton/Wine games can run without network access. See [docs/vkd3d.md](docs/vkd3d.md) for setup instructions.
 
 ## Proton Launcher
 
