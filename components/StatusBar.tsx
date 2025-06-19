@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Wifi, BatteryCharging, Cpu, Menu } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const StatusBar: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -12,8 +13,13 @@ export const StatusBar: React.FC = () => {
 
   const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <div className="h-12 px-4 flex items-center justify-between text-sm glass-card-style bg-white/10 !rounded-none !rounded-b-xl !shadow-lg !shadow-purple-900/30 sticky top-0 z-50">
+    <div
+      className={`h-12 px-4 flex items-center justify-between text-sm glass-card-style ${isDark ? 'bg-white/10 !shadow-purple-900/30' : 'bg-black/10 !shadow-gray-500/30 text-gray-900'} !rounded-none !rounded-b-xl !shadow-lg sticky top-0 z-50`}
+    >
       <div className="flex items-center gap-2">
         <Menu size={20} className="text-white/70 hover:text-white cursor-pointer" />
         <span className="font-semibold">PhillOS</span>

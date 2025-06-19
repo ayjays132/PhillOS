@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { NavItem } from '../types';
 import { DeviceType } from '../hooks/useDeviceType';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface MobileBottomNavigationBarProps {
   navItems: NavItem[];
@@ -13,6 +14,8 @@ interface MobileBottomNavigationBarProps {
 export const MobileBottomNavigationBar: React.FC<MobileBottomNavigationBarProps> = ({ navItems, deviceType = 'mobile', hasGamepad = false }) => {
   const iconSize = deviceType === 'vr' || deviceType === 'steamdeck' || hasGamepad ? 32 : 22;
   const itemPadding = hasGamepad ? 'p-4' : 'p-2';
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const register = (el: HTMLAnchorElement | null, idx: number) => {
     linkRefs.current[idx] = el;
@@ -31,7 +34,8 @@ export const MobileBottomNavigationBar: React.FC<MobileBottomNavigationBarProps>
     }
   };
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass-card-style bg-white/15 !rounded-none !rounded-t-2xl shadow-2xl shadow-purple-700/50"
+    <nav
+      className={`fixed bottom-0 left-0 right-0 z-50 glass-card-style ${isDark ? 'bg-white/15 shadow-purple-700/50' : 'bg-black/10 shadow-indigo-300/50'} !rounded-none !rounded-t-2xl shadow-2xl`}
       onKeyDown={handleKeyDown}
     >
       <div className="flex justify-around items-center h-16">
@@ -42,7 +46,13 @@ export const MobileBottomNavigationBar: React.FC<MobileBottomNavigationBarProps>
             title={item.label}
             className={({ isActive }) =>
                 `flex flex-col items-center justify-center ${itemPadding} rounded-lg transition-all duration-200 ease-out hover:bg-white/20 focus:outline-none focus:ring-1 focus:ring-cyan-400/80 flex-1 ${
-                  isActive ? 'text-cyan-300 opacity-100' : 'text-white/70 opacity-80 hover:opacity-100'
+                  isActive
+                    ? isDark
+                      ? 'text-cyan-300 opacity-100'
+                      : 'text-indigo-600 opacity-100'
+                    : isDark
+                      ? 'text-white/70 opacity-80 hover:opacity-100'
+                      : 'text-gray-700 opacity-80 hover:opacity-100'
                 }`
             }
             tabIndex={0}

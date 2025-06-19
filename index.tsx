@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { HashRouter } from 'react-router-dom';
 import { StorageProvider } from './contexts/StorageProvider';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -15,7 +16,9 @@ root.render(
   <React.StrictMode>
     <HashRouter>
       <StorageProvider>
-        <App />
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
       </StorageProvider>
     </HashRouter>
   </React.StrictMode>

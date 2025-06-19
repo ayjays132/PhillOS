@@ -15,6 +15,7 @@ import { useResponsive } from './hooks/useResponsive';
 import { useDeviceType } from './hooks/useDeviceType';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useDock } from './hooks/useDock';
+import { useTheme } from './contexts/ThemeContext';
 
 
 const App: React.FC = () => {
@@ -22,6 +23,7 @@ const App: React.FC = () => {
   const { deviceType, orientation, hasGamepad } = useDeviceType();
   const { isOnboardingComplete } = useOnboarding();
   const { navItems } = useDock();
+  const { theme } = useTheme();
   const location = useLocation();
 
 
@@ -36,8 +38,11 @@ const App: React.FC = () => {
 
   const showChrome = location.pathname !== '/onboarding';
 
+  const isDark = theme === 'dark';
+
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white/90">
+    <div className={`flex flex-col h-screen overflow-hidden ${isDark ? 'bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white/90' : 'bg-gradient-to-br from-white via-gray-200 to-blue-300 text-gray-900'}`}
+    >
       {showChrome && <StatusBar />}
       <main className={`flex-grow overflow-y-auto ${showChrome ? `p-3 pt-0 sm:p-4 ${isMobileLayout && deviceType === 'mobile' ? 'pb-20' : 'pb-4'}` : 'p-0'}`}>
         <Routes>

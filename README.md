@@ -121,6 +121,12 @@ PhillOS includes optional voice input and output for the AI CoPilot. The widget 
 
 Most modern browsers support these APIs, but they may require an HTTPS context and user permission. If voice features are unavailable, the microphone button will have no effect.
 
+## Theme Switching
+
+PhillOS now includes a simple theme system with **light** and **dark** modes. The current theme is saved to `localStorage` so your preference persists across sessions. Components automatically adapt their colors based on this setting.
+
+To toggle the theme, call the `useTheme` hook anywhere in the app or add a small switch component that invokes `toggleTheme()` from the context.
+
 ## Getting Started
 
 1.  **Prerequisites**:
