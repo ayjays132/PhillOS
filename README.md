@@ -207,6 +207,35 @@ Internally this runs `make -C bootloader` and `npm run build`. Bootloader files
 land in `dist/bootloader` and the UI build is placed directly in `dist/`.
 To generate an ISO, run `make -C bootloader OUT_DIR=../dist/bootloader iso`.
 
+### Writing the ISO to a USB Drive
+
+Once the ISO image (`dist/bootloader/phillos.iso`) is generated you can flash it
+to a USB stick.  On Linux and macOS the simplest method is the `dd` utility:
+
+```bash
+sudo dd if=dist/bootloader/phillos.iso of=/dev/sdX bs=4M status=progress && sync
+```
+
+Replace `/dev/sdX` with the device node for your USB drive (e.g. `/dev/sdb`).
+Windows users can use **Rufus** and Linux/macOS users may prefer **balenaEtcher**
+for a graphical experience.
+
+### UEFI/BIOS Settings
+
+PhillOS currently targets UEFI systems.  Disable Secure Boot if your firmware
+does not allow booting unsigned images and ensure "UEFI only" (or CSM off) is
+selected.  Use the boot menu key (often `F12` or `Esc`) to choose the USB device
+if it does not boot automatically.
+
+### Troubleshooting Boot Issues
+
+- **Bootloader not found:** verify the USB was flashed correctly and that you
+  selected the correct device in the boot menu.
+- **Black screen or immediate reboot:** ensure UEFI boot is enabled and Secure
+  Boot is disabled.
+- **USB not detected:** try another port or recreate the USB stick with a fresh
+  download of the ISO.
+
 ### Running in QEMU
 
 You can test the image using QEMU's UEFI firmware:
