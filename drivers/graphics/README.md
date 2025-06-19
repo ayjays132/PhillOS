@@ -16,3 +16,11 @@ identifies an Nvidia, AMD, or Intel device, a corresponding driver module will
 be loaded to provide accelerated graphics. Other vendors will fall back to the
 EFI framebuffer. This directory now contains stub driver structures for each
 vendor that will be expanded in later revisions.
+
+## Initialization Flow
+
+`init_gpu_driver()` performs a PCI scan and selects a vendor specific driver
+when an Nvidia, AMD or Intel device is discovered.  Each driver stub now probes
+its device's BAR registers, maps the framebuffer region and then calls the
+generic `init_framebuffer()` helper so early graphics output continues to work.
+The active driver can be queried with `gpu_get_active_driver()`.

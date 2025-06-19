@@ -17,5 +17,6 @@ typedef struct {
 
 gpu_vendor_t detect_gpu_vendor(void);
 void init_gpu_driver(void);
+gpu_driver_t *gpu_get_active_driver(void);
 
 #endif // PHILLOS_GPU_H
