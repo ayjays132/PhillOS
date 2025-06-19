@@ -3,6 +3,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import ffi from 'ffi-napi';
 import ref from 'ref-napi';
+import { SerialPort } from 'serialport';
+import { ReadlineParser } from '@serialport/parser-readline';
 
 const execAsync = promisify(exec);
 
@@ -11,6 +13,10 @@ app.use(express.json());
 
 let connectedDevice = '';
 let native = null;
+let modemPort = null;
+let modemParser = null;
+let smsStatus = 'idle';
+let callStatus = 'idle';
 
 try {
   native = ffi.Library('./libphone', {
@@ -25,6 +31,21 @@ try {
   console.log('Native phone library not loaded:', err.message);
 }
 
+try {
+  const path = process.env.MODEM_DEVICE || '/dev/ttyUSB0';
+  modemPort = new SerialPort({ path, baudRate: 115200, autoOpen: false });
+  modemParser = modemPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+  modemPort.open(err => {
+    if (err) {
+      console.log('Failed to open modem port:', err.message);
+    } else {
+      console.log('Modem port opened at', path);
+    }
+  });
+} catch (err) {
+  console.log('SerialPort init error:', err.message);
+}
+
 async function runCtl(cmd) {
   try {
     const { stdout } = await execAsync(`bluetoothctl ${cmd}`);
@@ -33,6 +54,38 @@ async function runCtl(cmd) {
     console.error(err);
     throw new Error('bluetoothctl failed');
   }
+}
+
+function sendAT(cmd, expect = /OK|ERROR/) {
+  if (!modemPort || !modemPort.isOpen) {
+    return Promise.reject(new Error('modem not available'));
+  }
+  return new Promise((resolve, reject) => {
+    let resp = '';
+    const onData = data => {
+      resp += data + '\n';
+      if (expect.test(data)) {
+        cleanup();
+        if (/ERROR/.test(data)) reject(new Error('modem error')); else resolve(resp);
+      }
+    };
+    const onErr = err => {
+      cleanup();
+      reject(err);
+    };
+    const cleanup = () => {
+      modemParser.off('data', onData);
+      modemPort.off('error', onErr);
+      clearTimeout(timer);
+    };
+    modemParser.on('data', onData);
+    modemPort.on('error', onErr);
+    modemPort.write(cmd + '\r');
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('timeout'));
+    }, 5000);
+  });
 }
 
 app.post('/connect', async (req, res) => {
@@ -78,19 +131,46 @@ app.post('/pair', async (req, res) => {
 });
 
 app.get('/status', (_req, res) => {
-  res.json({ connected: !!connectedDevice, device: connectedDevice });
+  res.json({
+    connected: !!connectedDevice,
+    device: connectedDevice,
+    smsStatus,
+    callStatus,
+  });
 });
 
-app.post('/sms', (req, res) => {
+app.post('/sms', async (req, res) => {
   const { to, body } = req.body || {};
-  console.log('sendSms', to, body);
-  res.json({ success: true });
+  if (!to || !body) return res.status(400).json({ error: 'to and body required' });
+  smsStatus = 'sending';
+  try {
+    await sendAT('AT');
+    await sendAT('AT+CMGF=1');
+    await sendAT(`AT+CMGS="${to}"`, />/);
+    await sendAT(body + String.fromCharCode(26));
+    smsStatus = 'sent';
+    res.json({ success: true });
+  } catch (err) {
+    console.error('SMS failed', err.message);
+    smsStatus = 'error';
+    res.status(500).json({ error: 'send failed' });
+  }
 });
 
-app.post('/call', (req, res) => {
+app.post('/call', async (req, res) => {
   const { number } = req.body || {};
-  console.log('makeCall', number);
-  res.json({ success: true });
+  if (!number) return res.status(400).json({ error: 'number required' });
+  callStatus = 'dialing';
+  try {
+    await sendAT('AT');
+    await sendAT(`ATD${number};`);
+    callStatus = 'in-call';
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Call failed', err.message);
+    callStatus = 'error';
+    res.status(500).json({ error: 'call failed' });
+  }
 });
 
 app.get('/sim/iccid', (_req, res) => {

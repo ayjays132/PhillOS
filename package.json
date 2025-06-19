@@ -25,7 +25,9 @@
     "remark-gfm": "^4.0.1",
     "express": "^4.19.2",
     "ffi-napi": "^4.0.3",
-    "ref-napi": "^3.0.0"
+    "ref-napi": "^3.0.0",
+    "serialport": "^13.0.0",
+    "@serialport/parser-readline": "^13.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
