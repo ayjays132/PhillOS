@@ -19,10 +19,10 @@ export const MobileBottomNavigationBar: React.FC<MobileBottomNavigationBarProps>
             key={item.id}
             to={item.path}
             title={item.label}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ease-out hover:bg-white/20 focus:outline-none focus:ring-1 focus:ring-cyan-400/80 w-1/5 ${ // Max 5 items for typical mobile nav
-                isActive ? 'text-cyan-300 opacity-100' : 'text-white/70 opacity-80 hover:opacity-100'
-              }`
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ease-out hover:bg-white/20 focus:outline-none focus:ring-1 focus:ring-cyan-400/80 flex-1 ${ // Flex equally for any number of items
+                  isActive ? 'text-cyan-300 opacity-100' : 'text-white/70 opacity-80 hover:opacity-100'
+                }`
             }
           >
             <item.icon size={iconSize} />
