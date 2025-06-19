@@ -25,6 +25,13 @@ export const AICoPilotWidget: React.FC = () => {
   const transcriptRef = useRef('');
   if (!voiceServiceRef.current) voiceServiceRef.current = new VoiceService();
 
+  // Ensure speech recognition stops when the widget unmounts
+  useEffect(() => {
+    return () => {
+      voiceServiceRef.current?.stop();
+    };
+  }, []);
+
   useEffect(() => {
     if (modelPreference === 'cloud') {
       if (!apiKey) {
