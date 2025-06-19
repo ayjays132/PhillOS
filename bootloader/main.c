@@ -135,7 +135,7 @@ static EFI_STATUS setup_kernel_stack(UINT64 *stack_top)
     *stack_top = stack_base + pages * 4096;
     return EFI_SUCCESS;
 }
-static EFI_STATUS prepare_boot_info(boot_info_t **out_info)
+static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
 {
     EFI_STATUS status;
     boot_info_t *info;
@@ -178,6 +178,24 @@ static EFI_STATUS prepare_boot_info(boot_info_t **out_info)
     info->mmap_desc_size = desc_size;
     info->mmap_key = map_key;
 
+    /* Copy boot arguments from the EFI loader */
+    EFI_LOADED_IMAGE *li;
+    EFI_GUID li_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+    status = uefi_call_wrapper(BS->HandleProtocol, 3, image, &li_guid, (void**)&li);
+    if (!EFI_ERROR(status) && li && li->LoadOptionsSize > 0) {
+        UINTN count = li->LoadOptionsSize / sizeof(CHAR16);
+        UINTN i;
+        for (i = 0; i < count - 1 && i < sizeof(info->cmdline) - 1; i++) {
+            CHAR16 c = ((CHAR16*)li->LoadOptions)[i];
+            if (c == L'\0')
+                break;
+            info->cmdline[i] = (char)c;
+        }
+        info->cmdline[i] = '\0';
+    } else {
+        info->cmdline[0] = '\0';
+    }
+
     *out_info = info;
     return EFI_SUCCESS;
 }
@@ -206,7 +224,7 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
     }
 
     boot_info_t *boot_info = NULL;
-    status = prepare_boot_info(&boot_info);
+    status = prepare_boot_info(ImageHandle, &boot_info);
     if (EFI_ERROR(status)) {
         Print(L"Failed to prepare boot info: %r\n", status);
         return status;

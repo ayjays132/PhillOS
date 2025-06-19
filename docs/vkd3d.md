@@ -6,6 +6,15 @@ PhillOS relies on the open source [vkd3d-proton](https://github.com/HansKristian
 
 Run `./scripts/setup-vkd3d.sh` once to download the sources. The script places them in `external/vkd3d` so future builds work entirely offline. If the directory already exists the script does nothing.
 
+After building the project, copy `libvkd3d-proton.so` from `external/vkd3d` into the boot image:
+
+```bash
+mkdir -p dist/bootloader/esp/usr/lib/phillos/vkd3d
+cp external/vkd3d/build/libvkd3d-proton.so dist/bootloader/esp/usr/lib/phillos/vkd3d/
+```
+
+Include the file before creating the ISO so the kernel can load it during GPU initialization.
+
 ## Usage with Native Applications
 
 Native Linux titles that use DirectX 12 can load `libvkd3d-proton.so` from `/usr/lib/phillos/vkd3d` or preload it with `LD_PRELOAD` to translate their graphics calls.
