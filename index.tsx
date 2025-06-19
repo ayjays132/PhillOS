@@ -8,6 +8,7 @@ import { StorageProvider } from './contexts/StorageProvider';
 import { CloudSyncProvider } from './contexts/CloudSyncContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { PhoneProvider } from './contexts/PhoneContext';
+import { MemoryHubProvider } from './contexts/MemoryHubContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -22,7 +23,9 @@ root.render(
         <CloudSyncProvider>
           <ThemeProvider>
             <PhoneProvider>
-              <App />
+              <MemoryHubProvider>
+                <App />
+              </MemoryHubProvider>
             </PhoneProvider>
           </ThemeProvider>
         </CloudSyncProvider>
