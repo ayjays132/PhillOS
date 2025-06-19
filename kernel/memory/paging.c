@@ -7,6 +7,11 @@
 
 static uint64_t *kernel_pml4 = NULL;
 
+int paging_is_initialized(void)
+{
+    return kernel_pml4 != NULL;
+}
+
 static inline void zero_page(void *page) {
     memset(page, 0, 4096);
 }
