@@ -85,3 +85,9 @@ export interface OnboardingState {
   userInterests: UserInterest[];
   connectedServices: ConnectedService[];
 }
+
+export interface PhoneSettings {
+  bluetoothAddress: string;
+  modemDevice: string;
+  autoConnect: boolean;
+}

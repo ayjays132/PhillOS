@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Settings, Send, MessageSquare, Bot } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { GlassCard } from '../GlassCard';
 import { CloudSyncToggle } from "./CloudSyncToggle";
 
@@ -67,6 +68,11 @@ export const ConversationalSettingsView: React.FC = () => {
             <h2 className="text-xl font-semibold mb-2">Welcome to Smart Settings</h2>
             <p className="text-base mb-1">Tell PhillOS what you want to configure or find.</p>
             <p className="text-sm">For example: "Dark mode", "Change wallpaper", "Notification preferences"</p>
+            <p className="mt-4">
+              <Link to="/settings/phone" className="text-cyan-300 hover:underline">
+                Phone Settings
+              </Link>
+            </p>
           </div>
         )}
         {messages.map((msg) => (

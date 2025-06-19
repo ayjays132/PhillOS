@@ -1,13 +1,15 @@
-import { NavItem, WidgetOrder } from '../types';
+import { NavItem, WidgetOrder, PhoneSettings } from '../types';
 
 const WIDGET_ORDER_KEY = 'phillos_widget_order';
 const DOCK_ITEMS_KEY = 'phillos_dock_items_v1';
+const PHONE_SETTINGS_KEY = 'phillos_phone_settings_v1';
 
 class StorageService {
   init() {
     // Placeholder for future initialization logic (e.g., loading from cloud)
     this.getWidgetOrder();
     this.getDockItems();
+    this.getPhoneSettings();
   }
 
   getWidgetOrder(): WidgetOrder | null {
@@ -43,6 +45,24 @@ class StorageService {
   setDockItems(items: NavItem[]) {
     try {
       localStorage.setItem(DOCK_ITEMS_KEY, JSON.stringify(items));
+    } catch {
+      // ignore
+    }
+  }
+
+  getPhoneSettings(): PhoneSettings | null {
+    try {
+      const raw = localStorage.getItem(PHONE_SETTINGS_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw) as PhoneSettings;
+    } catch {
+      return null;
+    }
+  }
+
+  setPhoneSettings(settings: PhoneSettings) {
+    try {
+      localStorage.setItem(PHONE_SETTINGS_KEY, JSON.stringify(settings));
     } catch {
       // ignore
     }
