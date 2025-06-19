@@ -9,8 +9,10 @@ $CC $CFLAGS -c main.c -o build/main.o
 $CC $CFLAGS -c ../kernel/init.c -o build/init.o
 $CC $CFLAGS -c ../kernel/memory/paging.c -o build/paging.o
 $CC $CFLAGS -c ../kernel/memory/alloc.c -o build/alloc.o
+$CC $CFLAGS -c ../drivers/storage/ahci.c -o build/ahci.o
+$CC $CFLAGS -c ../drivers/graphics/framebuffer.c -o build/framebuffer.o
 
 $CC $CFLAGS $LDFLAGS /usr/lib/crt0-efi-x86_64.o \
-    build/main.o build/init.o build/paging.o build/alloc.o \
+    build/main.o build/init.o build/paging.o build/alloc.o build/ahci.o build/framebuffer.o \
     -o build/bootloader.so
 $OBJCOPY -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel -j .rela -j .reloc -j .eh_frame --target=efi-app-x86_64 build/bootloader.so build/BOOTX64.EFI

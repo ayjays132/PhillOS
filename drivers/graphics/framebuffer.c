@@ -1,8 +1,47 @@
 #include "framebuffer.h"
+#include <efi.h>
+#include <efilib.h>
+#include "../../kernel/memory/paging.h"
 
-// Placeholder for generic framebuffer initialization
-void init_framebuffer(void) {
-    // TODO: initialize framebuffer using bootloader-provided mode info
+static EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = NULL;
+static uint8_t *fb_ptr = NULL;
+static uint64_t fb_base = 0;
+static uint64_t fb_size = 0;
+static uint32_t fb_width = 0;
+static uint32_t fb_height = 0;
+static uint32_t fb_pitch = 0;
+
+void init_framebuffer(void)
+{
+    EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+    EFI_STATUS status = ST->BootServices->LocateProtocol(&gop_guid, NULL, (void**)&gop);
+    if (EFI_ERROR(status) || !gop)
+        return;
+
+    fb_base = gop->Mode->FrameBufferBase;
+    fb_size = gop->Mode->FrameBufferSize;
+    fb_width = gop->Mode->Info->HorizontalResolution;
+    fb_height = gop->Mode->Info->VerticalResolution;
+    fb_pitch = gop->Mode->Info->PixelsPerScanLine;
+
+    map_identity_range(fb_base, fb_size);
+    fb_ptr = (uint8_t*)(uintptr_t)fb_base;
 }
+
+void fb_draw_pixel(uint32_t x, uint32_t y, uint32_t color)
+{
+    if (!fb_ptr)
+        return;
+    if (x >= fb_width || y >= fb_height)
+        return;
+
+    uint32_t *pixel = (uint32_t*)(fb_ptr + (y * fb_pitch + x) * 4);
+    *pixel = color;
+}
+
+uint64_t fb_get_base(void) { return fb_base; }
+uint64_t fb_get_size(void) { return fb_size; }
+uint32_t fb_get_width(void) { return fb_width; }
+uint32_t fb_get_height(void) { return fb_height; }
 
 // TODO: Add Nvidia and AMD GPU driver support in the future
