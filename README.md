@@ -291,6 +291,16 @@ This prototype serves as a visual and interactive demonstration of the PhillOS c
 -   Robust **Security AI** with real-time threat detection, adaptive firewalls, and secure enclaves.
 -   And much more, all aiming to create a truly personalized, efficient, and engaging computing experience that learns and adapts to the user.
 
+## PWA Cache Management
+
+PhillOS now ships with a basic service worker. If you make changes to the UI and deploy a new build, your browser may continue using cached files until the service worker updates.
+
+To force the latest version:
+
+1. Open the browser's dev tools and navigate to **Application → Service Workers**.
+2. Click **Unregister** or check **Update on reload** and refresh the page.
+3. Alternatively, clear site data to remove all cached files.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
