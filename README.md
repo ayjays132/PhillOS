@@ -360,6 +360,10 @@ script for installing **microG** so the Play Store works inside the container.
 
 See [android/README.md](android/README.md) for additional details.
 
+## DirectX 12 on Vulkan
+
+PhillOS uses the open source **vkd3d-proton** layer to translate DirectX 12 calls into Vulkan. During boot the kernel initializes this library after detecting the GPU vendor so both native applications and Proton/Wine games can run without network access. See [docs/vkd3d.md](docs/vkd3d.md) for setup instructions.
+
 ## PWA Cache Management
 
 PhillOS now ships with a basic service worker. If you make changes to the UI and deploy a new build, your browser may continue using cached files until the service worker updates.

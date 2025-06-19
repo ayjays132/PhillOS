@@ -42,6 +42,8 @@ $ which x86_64-elf-gcc
 
 Both commands should succeed. If not, review your install steps or adjust your environment.
 
+Before the first build run `./scripts/setup-vkd3d.sh` to fetch the vkd3d-proton sources. They are cached under `external/vkd3d` so subsequent builds work offline.
+
 ## Building
 
 With the prerequisites installed, run the top-level build script:
