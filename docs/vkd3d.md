@@ -15,6 +15,13 @@ cp external/vkd3d/build/libvkd3d-proton.so dist/bootloader/esp/usr/lib/phillos/v
 
 Include the file before creating the ISO so the kernel can load it during GPU initialization.  The kernel uses a tiny ELF loader to map the shared object into memory and expose its exported symbols.  If the file is missing the initialization step simply logs a warning and continues.
 
+### Pre-downloading Proton
+
+For completely offline builds you may also want a local copy of Proton. Execute
+`./scripts/setup-proton.sh` with the desired version to download and unpack the
+runtime under `dist/proton/<version>`. Set `PROTON_SHA256` to verify the
+archive's checksum and `PROTON_DOWNLOAD_URL` if using a custom mirror.
+
 ## Usage with Native Applications
 
 Native Linux titles that use DirectX 12 can load `libvkd3d-proton.so` from `/usr/lib/phillos/vkd3d` or preload it with `LD_PRELOAD` to translate their graphics calls.
