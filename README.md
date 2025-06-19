@@ -211,6 +211,13 @@ qemu-system-x86_64 -drive format=raw,file=fat:rw:bootloader/build \
 
 This starts QEMU with the generated EFI file as the boot volume.
 
+### AHCI Storage Driver
+
+The kernel contains a very small AHCI driver used only during early boot.  It
+initializes the first detected SATA port and supports basic DMA reads and
+writes.  Buffers passed to the read/write helpers must reside in identity mapped
+physical memory.  Only simple single-page transfers are currently tested.
+
 ## Project Structure
 
 ```
