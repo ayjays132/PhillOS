@@ -164,7 +164,8 @@ To toggle the theme, call the `useTheme` hook anywhere in the app or add a small
 ## Building the Bootloader & Kernel
 
 PhillOS ships with a minimal bootloader and kernel written in C. Building them
-requires a cross&#8209;compiler and EFI development libraries.
+requires a cross&#8209;compiler and EFI development libraries. See
+[docs/building.md](docs/building.md) for detailed setup instructions.
 
 ### Required Packages
 
@@ -193,6 +194,12 @@ sudo pacman -S make mtools dosfstools grub x86_64-elf-gcc \
 # Fedora
 sudo dnf install make mtools dosfstools grub2-tools \
     x86_64-elf-gcc binutils gnu-efi
+```
+
+After installation confirm the cross compiler is available:
+
+```bash
+x86_64-elf-gcc --version
 ```
 
 ### Build Steps
@@ -310,7 +317,7 @@ physical memory.  Only simple single-page transfers are currently tested.
 
 ## Future Vision (Conceptual)
 
-This prototype serves as a visual and interactive demonstration of the PhillOS concept. See [docs/Blueprint.md](docs/Blueprint.md) for the broader roadmap; more docs will appear in the `docs/` directory.
+This prototype serves as a visual and interactive demonstration of the PhillOS concept. See [docs/Blueprint.md](docs/Blueprint.md) for the broader roadmap and [docs/building.md](docs/building.md) for toolchain setup. More docs will appear in the `docs/` directory.
 
 -   An **AI-Native Kernel** for dynamic resource allocation, intelligent process scheduling, and proactive self-healing.
 -   **Deep OS-level AI integration** across all applications and system functions, enabling true ambient intelligence.
