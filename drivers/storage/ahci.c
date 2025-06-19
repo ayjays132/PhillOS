@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <string.h>
 #include "../../kernel/memory/alloc.h"
+#include "../../kernel/memory/paging.h"
+#include "../../kernel/debug.h"
 
 /* Basic PCI config space access */
 static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
@@ -151,41 +153,66 @@ static int port_rw(hba_port_t *port, uint64_t lba, uint32_t count,
 /* Detect first AHCI controller and prepare a single port */
 void init_ahci(void)
 {
+    debug_puts("Scanning for AHCI controller\n");
     for (uint8_t bus = 0; bus < 256; bus++) {
         for (uint8_t slot = 0; slot < 32; slot++) {
-            uint16_t vendor = pci_read32(bus, slot, 0, 0) & 0xFFFF;
-            if (vendor == 0xFFFF)
-                continue;
-            uint32_t classcode = pci_read32(bus, slot, 0, 8);
-            uint8_t prog = (classcode >> 8) & 0xFF;
-            uint8_t subclass = (classcode >> 16) & 0xFF;
-            uint8_t class = (classcode >> 24) & 0xFF;
-            if (class == 1 && subclass == 6 && prog == 1) {
-                uint32_t bar5 = pci_read32(bus, slot, 0, 0x24);
-                hba_mem_t *abar = (hba_mem_t*)(uintptr_t)(bar5 & ~0xF);
-                uint32_t pi = abar->pi;
-                for (int i=0; i<32; i++) {
-                    if (pi & (1<<i)) {
-                        hba_port_t *port = &abar->ports[i];
-                        port->clb = (uint32_t)(uintptr_t)alloc_page();
-                        port->fb  = (uint32_t)(uintptr_t)alloc_page();
-                        memset((void*)(uintptr_t)port->clb,0,4096);
-                        memset((void*)(uintptr_t)port->fb,0,4096);
-                        boot_port = port;
-                        return;
+            for (uint8_t func = 0; func < 8; func++) {
+                uint32_t vendor_dev = pci_read32(bus, slot, func, 0);
+                uint16_t vendor = vendor_dev & 0xFFFF;
+                if (vendor == 0xFFFF)
+                    continue;
+
+                uint32_t classcode = pci_read32(bus, slot, func, 8);
+                uint8_t subclass = (classcode >> 16) & 0xFF;
+                uint8_t class = (classcode >> 24) & 0xFF;
+
+                if (class == 0x01 && subclass == 0x06) {
+                    uint16_t device = (vendor_dev >> 16) & 0xFFFF;
+                    debug_puts("AHCI controller vendor 0x");
+                    debug_puthex(vendor);
+                    debug_puts(" device 0x");
+                    debug_puthex(device);
+                    debug_puts("\n");
+
+                    uint32_t bar5 = pci_read32(bus, slot, func, 0x24);
+                    uint64_t abar_phys = bar5 & ~0xF;
+                    map_identity_range(abar_phys, sizeof(hba_mem_t));
+                    hba_mem_t *abar = (hba_mem_t*)(uintptr_t)abar_phys;
+                    uint32_t version = abar->vs;
+                    uint32_t pi = abar->pi;
+
+                    debug_puts("AHCI version 0x");
+                    debug_puthex(version);
+                    debug_puts(" ports 0x");
+                    debug_puthex(pi);
+                    debug_puts("\n");
+
+                    for (int i = 0; i < 32; i++) {
+                        if (pi & (1 << i)) {
+                            hba_port_t *port = &abar->ports[i];
+                            port->clb = (uint32_t)(uintptr_t)alloc_page();
+                            port->fb  = (uint32_t)(uintptr_t)alloc_page();
+                            memset((void*)(uintptr_t)port->clb, 0, 4096);
+                            memset((void*)(uintptr_t)port->fb, 0, 4096);
+                            boot_port = port;
+                            return;
+                        }
                     }
                 }
             }
         }
     }
+    debug_puts("No AHCI controller found\n");
 }
 
 int ahci_read(uint64_t lba, uint32_t count, void *buffer)
 {
-    return port_rw(boot_port, lba, count, buffer, 0);
+    (void)lba; (void)count; (void)buffer;
+    return -1; /* TODO: implement sector read */
 }
 
 int ahci_write(uint64_t lba, uint32_t count, const void *buffer)
 {
-    return port_rw(boot_port, lba, count, (void*)buffer, 1);
+    (void)lba; (void)count; (void)buffer;
+    return -1; /* TODO: implement sector write */
 }
