@@ -49,14 +49,32 @@ const strataConfig: StratumConfig[] = [
   },
 ];
 
+const colSpanClasses: Record<number, string> = {
+  1: 'col-span-1',
+  2: 'col-span-2',
+  3: 'col-span-3',
+  4: 'col-span-4',
+};
+
+const rowSpanClasses: Record<number, string> = {
+  1: 'row-span-1',
+  2: 'row-span-2',
+  3: 'row-span-3',
+  4: 'row-span-4',
+};
+
 const WidgetHost: React.FC<{ widget: WidgetConfig }> = ({ widget }) => {
   const IconComponent = widget.icon;
+  const tabletCol = colSpanClasses[widget.colSpanTablet ?? 1] ?? colSpanClasses[1];
+  const tabletRow = rowSpanClasses[widget.rowSpanTablet ?? 1] ?? rowSpanClasses[1];
+  const desktopCol = colSpanClasses[widget.colSpanDesktop ?? 1] ?? colSpanClasses[1];
+  const desktopRow = rowSpanClasses[widget.rowSpanDesktop ?? 1] ?? rowSpanClasses[1];
   return (
-    <GlassCard 
+    <GlassCard
       className={`
-        flex flex-col 
-        md:col-span-${widget.colSpanTablet || 1} md:row-span-${widget.rowSpanTablet || 1}
-        lg:col-span-${widget.colSpanDesktop || 1} lg:row-span-${widget.rowSpanDesktop || 1}
+        flex flex-col
+        md:${tabletCol} md:${tabletRow}
+        lg:${desktopCol} lg:${desktopRow}
         !bg-white/3 !border-white/5 !rounded-xl
       `}
     >
