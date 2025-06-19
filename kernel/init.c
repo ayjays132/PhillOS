@@ -4,6 +4,7 @@
 #include "memory/alloc.h"
 #include "memory/heap.h"
 #include "../drivers/storage/ahci.h"
+#include "fs/fat32.h"
 #include "../drivers/graphics/framebuffer.h"
 #include "../drivers/graphics/gpu.h"
 
@@ -20,9 +21,10 @@ void kernel_main(boot_info_t *boot_info) {
     init_physical_memory(boot_info);
     init_paging();
     init_heap();
+    init_ahci();
+    fat32_init();
     init_gpu_driver();
     init_framebuffer(&boot_info->fb);
-    init_ahci();
     fb_draw_pixel(10, 10, 0x00FF0000); // draw red pixel for debug
     // Kernel is now initialized
     while (1) {

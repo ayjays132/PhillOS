@@ -10,13 +10,13 @@ ESP_IMG ?= $(OUT_DIR)/esp.img
 ISO ?= $(OUT_DIR)/phillos.iso
 
 CFLAGS := -fpic -fshort-wchar -mno-red-zone -fno-stack-protector 	-ffreestanding -I/usr/include/efi -I/usr/include/efi/x86_64 	-I../kernel -I../kernel/memory
-KERNEL_CFLAGS := -fpic -fshort-wchar -mno-red-zone -fno-stack-protector 	-ffreestanding -I../kernel -I../kernel/memory 	-I../drivers/storage -I../drivers/graphics 	-I/usr/include/efi -I/usr/include/efi/x86_64
+KERNEL_CFLAGS := -fpic -fshort-wchar -mno-red-zone -fno-stack-protector 	-ffreestanding -I../kernel -I../kernel/memory -I../kernel/fs -I../drivers/storage -I../drivers/graphics 	-I/usr/include/efi -I/usr/include/efi/x86_64
 LDFLAGS := -nostdlib -znocombreloc -T /usr/lib/elf_x86_64_efi.lds 	-shared -Bsymbolic -L/usr/lib -lefi -lgnuefi
 
 BOOTLOADER := $(OUT_DIR)/BOOTX64.EFI
 KERNEL_ELF := $(OUT_DIR)/kernel.elf
 
-KERNEL_OBJS := $(OUT_DIR)/init.o 	$(OUT_DIR)/string.o 	$(OUT_DIR)/paging.o 	$(OUT_DIR)/alloc.o $(OUT_DIR)/heap.o      $(OUT_DIR)/debug.o 	$(OUT_DIR)/ahci.o 	$(OUT_DIR)/framebuffer.o $(OUT_DIR)/gpu.o $(OUT_DIR)/nvidia.o $(OUT_DIR)/amd.o $(OUT_DIR)/intel.o $(OUT_DIR)/vkd3d.o
+KERNEL_OBJS := $(OUT_DIR)/init.o 	$(OUT_DIR)/string.o 	$(OUT_DIR)/paging.o 	$(OUT_DIR)/alloc.o $(OUT_DIR)/heap.o      $(OUT_DIR)/debug.o 	$(OUT_DIR)/ahci.o 	$(OUT_DIR)/framebuffer.o $(OUT_DIR)/gpu.o $(OUT_DIR)/nvidia.o $(OUT_DIR)/amd.o $(OUT_DIR)/intel.o $(OUT_DIR)/vkd3d.o $(OUT_DIR)/fat32.o
 
 .PHONY: all iso clean
 
@@ -52,6 +52,9 @@ $(OUT_DIR)/intel.o: ../drivers/graphics/intel.c | $(OUT_DIR)
 	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 
 $(OUT_DIR)/vkd3d.o: ../drivers/graphics/vkd3d.c | $(OUT_DIR)
+	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
+
+$(OUT_DIR)/fat32.o: ../kernel/fs/fat32.c | $(OUT_DIR)
 	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 
 $(KERNEL_ELF): $(KERNEL_OBJS)
