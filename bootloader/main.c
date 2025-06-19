@@ -2,11 +2,164 @@
 #include <efilib.h>
 #include "init.h"
 
-EFI_STATUS
-EFIAPI
-efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
+typedef struct {
+    unsigned char e_ident[16];
+    uint16_t e_type;
+    uint16_t e_machine;
+    uint32_t e_version;
+    uint64_t e_entry;
+    uint64_t e_phoff;
+    uint64_t e_shoff;
+    uint32_t e_flags;
+    uint16_t e_ehsize;
+    uint16_t e_phentsize;
+    uint16_t e_phnum;
+    uint16_t e_shentsize;
+    uint16_t e_shnum;
+    uint16_t e_shstrndx;
+} Elf64_Ehdr;
+
+typedef struct {
+    uint32_t p_type;
+    uint32_t p_flags;
+    uint64_t p_offset;
+    uint64_t p_vaddr;
+    uint64_t p_paddr;
+    uint64_t p_filesz;
+    uint64_t p_memsz;
+    uint64_t p_align;
+} Elf64_Phdr;
+
+#define PT_LOAD 1
+
+static EFI_STATUS load_kernel(EFI_HANDLE image, void **entry)
+{
+    EFI_STATUS status;
+    EFI_LOADED_IMAGE *loaded_image;
+    EFI_GUID li_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+
+    status = uefi_call_wrapper(BS->HandleProtocol, 3, image, &li_guid, (void**)&loaded_image);
+    if (EFI_ERROR(status))
+        return status;
+
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *fs;
+    EFI_GUID fs_guid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
+    status = uefi_call_wrapper(BS->HandleProtocol, 3, loaded_image->DeviceHandle, &fs_guid, (void**)&fs);
+    if (EFI_ERROR(status))
+        return status;
+
+    EFI_FILE_PROTOCOL *root;
+    status = uefi_call_wrapper(fs->OpenVolume, 2, fs, &root);
+    if (EFI_ERROR(status))
+        return status;
+
+    EFI_FILE_PROTOCOL *file;
+    status = uefi_call_wrapper(root->Open, 5, root, &file, L"\\EFI\\PHILLOS\\kernel.elf", EFI_FILE_MODE_READ, 0);
+    if (EFI_ERROR(status))
+        return status;
+
+    EFI_GUID info_guid = EFI_FILE_INFO_ID;
+    UINTN info_size = SIZE_OF_EFI_FILE_INFO + 200;
+    EFI_FILE_INFO *info;
+    status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, info_size, (void**)&info);
+    if (EFI_ERROR(status)) {
+        file->Close(file);
+        return status;
+    }
+
+    status = uefi_call_wrapper(file->GetInfo, 4, file, &info_guid, &info_size, info);
+    if (EFI_ERROR(status)) {
+        BS->FreePool(info);
+        file->Close(file);
+        return status;
+    }
+
+    UINTN file_size = info->FileSize;
+    BS->FreePool(info);
+
+    void *buf;
+    status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, file_size, &buf);
+    if (EFI_ERROR(status)) {
+        file->Close(file);
+        return status;
+    }
+
+    UINTN read_size = file_size;
+    status = uefi_call_wrapper(file->Read, 3, file, &read_size, buf);
+    file->Close(file);
+    if (EFI_ERROR(status) || read_size != file_size) {
+        BS->FreePool(buf);
+        return EFI_LOAD_ERROR;
+    }
+
+    Elf64_Ehdr *eh = (Elf64_Ehdr*)buf;
+    Elf64_Phdr *ph = (Elf64_Phdr*)((UINT8*)buf + eh->e_phoff);
+
+    for (UINT16 i = 0; i < eh->e_phnum; i++) {
+        if (ph[i].p_type != PT_LOAD)
+            continue;
+
+        UINT64 dest = ph[i].p_paddr;
+        UINTN pages = (ph[i].p_memsz + 4095) / 4096;
+        status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAddress, EfiLoaderData, pages, &dest);
+        if (EFI_ERROR(status)) {
+            BS->FreePool(buf);
+            return status;
+        }
+
+        CopyMem((void*)dest, (UINT8*)buf + ph[i].p_offset, ph[i].p_filesz);
+        if (ph[i].p_memsz > ph[i].p_filesz)
+            SetMem((void*)(dest + ph[i].p_filesz), ph[i].p_memsz - ph[i].p_filesz, 0);
+    }
+
+    *entry = (void*)eh->e_entry;
+    BS->FreePool(buf);
+    return EFI_SUCCESS;
+}
+
+static EFI_STATUS exit_boot(EFI_HANDLE image)
+{
+    EFI_STATUS status;
+    UINTN map_size = 0, map_key, desc_size;
+    UINT32 desc_ver;
+
+    status = uefi_call_wrapper(BS->GetMemoryMap, 5, &map_size, NULL, &map_key, &desc_size, &desc_ver);
+    if (status != EFI_BUFFER_TOO_SMALL)
+        return status;
+
+    map_size += desc_size * 8;
+    EFI_MEMORY_DESCRIPTOR *map;
+    status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, map_size, (void**)&map);
+    if (EFI_ERROR(status))
+        return status;
+
+    status = uefi_call_wrapper(BS->GetMemoryMap, 5, &map_size, map, &map_key, &desc_size, &desc_ver);
+    if (EFI_ERROR(status))
+        return status;
+
+    status = uefi_call_wrapper(BS->ExitBootServices, 2, image, map_key);
+    return status;
+}
+
+EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     InitializeLib(ImageHandle, SystemTable);
-    Print(L"Hello from PhillOS UEFI bootloader!\n");
-    kernel_main();
+    Print(L"PhillOS bootloader loading kernel\n");
+
+    void *entry = NULL;
+    EFI_STATUS status = load_kernel(ImageHandle, &entry);
+    if (EFI_ERROR(status)) {
+        Print(L"Failed to load kernel: %r\n", status);
+        return status;
+    }
+
+    status = exit_boot(ImageHandle);
+    if (EFI_ERROR(status)) {
+        Print(L"Failed to exit boot services: %r\n", status);
+        return status;
+    }
+
+    void (*kernel_entry)(void) = entry;
+    kernel_entry();
+
     return EFI_SUCCESS;
 }
