@@ -1,9 +1,9 @@
 
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import { GlassCard } from './GlassCard';
 import { WidgetConfig, StratumConfig } from '../types';
 import { 
-  BotMessageSquare, BarChart3, Search, Zap, Gamepad2, UserCircle, Rss, Settings, Palette, BrainCircuit
+  BotMessageSquare, BarChart3, Search, Zap, Gamepad2, UserCircle, Rss, BrainCircuit
 } from 'lucide-react';
 import { AICoPilotWidget } from './widgets/AICoPilotWidget';
 import { AIShadowSearchWidget } from './widgets/AIShadowSearchWidget';
@@ -13,9 +13,7 @@ import { QuickActionsWidget } from './widgets/QuickActionsWidget';
 import { GamingModeWidget } from './widgets/GamingModeWidget';
 import { UserProfileWidget } from './widgets/UserProfileWidget';
 import { PersonalizedNewsWidget } from './widgets/PersonalizedNewsWidget';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useWidgetLayout } from '../hooks/useWidgetLayout';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 const strataConfig: StratumConfig[] = [
   {
@@ -84,38 +82,11 @@ const gridColsDesktopClasses: Record<number, string> = {
   6: 'lg:grid-cols-6',
 };
 
-interface DragItem {
-  id: string;
-  index: number;
-  stratumId: string;
-}
-
 const WidgetHost: React.FC<{
   widget: WidgetConfig;
   index: number;
   stratumId: string;
-  move: (from: number, to: number) => void;
-}> = ({ widget, index, stratumId, move }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [, drop] = useDrop<DragItem>({
-    accept: 'WIDGET',
-    hover(item) {
-      if (item.stratumId !== stratumId) return;
-      if (!ref.current) return;
-      if (item.index === index) return;
-      move(item.index, index);
-      item.index = index;
-    },
-  });
-
-  const [{ isDragging }, drag] = useDrag({
-    type: 'WIDGET',
-    item: { id: widget.id, index, stratumId } as DragItem,
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-  });
-
-  drag(drop(ref));
-
+}> = ({ widget, index, stratumId }) => {
   const IconComponent = widget.icon;
   const tabletCol = colSpanClasses[widget.colSpanTablet ?? 1] ?? colSpanClasses[1];
   const tabletRow = rowSpanClasses[widget.rowSpanTablet ?? 1] ?? rowSpanClasses[1];
@@ -123,60 +94,142 @@ const WidgetHost: React.FC<{
   const desktopRow = rowSpanClasses[widget.rowSpanDesktop ?? 1] ?? rowSpanClasses[1];
 
   return (
-    <div ref={ref} className={`${isDragging ? 'opacity-50' : ''}`}>
-      <GlassCard
-        className={`
-          flex flex-col
-          md:${tabletCol} md:${tabletRow}
-          lg:${desktopCol} lg:${desktopRow}
-          !bg-white/3 !border-white/5 !rounded-xl
-        `}
-      >
-        <div className="flex items-center mb-3 cursor-move">
-          <IconComponent size={20} className={`${widget.iconColor || 'text-white/80'} mr-2`} />
-          <h3 className="text-lg font-semibold text-white/90">{widget.title}</h3>
+    <Draggable draggableId={`${stratumId}-${widget.id}`} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className={`${snapshot.isDragging ? 'opacity-50' : ''}`}
+        >
+          <GlassCard
+            className={`
+              flex flex-col
+              md:${tabletCol} md:${tabletRow}
+              lg:${desktopCol} lg:${desktopRow}
+              !bg-white/3 !border-white/5 !rounded-xl
+            `}
+          >
+            <div className="flex items-center mb-3 cursor-move">
+              <IconComponent size={20} className={`${widget.iconColor || 'text-white/80'} mr-2`} />
+              <h3 className="text-lg font-semibold text-white/90">{widget.title}</h3>
+            </div>
+            <div className="flex-grow overflow-y-auto">
+              <widget.component {...widget.props} />
+            </div>
+          </GlassCard>
         </div>
-        <div className="flex-grow overflow-y-auto">
-          <widget.component {...widget.props} />
-        </div>
-      </GlassCard>
-    </div>
+      )}
+    </Draggable>
   );
 };
 
 
+interface WidgetOrder {
+  [stratumId: string]: string[];
+}
+
+const STORAGE_KEY = 'phillos_widget_order';
+
+function applyOrder(strata: StratumConfig[], order: WidgetOrder | null): StratumConfig[] {
+  if (!order) return strata;
+  return strata.map((s) => {
+    const ids = order[s.id];
+    if (!ids) return s;
+    const map = new Map(s.widgets.map((w) => [w.id, w]));
+    const arranged: WidgetConfig[] = [];
+    ids.forEach((id) => {
+      const w = map.get(id);
+      if (w) arranged.push(w);
+    });
+    s.widgets.forEach((w) => {
+      if (!ids.includes(w.id)) arranged.push(w);
+    });
+    return { ...s, widgets: arranged };
+  });
+}
+
+function persistOrder(strata: StratumConfig[]) {
+  const order: WidgetOrder = {};
+  strata.forEach((s) => {
+    order[s.id] = s.widgets.map((w) => w.id);
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+  } catch {
+    // ignore
+  }
+}
+
 export const HomeDashboard: React.FC = () => {
-  const { orderedWidgets, moveWidget } = useWidgetLayout(strataConfig);
+  const [strata, setStrata] = useState<StratumConfig[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as WidgetOrder;
+        return applyOrder(strataConfig, parsed);
+      }
+    } catch {
+      // ignore
+    }
+    return strataConfig;
+  });
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    if (result.source.droppableId !== result.destination.droppableId) return;
+    const stratumId = result.source.droppableId;
+    const from = result.source.index;
+    const to = result.destination.index;
+    setStrata((prev) => {
+      const next = prev.map((s) => {
+        if (s.id !== stratumId) return s;
+        const widgets = Array.from(s.widgets);
+        const [moved] = widgets.splice(from, 1);
+        widgets.splice(to, 0, moved);
+        return { ...s, widgets };
+      });
+      persistOrder(next);
+      return next;
+    });
+  };
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DragDropContext onDragEnd={handleDragEnd}>
       <div className="space-y-4 sm:space-y-6">
-        {strataConfig.map((stratum) => (
-          <section key={stratum.id} aria-labelledby={stratum.id + "-title"}>
+        {strata.map((stratum) => (
+          <section key={stratum.id} aria-labelledby={stratum.id + '-title'}>
             {stratum.title && (
-              <h2 id={stratum.id + "-title"} className="text-xl sm:text-2xl font-bold text-white/80 mb-3 ml-1">{stratum.title}</h2>
+              <h2 id={stratum.id + '-title'} className="text-xl sm:text-2xl font-bold text-white/80 mb-3 ml-1">{stratum.title}</h2>
             )}
-            <div
-              className={`
-                grid gap-3 sm:gap-4
-                grid-cols-1
-                ${
-                  gridColsTabletClasses[stratum.gridColsTablet || 2] ||
-                  gridColsTabletClasses[2]
-                }
-                ${
-                  gridColsDesktopClasses[stratum.gridColsDesktop || 4] ||
-                  gridColsDesktopClasses[4]
-                }
-              `}
-            >
-              {orderedWidgets(stratum).map((widget, index) => (
-                <WidgetHost key={widget.id} widget={widget} index={index} stratumId={stratum.id} move={(from, to) => moveWidget(stratum.id, from, to)} />
-              ))}
-            </div>
+            <Droppable droppableId={stratum.id} direction="horizontal">
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={`
+                    grid gap-3 sm:gap-4
+                    grid-cols-1
+                    ${
+                      gridColsTabletClasses[stratum.gridColsTablet || 2] ||
+                      gridColsTabletClasses[2]
+                    }
+                    ${
+                      gridColsDesktopClasses[stratum.gridColsDesktop || 4] ||
+                      gridColsDesktopClasses[4]
+                    }
+                  `}
+                >
+                  {stratum.widgets.map((widget, index) => (
+                    <WidgetHost key={widget.id} widget={widget} index={index} stratumId={stratum.id} />
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
           </section>
         ))}
       </div>
-    </DndProvider>
+    </DragDropContext>
   );
 };
