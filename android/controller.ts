@@ -5,6 +5,11 @@ import { spawn } from 'child_process';
  * successfully, rejects otherwise.
  */
 function run(cmd: string, args: string[] = []): Promise<void> {
+  const unsafe = /[;&|`$><]/;
+  if (unsafe.test(cmd) || args.some(a => unsafe.test(a))) {
+    return Promise.reject(new Error('Unsafe command or arguments'));
+  }
+
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: 'inherit' });
     child.on('error', reject);
