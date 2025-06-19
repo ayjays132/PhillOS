@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node backend/server.js",
-    "phone-bridge": "node services/phoneBridge/server.js"
+    "phone-bridge": "node services/phoneBridge/server.js",
+    "training-pipeline": "node services/trainingPipeline.ts"
   },
   "dependencies": {
     "@google/genai": "^1.5.1",
@@ -24,6 +25,7 @@
     "react-router-dom": "^7.6.2",
     "remark-gfm": "^4.0.1",
     "express": "^4.19.2",
+    "node-localstorage": "^2.2.1",
     "ffi-napi": "^4.0.3",
     "ref-napi": "^3.0.0",
     "serialport": "^13.0.0",
