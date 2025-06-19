@@ -3,8 +3,9 @@ import React from 'react';
 import { GlassCard } from './GlassCard';
 import { WidgetConfig, StratumConfig } from '../types';
 import {
-  BotMessageSquare, BarChart3, Search, Zap, Gamepad2, UserCircle, Rss, BrainCircuit, RefreshCw
+  BotMessageSquare, BarChart3, Search, Zap, Gamepad2, UserCircle, Rss, BrainCircuit, RefreshCw, Phone
 } from 'lucide-react';
+import { PhoneStatusWidget } from "./widgets/PhoneStatusWidget";
 import { AICoPilotWidget } from './widgets/AICoPilotWidget';
 import { AIShadowSearchWidget } from './widgets/AIShadowSearchWidget';
 import { ContextStreamWidget } from './widgets/ContextStreamWidget';
@@ -36,6 +37,7 @@ const strataConfig: StratumConfig[] = [
       { id: 'systemhealth', title: 'System Health', icon: BarChart3, iconColor: 'text-green-400', component: SystemHealthWidget, colSpanDesktop: 1, colSpanTablet: 1},
       { id: 'userprofile', title: 'User Profile', icon: UserCircle, iconColor: 'text-orange-300', component: UserProfileWidget, colSpanDesktop: 1, colSpanTablet: 1},
       { id: 'cache', title: 'Offline & Updates', icon: RefreshCw, iconColor: 'text-blue-300', component: CacheManagementWidget, colSpanDesktop: 1, colSpanTablet: 1 },
+      { id: 'phonestatus', title: 'Phone Status', icon: Phone, iconColor: 'text-green-300', component: PhoneStatusWidget, colSpanDesktop: 1, colSpanTablet: 1 },
     ],
     gridColsDesktop: 2,
     gridColsTablet: 2,

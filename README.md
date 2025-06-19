@@ -401,6 +401,17 @@ To force the latest version:
 3. Alternatively, clear site data to remove all cached files.
 4. You can also open the *Offline & Updates* widget on the dashboard and use the **Check for Updates** or **Clear Cache** buttons.
 
+## Phone Hardware Requirements & Usage
+
+Basic phone integration requires the following hardware:
+
+- SIM card slot connected to a compatible modem
+- Bluetooth 4.0 or newer controller
+
+The drivers under `drivers/phone/` are only stubs. Building the OS with these files included will not enable real phone functionality yet, but the React UI exposes SMS and call features through `phoneService.ts` for future experimentation.
+
+After building the project, open the **Phone Status** widget on the dashboard to view simulated signal strength and Bluetooth state.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
