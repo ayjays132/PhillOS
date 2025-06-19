@@ -260,6 +260,20 @@ initializes the first detected SATA port and supports basic DMA reads and
 writes.  Buffers passed to the read/write helpers must reside in identity mapped
 physical memory.  Only simple single-page transfers are currently tested.
 
+## Offline Installation and Usage
+
+PhillOS can run without an internet connection once the UI files are cached by the service worker.
+
+1. Build the project and generate the ISO as described above, then flash it to a USB stick.
+2. Boot from the USB drive. The browser loads all core assets and API responses into the cache so subsequent boots work completely offline.
+3. Alternatively serve the contents of the `dist/` folder from a local web server:
+
+```bash
+npx serve dist
+```
+
+Visit the local URL on your network once to cache the files. After that the OS continues to function even if the server goes offline. Rebuild the project and replace the files on the USB or server to update.
+
 ## Project Structure
 
 ```
@@ -373,6 +387,7 @@ To force the latest version:
 1. Open the browser's dev tools and navigate to **Application → Service Workers**.
 2. Click **Unregister** or check **Update on reload** and refresh the page.
 3. Alternatively, clear site data to remove all cached files.
+4. You can also open the *Offline & Updates* widget on the dashboard and use the **Check for Updates** or **Clear Cache** buttons.
 
 ## License
 

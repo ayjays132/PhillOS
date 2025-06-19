@@ -12,8 +12,22 @@ export default defineConfig(({ mode }) => {
           registerType: 'autoUpdate',
           strategies: 'generateSW',
           workbox: {
-            globPatterns: ['**/*'],
-            additionalManifestEntries: [{ url: '/index.tsx', revision: null }]
+            globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+            additionalManifestEntries: [{ url: '/index.tsx', revision: null }],
+            runtimeCaching: [
+              {
+                urlPattern: /\/api\/.*$/,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'api-cache',
+                  networkTimeoutSeconds: 5,
+                  expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 24 * 60 * 60
+                  }
+                }
+              }
+            ]
           }
         })
       ],
