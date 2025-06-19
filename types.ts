@@ -90,4 +90,6 @@ export interface PhoneSettings {
   bluetoothAddress: string;
   modemDevice: string;
   autoConnect: boolean;
+  ringtone: string;
+  vibrate: boolean;
 }

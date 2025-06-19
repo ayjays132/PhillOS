@@ -25,6 +25,8 @@ export const PhoneProvider: React.FC<{ children: React.ReactNode }> = ({
         bluetoothAddress: "",
         modemDevice: "",
         autoConnect: false,
+        ringtone: "",
+        vibrate: false,
       };
       storageService.setPhoneSettings({ ...settings, bluetoothAddress: addr });
     },
