@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { GlassCard } from './GlassCard';
-import { phoneService } from '../services/phoneService';
-import { usePhoneBridge } from '../hooks/usePhoneBridge';
+import { usePhone } from '../contexts/PhoneContext';
 import { createQwenChatSession } from '../services/qwenService';
 
 const PhoneApp: React.FC = () => {
-  const { status, connect, disconnect } = usePhoneBridge();
+  const { connected, connect, disconnect, sendSms, makeCall } = usePhone();
   const [address, setAddress] = useState('');
   const [smsTo, setSmsTo] = useState('');
   const [smsBody, setSmsBody] = useState('');
@@ -13,7 +12,7 @@ const PhoneApp: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const toggle = () => {
-    if (status.connected) {
+    if (connected) {
       disconnect();
     } else if (address) {
       connect(address);
@@ -22,13 +21,13 @@ const PhoneApp: React.FC = () => {
 
   const sendSms = async () => {
     if (!smsTo || !smsBody) return;
-    await phoneService.sendSms({ to: smsTo, body: smsBody });
+    await sendSms(smsTo, smsBody);
     setSmsBody('');
   };
 
   const dial = async () => {
     if (!number) return;
-    await phoneService.makeCall(number);
+    await makeCall(number);
   };
 
   const suggest = async () => {
@@ -54,11 +53,11 @@ const PhoneApp: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-white/80 text-sm">
-            {status.connected ? 'Connected' : 'Disconnected'}
+            {connected ? 'Connected' : 'Disconnected'}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {!status.connected && (
+          {!connected && (
             <input
               value={address}
               onChange={e => setAddress(e.target.value)}
@@ -70,7 +69,7 @@ const PhoneApp: React.FC = () => {
             onClick={toggle}
             className="text-xs px-2 py-1 bg-white/10 rounded text-white/80"
           >
-            {status.connected ? 'Disconnect' : 'Connect'}
+            {connected ? 'Disconnect' : 'Connect'}
           </button>
         </div>
       </div>

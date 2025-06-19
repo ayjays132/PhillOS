@@ -1,7 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
-import { Wifi, BatteryCharging, Cpu, Menu } from 'lucide-react';
+import {
+  Wifi,
+  BatteryCharging,
+  Cpu,
+  Menu,
+  Phone,
+  PhoneOff,
+  Signal,
+  SignalHigh,
+  SignalMedium,
+  SignalLow,
+  SignalZero,
+} from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { usePhone } from '../contexts/PhoneContext';
 
 export const StatusBar: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -14,7 +27,14 @@ export const StatusBar: React.FC = () => {
   const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const { theme } = useTheme();
+  const { connected, signalStrength } = usePhone();
   const isDark = theme === 'dark';
+
+  let SignalIcon = SignalZero;
+  if (signalStrength > 75) SignalIcon = SignalHigh;
+  else if (signalStrength > 50) SignalIcon = SignalMedium;
+  else if (signalStrength > 25) SignalIcon = SignalLow;
+  else if (signalStrength > 0) SignalIcon = Signal;
 
   return (
     <div
@@ -27,6 +47,11 @@ export const StatusBar: React.FC = () => {
       <div className="flex items-center gap-3 sm:gap-4">
         <Cpu size={18} className="text-cyan-400 animate-pulse-slow" />
         <Wifi size={18} className="text-green-400" />
+        {connected ? (
+          <SignalIcon size={18} className="text-green-400" />
+        ) : (
+          <PhoneOff size={18} className="text-red-400" />
+        )}
         <div className="flex items-center gap-1">
           <BatteryCharging size={18} className="text-yellow-300" />
           <span>92%</span>

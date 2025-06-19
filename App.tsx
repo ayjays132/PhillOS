@@ -17,6 +17,7 @@ import { useDeviceType } from './hooks/useDeviceType';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useDock } from './hooks/useDock';
 import { useTheme } from './contexts/ThemeContext';
+import { PhoneProvider } from './contexts/PhoneContext';
 
 
 const App: React.FC = () => {
@@ -42,11 +43,12 @@ const App: React.FC = () => {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`flex flex-col h-screen overflow-hidden ${isDark ? 'bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white/90' : 'bg-gradient-to-br from-white via-gray-200 to-blue-300 text-gray-900'}`}
-    >
-      {showChrome && <StatusBar />}
-      <main className={`flex-grow overflow-y-auto ${showChrome ? `p-3 pt-0 sm:p-4 ${isMobileLayout && deviceType === 'mobile' ? 'pb-20' : 'pb-4'}` : 'p-0'}`}>
-        <Routes>
+    <PhoneProvider>
+      <div className={`flex flex-col h-screen overflow-hidden ${isDark ? 'bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white/90' : 'bg-gradient-to-br from-white via-gray-200 to-blue-300 text-gray-900'}`}
+      >
+        {showChrome && <StatusBar />}
+        <main className={`flex-grow overflow-y-auto ${showChrome ? `p-3 pt-0 sm:p-4 ${isMobileLayout && deviceType === 'mobile' ? 'pb-20' : 'pb-4'}` : 'p-0'}`}>
+          <Routes>
           <Route path="/onboarding" element={<OnboardingStepper />} />
           <Route path="/" element={isOnboardingComplete ? <Navigate to="/home" replace /> : <Navigate to="/onboarding" replace />} />
           <Route path="/home" element={<HomeDashboard />} />
@@ -67,7 +69,8 @@ const App: React.FC = () => {
           <Dock deviceType={deviceType} orientation={orientation} hasGamepad={hasGamepad} />
         )
       )}
-    </div>
+      </div>
+    </PhoneProvider>
   );
 };
 
