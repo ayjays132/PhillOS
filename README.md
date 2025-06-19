@@ -109,9 +109,9 @@ When you choose the *Local-First AI* option during onboarding, the CoPilot widge
 
 ## Cross‑Device Awareness
 
-PhillOS now detects whether it is running on a phone, desktop, Steam Deck or a VR capable browser.  
-The `useDeviceType` hook inspects the user agent and WebXR support to classify the current device.  
-Navigation components adjust icon sizes and spacing automatically so the Dock is comfortable on larger handhelds or in VR, while mobile devices continue to use the bottom navigation bar.
+PhillOS detects whether it is running on a phone, desktop, Steam Deck or a VR capable browser.
+The `useDeviceType` hook inspects the user agent and WebXR support to classify the current device.
+Navigation components adjust icon sizes and spacing automatically. When running on a Steam Deck or in VR, the Dock is displayed vertically along the left edge with larger icons. Desktop users see the traditional centered Dock, while mobile devices continue to use the bottom navigation bar.
 
 ## Voice Interaction
 
