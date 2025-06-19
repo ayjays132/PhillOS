@@ -219,7 +219,7 @@ This prototype serves as a visual and interactive demonstration of the PhillOS c
 
 ## License
 
-This project is a conceptual prototype. If a `LICENSE.md` file is present in the repository, its terms apply. Otherwise, consider it open for exploration and inspiration. (Typically, MIT License is a good default for open-source projects: `This project is licensed under the MIT License.`)
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 I. Core Design Philosophy: "Living Glass" - A Fusion of Ethereal Translucency and Tactile Depth
