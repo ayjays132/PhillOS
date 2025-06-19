@@ -130,5 +130,6 @@ void init_gpu_driver(void)
         drv->init();
     }
 
-    init_vkd3d(vendor);
+    if (init_vkd3d(vendor))
+        debug_puts("vkd3d unavailable\n");
 }

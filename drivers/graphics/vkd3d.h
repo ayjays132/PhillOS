@@ -3,6 +3,6 @@
 
 #include "gpu.h"
 
-void init_vkd3d(gpu_vendor_t vendor);
+int init_vkd3d(gpu_vendor_t vendor);
 
 #endif // PHILLOS_VKD3D_H

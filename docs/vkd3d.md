@@ -13,7 +13,7 @@ mkdir -p dist/bootloader/esp/usr/lib/phillos/vkd3d
 cp external/vkd3d/build/libvkd3d-proton.so dist/bootloader/esp/usr/lib/phillos/vkd3d/
 ```
 
-Include the file before creating the ISO so the kernel can load it during GPU initialization.
+Include the file before creating the ISO so the kernel can load it during GPU initialization.  The kernel uses a tiny ELF loader to map the shared object into memory and expose its exported symbols.  If the file is missing the initialization step simply logs a warning and continues.
 
 ## Usage with Native Applications
 
