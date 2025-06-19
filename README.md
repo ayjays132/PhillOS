@@ -567,6 +567,27 @@ const launcher = createProtonLauncher({
 launcher.launch('/path/to/Game.exe');
 ```
 
+To run with Wine instead of Proton simply omit `protonDir` and provide a `wineBinary`:
+
+```ts
+const launcher = createProtonLauncher({
+  wineBinary: '/usr/bin/wine',
+  prefix: '~/.wine-prefixes/my-game'
+});
+
+launcher.launch('/path/to/Game.exe');
+```
+
+The file can also be executed directly from the command line:
+
+```bash
+# Proton example
+node backend/protonLauncher.js /path/to/Game.exe --protonDir /opt/steam/compatibilitytools.d --version Proton-9.0
+
+# Wine example
+node backend/protonLauncher.js /path/to/Game.exe --wine /usr/bin/wine --prefix ~/.wine-prefixes/my-game
+```
+
 For convenience a simple React interface is available at the **Gaming Hub** route.
 Open `/gaming` while running the development server to choose an executable,
 set the Proton version and prefix, and launch the game from the browser.
