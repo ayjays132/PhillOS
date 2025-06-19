@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { NavItem } from '../types';
 import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail, BrainCircuit } from 'lucide-react';
 
+export const EXTERNAL_ITEM_TYPE = 'NEW_DOCK_ITEM';
+
 const DEFAULT_ITEMS: NavItem[] = [
   { id: 'home', label: 'Home', path: '/home', icon: LayoutGrid },
   { id: 'copilot', label: 'AI CoPilot', path: '/copilot', icon: BotMessageSquare },
