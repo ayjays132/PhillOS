@@ -21,6 +21,8 @@ void kernel_main(boot_info_t *boot_info) {
     init_physical_memory(boot_info);
     init_paging();
     init_heap();
+    if (boot_info->ai_size)
+        init_ai_heap((void *)boot_info->ai_base, boot_info->ai_size);
     init_ahci();
     fat32_init();
     init_gpu_driver();

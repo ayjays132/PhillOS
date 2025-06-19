@@ -25,6 +25,8 @@ typedef struct {
     uint64_t mmap_key; // used by bootloader
     efi_memory_descriptor_t *mmap;
     framebuffer_info_t fb;
+    uint64_t ai_base;
+    uint64_t ai_size;
     char cmdline[128];
 } boot_info_t;
 
