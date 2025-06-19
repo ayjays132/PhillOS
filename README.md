@@ -311,6 +311,7 @@ physical memory.  Only simple single-page transfers are currently tested.
 ## Future Vision (Conceptual)
 
 This prototype serves as a visual and interactive demonstration of the PhillOS concept. The full vision as outlined in the "PhillOS Blueprint" document is far more extensive and includes:
+See [docs/Blueprint.md](docs/Blueprint.md) for the full architecture blueprint.
 
 -   An **AI-Native Kernel** for dynamic resource allocation, intelligent process scheduling, and proactive self-healing.
 -   **Deep OS-level AI integration** across all applications and system functions, enabling true ambient intelligence.
