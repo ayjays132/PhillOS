@@ -51,3 +51,27 @@ ts-node controller.ts start
 ...
 ts-node controller.ts stop
 ```
+
+### Updating Packages Offline
+
+Package versions and download URLs are defined in `package_versions.json`.
+When the scripts run in online mode they will automatically download any
+package whose checksum differs from the value listed in this file. For
+systems without internet access you can pre-populate the `downloads/`
+directory with the APKs referenced in the configuration. The scripts
+verify the SHA-256 checksum of each file before installing it.
+
+To update an offline installation:
+
+1. On a machine with internet access, edit `package_versions.json` to
+   reflect the desired versions and run either setup script once so the
+   new APKs are downloaded to `android/downloads/`.
+2. Copy the updated `downloads/` directory and `package_versions.json`
+   to the target system.
+3. Run the installer with offline mode enabled:
+
+```bash
+OFFLINE=1 ./setup-playstore.sh
+```
+
+The same process applies to `setup-microg.sh`.
