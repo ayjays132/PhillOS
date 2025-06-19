@@ -9,11 +9,14 @@ import {
   CloudProvider,
 } from "../services/cloudAIService";
 import { useOnboarding } from "../hooks/useOnboarding";
+import { useTheme } from "../contexts/ThemeContext";
 
 const PhoneApp: React.FC = () => {
   const { modelPreference } = useOnboarding();
   const { status, connect, disconnect, lastAddress } = usePhone();
   const [address, setAddress] = useState(lastAddress);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [smsTo, setSmsTo] = useState("");
   const [smsBody, setSmsBody] = useState("");
   const [number, setNumber] = useState("");
@@ -74,7 +77,7 @@ const PhoneApp: React.FC = () => {
     <GlassCard className="!shadow-2xl !shadow-blue-600/30 !border-white/15 h-full flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-white/80 text-sm">
+          <span className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-800/80'}`}>
             {status.connected ? "Connected" : "Disconnected"}
           </span>
         </div>
@@ -84,12 +87,12 @@ const PhoneApp: React.FC = () => {
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="MAC"
-              className="bg-transparent text-xs border border-white/20 rounded px-1 w-24"
+              className={`bg-transparent text-xs rounded px-1 w-24 border ${isDark ? 'border-white/20 text-white' : 'border-black/30 text-gray-900'}`}
             />
           )}
           <button
             onClick={toggle}
-            className="text-xs px-2 py-1 bg-white/10 rounded text-white/80"
+            className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-white/10 text-white/80' : 'bg-black/10 text-gray-800'}`}
           >
             {status.connected ? "Disconnect" : "Connect"}
           </button>
@@ -103,7 +106,7 @@ const PhoneApp: React.FC = () => {
               onChange={(e) =>
                 setCloudProvider(e.target.value as CloudProvider)
               }
-              className="bg-white/10 border border-white/20 text-xs text-white px-1 py-0.5 rounded"
+              className={`text-xs px-1 py-0.5 rounded border ${isDark ? 'bg-white/10 border-white/20 text-white' : 'bg-white border-black/20 text-gray-900'}`}
             >
               <option value="gemini">Gemini</option>
               <option value="openai">ChatGPT</option>
@@ -113,7 +116,7 @@ const PhoneApp: React.FC = () => {
               placeholder="API Key"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              className="flex-grow px-1 py-0.5 bg-white/5 border border-white/10 rounded text-xs placeholder-white/40"
+              className={`flex-grow px-1 py-0.5 rounded text-xs placeholder-gray-500 border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-black/20 text-gray-900'}`}
             />
           </div>
         )}
@@ -122,11 +125,11 @@ const PhoneApp: React.FC = () => {
             value={smsTo}
             onChange={(e) => setSmsTo(e.target.value)}
             placeholder="To"
-            className="bg-transparent text-sm border border-white/20 rounded px-2 flex-1"
+            className={`bg-transparent text-sm rounded px-2 flex-1 border ${isDark ? 'border-white/20 text-white' : 'border-black/30 text-gray-900'}`}
           />
           <button
             onClick={suggest}
-            className="text-xs px-2 py-1 bg-white/10 rounded text-white/80"
+            className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-white/10 text-white/80' : 'bg-black/10 text-gray-800'}`}
           >
             {loading ? "..." : "Suggest"}
           </button>
@@ -135,11 +138,11 @@ const PhoneApp: React.FC = () => {
           value={smsBody}
           onChange={(e) => setSmsBody(e.target.value)}
           placeholder="Message"
-          className="bg-transparent text-sm border border-white/20 rounded px-2 py-1 w-full h-24"
+          className={`bg-transparent text-sm rounded px-2 py-1 w-full h-24 border ${isDark ? 'border-white/20 text-white' : 'border-black/30 text-gray-900'}`}
         />
         <button
           onClick={sendSms}
-          className="w-full text-xs px-2 py-1 bg-white/20 rounded text-white/80"
+          className={`w-full text-xs px-2 py-1 rounded ${isDark ? 'bg-white/20 text-white/80' : 'bg-black/20 text-gray-800'}`}
         >
           Send SMS
         </button>
@@ -149,11 +152,11 @@ const PhoneApp: React.FC = () => {
           value={number}
           onChange={(e) => setNumber(e.target.value)}
           placeholder="Number"
-          className="bg-transparent text-sm border border-white/20 rounded px-2 w-full"
+          className={`bg-transparent text-sm rounded px-2 w-full border ${isDark ? 'border-white/20 text-white' : 'border-black/30 text-gray-900'}`}
         />
         <button
           onClick={dial}
-          className="w-full text-xs px-2 py-1 bg-white/20 rounded text-white/80"
+          className={`w-full text-xs px-2 py-1 rounded ${isDark ? 'bg-white/20 text-white/80' : 'bg-black/20 text-gray-800'}`}
         >
           Call
         </button>
