@@ -44,4 +44,5 @@ uint64_t fb_get_size(void) { return fb_size; }
 uint32_t fb_get_width(void) { return fb_width; }
 uint32_t fb_get_height(void) { return fb_height; }
 
-// TODO: Add Nvidia and AMD GPU driver support in the future
+// GPU vendor detection implemented in gpu.c.
+// Future work will load vendor-specific drivers based on the detected GPU.

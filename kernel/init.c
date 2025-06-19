@@ -3,10 +3,13 @@
 #include "memory/alloc.h"
 #include "../drivers/storage/ahci.h"
 #include "../drivers/graphics/framebuffer.h"
+#include "../drivers/graphics/gpu.h"
 
 void kernel_main(void) {
     // Placeholder for kernel initialization logic
     init_physical_memory();
+    gpu_vendor_t gpu = detect_gpu_vendor();
+    (void)gpu; // currently unused
     init_framebuffer();
     init_paging();
     init_ahci();
