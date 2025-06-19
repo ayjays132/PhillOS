@@ -5,6 +5,7 @@ interface BridgeStatus {
   device?: string;
   smsStatus?: string;
   callStatus?: string;
+  signalStrength?: number;
 }
 
 async function fetchStatus(): Promise<BridgeStatus> {
@@ -14,14 +15,17 @@ async function fetchStatus(): Promise<BridgeStatus> {
 }
 
 export function usePhoneBridge() {
-  const [status, setStatus] = useState<BridgeStatus>({ connected: false });
+  const [status, setStatus] = useState<BridgeStatus>({
+    connected: false,
+    signalStrength: 0,
+  });
 
   const update = useCallback(async () => {
     try {
       const data = await fetchStatus();
       setStatus(data);
     } catch {
-      setStatus({ connected: false });
+      setStatus({ connected: false, signalStrength: 0 });
     }
   }, []);
 
