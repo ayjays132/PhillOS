@@ -1,4 +1,5 @@
 #include "init.h"
+#include "boot_info.h"
 #include "memory/paging.h"
 #include "memory/alloc.h"
 #include "memory/heap.h"
@@ -6,11 +7,19 @@
 #include "../drivers/graphics/framebuffer.h"
 #include "../drivers/graphics/gpu.h"
 
-void kernel_main(void) {
+static boot_info_t *g_boot_info = NULL;
+
+boot_info_t *boot_info_get(void)
+{
+    return g_boot_info;
+}
+
+void kernel_main(boot_info_t *boot_info) {
+    g_boot_info = boot_info;
     // Placeholder for kernel initialization logic
-    init_physical_memory();
+    init_physical_memory(boot_info);
     init_gpu_driver();
-    init_framebuffer();
+    init_framebuffer(&boot_info->fb);
     init_paging();
     init_heap();
     init_ahci();

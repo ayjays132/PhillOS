@@ -1,7 +1,5 @@
 #include "paging.h"
 #include "alloc.h"
-#include <efi.h>
-#include <efilib.h>
 #include <string.h>
 
 #define ENTRIES_PER_TABLE 512

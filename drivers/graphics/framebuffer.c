@@ -1,10 +1,8 @@
 #include "framebuffer.h"
-#include <efi.h>
-#include <efilib.h>
+#include "../../kernel/boot_info.h"
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
 
-static EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = NULL;
 static uint8_t *fb_ptr = NULL;
 static uint64_t fb_base = 0;
 static uint64_t fb_size = 0;
@@ -12,18 +10,16 @@ static uint32_t fb_width = 0;
 static uint32_t fb_height = 0;
 static uint32_t fb_pitch = 0;
 
-void init_framebuffer(void)
+void init_framebuffer(framebuffer_info_t *info)
 {
-    EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
-    EFI_STATUS status = ST->BootServices->LocateProtocol(&gop_guid, NULL, (void**)&gop);
-    if (EFI_ERROR(status) || !gop)
+    if (!info)
         return;
 
-    fb_base = gop->Mode->FrameBufferBase;
-    fb_size = gop->Mode->FrameBufferSize;
-    fb_width = gop->Mode->Info->HorizontalResolution;
-    fb_height = gop->Mode->Info->VerticalResolution;
-    fb_pitch = gop->Mode->Info->PixelsPerScanLine;
+    fb_base = info->base;
+    fb_size = info->size;
+    fb_width = info->width;
+    fb_height = info->height;
+    fb_pitch = info->pitch;
 
     map_identity_range(fb_base, fb_size);
     fb_ptr = (uint8_t*)(uintptr_t)fb_base;
