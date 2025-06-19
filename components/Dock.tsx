@@ -3,14 +3,19 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { NavItem } from '../types';
 
+import { DeviceType } from '../hooks/useDeviceType';
+
 interface DockProps {
   navItems: NavItem[];
+  deviceType?: DeviceType;
 }
 
-export const Dock: React.FC<DockProps> = ({ navItems }) => {
+export const Dock: React.FC<DockProps> = ({ navItems, deviceType = 'desktop' }) => {
+  const iconSize = deviceType === 'vr' || deviceType === 'steamdeck' ? 32 : 24;
+  const containerPadding = deviceType === 'vr' || deviceType === 'steamdeck' ? 'p-3' : 'p-2';
   return (
     <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-      <div className="flex items-center gap-2 p-2 glass-card-style bg-white/10 rounded-full shadow-2xl shadow-purple-700/50">
+      <div className={`flex items-center gap-2 ${containerPadding} glass-card-style bg-white/10 rounded-full shadow-2xl shadow-purple-700/50`}>
         {navItems.map((item) => (
           <NavLink
             key={item.id}
@@ -23,7 +28,7 @@ export const Dock: React.FC<DockProps> = ({ navItems }) => {
             }
           >
             {({ isActive }) => (
-              <item.icon size={24} className={isActive ? 'text-white' : 'text-white/80'} />
+              <item.icon size={iconSize} className={isActive ? 'text-white' : 'text-white/80'} />
             )}
           </NavLink>
         ))}

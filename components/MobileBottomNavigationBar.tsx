@@ -2,12 +2,15 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { NavItem } from '../types';
+import { DeviceType } from '../hooks/useDeviceType';
 
 interface MobileBottomNavigationBarProps {
   navItems: NavItem[];
+  deviceType?: DeviceType;
 }
 
-export const MobileBottomNavigationBar: React.FC<MobileBottomNavigationBarProps> = ({ navItems }) => {
+export const MobileBottomNavigationBar: React.FC<MobileBottomNavigationBarProps> = ({ navItems, deviceType = 'mobile' }) => {
+  const iconSize = deviceType === 'vr' || deviceType === 'steamdeck' ? 28 : 22;
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-card-style bg-white/15 !rounded-none !rounded-t-2xl shadow-2xl shadow-purple-700/50">
       <div className="flex justify-around items-center h-16">
@@ -22,7 +25,7 @@ export const MobileBottomNavigationBar: React.FC<MobileBottomNavigationBarProps>
               }`
             }
           >
-            <item.icon size={22} />
+            <item.icon size={iconSize} />
             <span className="text-xs mt-1">{item.label}</span>
           </NavLink>
         ))}

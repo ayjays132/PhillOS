@@ -10,6 +10,7 @@ import { PlaceholderAppView } from './components/PlaceholderAppView';
 import { OnboardingStepper } from './components/onboarding/OnboardingStepper';
 import { ConversationalSettingsView } from './components/settings/ConversationalSettingsView';
 import { useResponsive } from './hooks/useResponsive';
+import { useDeviceType } from './hooks/useDeviceType';
 import { useOnboarding } from './hooks/useOnboarding';
 import { NavItem } from './types';
 
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
 
 const App: React.FC = () => {
   const { isMobileLayout } = useResponsive();
+  const { deviceType } = useDeviceType();
   const { isOnboardingComplete } = useOnboarding();
   const location = useLocation();
 
@@ -42,7 +44,7 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white/90">
       {showChrome && <StatusBar />}
-      <main className={`flex-grow overflow-y-auto ${showChrome ? `p-3 pt-0 sm:p-4 ${isMobileLayout ? 'pb-20' : 'pb-4'}` : 'p-0'}`}>
+      <main className={`flex-grow overflow-y-auto ${showChrome ? `p-3 pt-0 sm:p-4 ${isMobileLayout && deviceType === 'mobile' ? 'pb-20' : 'pb-4'}` : 'p-0'}`}>
         <Routes>
           <Route path="/onboarding" element={<OnboardingStepper />} />
           <Route path="/" element={isOnboardingComplete ? <Navigate to="/home" replace /> : <Navigate to="/onboarding" replace />} />
@@ -56,10 +58,10 @@ const App: React.FC = () => {
         </Routes>
       </main>
       {showChrome && (
-        isMobileLayout ? (
-          <MobileBottomNavigationBar navItems={navItems} />
+        isMobileLayout && deviceType !== 'steamdeck' && deviceType !== 'vr' ? (
+          <MobileBottomNavigationBar navItems={navItems} deviceType={deviceType} />
         ) : (
-          <Dock navItems={navItems} />
+          <Dock navItems={navItems} deviceType={deviceType} />
         )
       )}
     </div>
