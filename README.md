@@ -14,7 +14,6 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [The "Living Glass" Design](#the-living-glass-design)
 - [Technology Stack](#technology-stack)
 - [Current Prototype Features](#current-prototype-features)
-- [Setting Up Your Gemini API Key](#setting-up-your-gemini-api-key)
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
 - [Key Architectural Components](#key-architectural-components)
@@ -57,7 +56,7 @@ The "Living Glass" aesthetic is central to PhillOS's identity, emphasizing:
 -   **TypeScript**: For static typing, enhancing code quality and developer experience.
 -   **Tailwind CSS**: A utility-first CSS framework for rapid and responsive UI development, enabling the "Living Glass" aesthetic.
 -   **Lucide React**: For a comprehensive suite of clean, modern, and customizable SVG icons.
--   **@google/genai (Gemini API)**: Used by the AI CoPilot widget for generative AI chat capabilities.
+-   **@google/genai** and **openai**: Cloud AI providers used by the AI CoPilot widget when cloud mode is enabled.
 -   **React Router (v6, HashRouter)**: For client-side navigation within the single-page application.
 
 ## Current Prototype Features
@@ -69,7 +68,7 @@ This prototype implements the following features from the PhillOS vision:
     -   Adaptive navigation: Desktop Dock and Mobile Bottom Navigation Bar.
 -   **Home Dashboard**:
     -   "Strata" system for organizing widgets into logical groups.
-    -   **AI CoPilot Widget**: Real-time chat with Gemini, demonstrating AI interaction.
+    -   **AI CoPilot Widget**: Real-time chat using Gemini or ChatGPT, demonstrating AI interaction.
     -   **User Profile Widget**: Displays username and avatar selected during onboarding.
     -   **AIShadowSearch Widget**: Mocked semantic search across system and web.
     -   **ContextStream Widget**: Mocked display of proactive AI suggestions and contextual information.
@@ -79,33 +78,20 @@ This prototype implements the following features from the PhillOS vision:
     -   Persistence of onboarding choices in `localStorage`.
 -   **Conversational Settings Interface**: A chat-like UI for settings, currently with mocked AI responses to demonstrate the interaction pattern.
 -   **Placeholder App Views**: For conceptual applications like Files, Mail, and Gaming, indicating future development areas.
--   **API Key Handling**: Visual warnings if the Gemini API key is missing or invalid.
+-   **API Key Handling**: Users provide their own API keys for Gemini or ChatGPT directly in the UI.
 
-## Setting Up Your Gemini API Key
+## Using Cloud AI Providers
 
-PhillOS leverages the Google Gemini API for its AI CoPilot feature. To enable this functionality, an API key is **required**.
+PhillOS can optionally connect to either Google Gemini or OpenAI's ChatGPT for cloud-enhanced AI features. During use, select your preferred provider and supply the API key when prompted. The key is kept only in memory for the active session and is never stored.
 
-1.  **Obtain an API Key**:
-    *   Go to [Google AI Studio](https://aistudio.google.com/).
-    *   Log in with your Google account.
-    *   Click on "Get API key" (you might find it under "API Keys" in the left navigation) and create a new API key. Keep this key secure.
+1. **Obtain an API Key**
+   * Gemini keys are available from [Google AI Studio](https://aistudio.google.com/).
+   * ChatGPT keys are available from [OpenAI](https://platform.openai.com/account/api-keys).
 
-2.  **Provide the API Key to the Application**:
-    *   The application is designed to obtain the API key **exclusively** from the environment variable `process.env.API_KEY`.
-    *   **How you set this environment variable depends on how you are running the application:**
-        *   **Using a Development Server (e.g., Vite, Next.js, Create React App):** These tools typically support `.env` files. If you adapt this project to use such a tool, create a file named `.env` in the root of the project and add your API key:
-            ```env
-            API_KEY=YOUR_GEMINI_API_KEY_HERE
-            ```
-            (Replace `YOUR_GEMINI_API_KEY_HERE` with your actual key).
-        *   **Running with a Simple Static Server (Current Setup):** The provided `index.html` and `index.tsx` structure is designed for simple static serving. Browsers do not inherently provide `process.env` from system environment variables. For the AI CoPilot to function in this basic setup:
-            *   The `geminiService.ts` file directly references `process.env.API_KEY`. For development purposes with a basic static server, you would need to ensure this variable is somehow made available to the JavaScript runtime in the browser. *This prototype, as provided, does not include a mechanism for this, and modification of `geminiService.ts` to hardcode the key is strongly discouraged and against Gemini API usage guidelines.*
-            *   The most compliant way to test this specific prototype's Gemini features with a static server would be to use a more sophisticated local server or a tool that can inject this variable, or to manually define `process = { env: { API_KEY: "YOUR_KEY" } };` in a script tag in `index.html` *before* `index.tsx` loads (for local testing only, **never for production or committed code**).
-        *   **Deployment:** When deploying the application, ensure your hosting environment allows you to set server-side environment variables which can then be passed to the client if using a framework, or adhere to the platform's secure key management.
+2. **Provide the Key at Runtime**
+   * When choosing the *Cloud-Enhanced AI* option, a field will appear asking for your key and provider. Enter the key directly in the PhillOS UI. The key is not persisted.
 
-    *   **Important**:
-        *   **Never commit your API key directly into the source code or share it publicly.**
-        *   The application (`App.tsx` and `AICoPilotWidget.tsx`) includes checks and will display a warning if the API key appears to be missing or invalid, limiting AI CoPilot functionality.
+   **Important:** Never share your API key publicly.
 
 ## Using a Local Qwen Model via Ollama
 
@@ -134,10 +120,7 @@ When you choose the *Local-First AI* option during onboarding, the CoPilot widge
     ```
     For the current setup, ensure all provided files (`index.html`, `index.tsx`, `App.tsx`, `types.ts`, `metadata.json`, and the `components/`, `hooks/`, `services/` directories) are in the same project folder.
 
-3.  **Set Up Gemini API Key**:
-    *   Follow the instructions in the [Setting Up Your Gemini API Key](#setting-up-your-gemini-api-key) section above. This is crucial for AI CoPilot functionality.
-
-4.  **Run the Application**:
+3.  **Run the Application**:
     *   **Option A (Simple Static Server):**
         You can use any simple HTTP server. If you have Node.js:
         1.  Open your terminal in the project's root directory.
@@ -149,8 +132,7 @@ When you choose the *Local-First AI* option during onboarding, the CoPilot widge
         1.  In a new directory, initialize a Vite project: `npm create vite@latest phillos-vite-wrapper -- --template react-ts`
         2.  `cd phillos-vite-wrapper`
         3.  Replace the contents of the `src` directory and the root `index.html` in `phillos-vite-wrapper` with the files from this PhillOS prototype. Adjust paths in `index.html` if necessary.
-        4.  Create a `.env` file in the root of `phillos-vite-wrapper` and add `API_KEY=YOUR_GEMINI_API_KEY_HERE`.
-        5.  Run `npm install && npm run dev`.
+        4.  Run `npm install && npm run dev`.
 
 5.  **Explore PhillOS**:
     *   You will be guided through the new, in-depth onboarding process.
@@ -190,7 +172,7 @@ When you choose the *Local-First AI* option during onboarding, the CoPilot widge
 │   ├── useOnboarding.ts    # Manages onboarding state & logic
 │   └── useResponsive.ts    # Handles responsive layout changes
 ├── services/
-│   └── geminiService.ts    # Gemini API integration logic
+│   └── cloudAIService.ts   # Gemini or ChatGPT integration logic
 ├── App.tsx                 # Main application component, routing
 ├── index.html              # Root HTML file
 ├── index.tsx               # React entry point
@@ -206,8 +188,8 @@ When you choose the *Local-First AI* option during onboarding, the CoPilot widge
 -   **`OnboardingStepper.tsx`**: Orchestrates the various steps of the user onboarding experience, dynamically rendering the current step.
 -   **`GlassCard.tsx`**: A reusable presentational component that implements the core "Living Glass" visual style (translucency, blur, custom shadows), applied to most UI panes.
 -   **`HomeDashboard.tsx`**: Renders the main dashboard layout, utilizing a "Strata" system to organize different categories of widgets.
--   **`AICoPilotWidget.tsx`**: A key interactive widget that integrates with `geminiService.ts` to provide a chat interface powered by the Google Gemini API.
--   **`geminiService.ts`**: Encapsulates all interactions with the `@google/genai` SDK, including chat session creation and message streaming.
+-   **`AICoPilotWidget.tsx`**: A key interactive widget that integrates with `cloudAIService.ts` to provide chat via Gemini or ChatGPT.
+-   **`cloudAIService.ts`**: Handles communication with the selected cloud AI provider.
 
 ## Future Vision (Conceptual)
 

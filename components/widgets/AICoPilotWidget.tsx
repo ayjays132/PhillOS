@@ -2,40 +2,40 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, AlertTriangle, Loader2 } from 'lucide-react';
 import { ChatMessage } from '../../types';
-import { createChatSession, sendMessageToChatStream } from '../../services/geminiService';
+import { createCloudChatSession, sendMessageStream, CloudProvider, CloudChatSession } from '../../services/cloudAIService';
 import { createQwenChatSession, QwenChatSession } from '../../services/qwenService';
-import type { Chat, GenerateContentResponse } from '@google/genai';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOnboarding } from '../../hooks/useOnboarding';
 
 export const AICoPilotWidget: React.FC = () => {
   const { modelPreference } = useOnboarding();
-  const [chatSession, setChatSession] = useState<Chat | QwenChatSession | null>(null);
+  const [chatSession, setChatSession] = useState<CloudChatSession | QwenChatSession | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+  const [cloudProvider, setCloudProvider] = useState<CloudProvider>('gemini');
+  const [apiKey, setApiKey] = useState('');
 
   useEffect(() => {
     if (modelPreference === 'cloud') {
-      const apiKey = process.env.API_KEY;
-      if (!apiKey || apiKey === 'YOUR_API_KEY_HERE' || apiKey.length < 10) {
+      if (!apiKey) {
         setIsApiKeyMissing(true);
-        setError('Gemini API Key is missing or invalid. Please configure it to use the AI CoPilot.');
+        setError('API key required for cloud AI.');
         return;
       }
-
-      const session = createChatSession();
+      const session = createCloudChatSession(cloudProvider, apiKey);
       if (session) {
         setChatSession(session);
         setMessages([
           { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
         ]);
+        setIsApiKeyMissing(false);
       } else {
-        setError('Failed to initialize AI CoPilot session. Make sure your API key is correctly set up.');
+        setError('Failed to initialize AI CoPilot session.');
         setIsApiKeyMissing(true);
       }
     } else {
@@ -45,7 +45,7 @@ export const AICoPilotWidget: React.FC = () => {
         { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
       ]);
     }
-  }, [modelPreference]);
+  }, [modelPreference, apiKey, cloudProvider]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,7 +69,7 @@ export const AICoPilotWidget: React.FC = () => {
 
     try {
       const stream = modelPreference === 'cloud'
-        ? await sendMessageToChatStream(chatSession as Chat, userMessage.text)
+        ? sendMessageStream(chatSession as CloudChatSession, userMessage.text)
         : (chatSession as QwenChatSession).sendMessageStream(userMessage.text);
 
       if (!stream) {
@@ -83,9 +83,7 @@ export const AICoPilotWidget: React.FC = () => {
       setMessages(prev => [...prev, { id: modelMessageId, role: 'model', text: '', timestamp: new Date() }]);
 
       for await (const chunk of stream) {
-        const chunkText = modelPreference === 'cloud'
-          ? (chunk as GenerateContentResponse).text
-          : (chunk as string);
+        const chunkText = chunk as string;
         if (chunkText) {
           modelResponseText += chunkText;
           setMessages(prev => prev.map(msg =>
@@ -106,7 +104,7 @@ export const AICoPilotWidget: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, chatSession, isApiKeyMissing, modelPreference]);
+  }, [input, isLoading, chatSession, isApiKeyMissing, modelPreference, cloudProvider, apiKey]);
 
   if (modelPreference === 'cloud' && isApiKeyMissing && !messages.some(msg => msg.id === 'initial-greeting')) {
      return (
@@ -114,7 +112,7 @@ export const AICoPilotWidget: React.FC = () => {
             <AlertTriangle size={48} className="text-red-400 mb-4" />
             <p className="text-lg font-semibold text-red-300">AI CoPilot Unavailable</p>
             <p className="text-sm text-white/70">
-                Gemini API Key is missing or invalid. Please set the <code>process.env.API_KEY</code> environment variable.
+                Enter a valid API key to use cloud AI features.
             </p>
         </div>
     );
@@ -159,6 +157,27 @@ export const AICoPilotWidget: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       {error && <p className="p-2 text-xs text-red-400 bg-red-900/30 text-center">{error}</p>}
+      {modelPreference === 'cloud' && (
+        <div className="p-3 border-t border-white/10 bg-black/10 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <select
+              value={cloudProvider}
+              onChange={e => setCloudProvider(e.target.value as CloudProvider)}
+              className="bg-white/10 border border-white/20 text-sm text-white p-2 rounded-lg focus:outline-none"
+            >
+              <option value="gemini">Gemini</option>
+              <option value="openai">ChatGPT</option>
+            </select>
+            <input
+              type="password"
+              placeholder="API Key"
+              value={apiKey}
+              onChange={e => setApiKey(e.target.value)}
+              className="flex-grow p-2 bg-white/5 border border-white/10 rounded-lg text-sm placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-cyan-400/80"
+            />
+          </div>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="p-3 border-t border-white/10 flex items-center gap-2 bg-black/10">
         <input
           type="text"
