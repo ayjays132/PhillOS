@@ -3,6 +3,7 @@ import { NavItem, WidgetOrder, PhoneSettings } from '../types';
 const WIDGET_ORDER_KEY = 'phillos_widget_order';
 const DOCK_ITEMS_KEY = 'phillos_dock_items_v1';
 const PHONE_SETTINGS_KEY = 'phillos_phone_settings_v1';
+const MEMORY_WINDOWS_KEY = 'phillos_memory_windows_v1';
 
 class StorageService {
   init() {
@@ -63,6 +64,26 @@ class StorageService {
   setPhoneSettings(settings: PhoneSettings) {
     try {
       localStorage.setItem(PHONE_SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
+      // ignore
+    }
+  }
+
+  getMemoryWindows(): any[] | null {
+    try {
+      const raw = localStorage.getItem(MEMORY_WINDOWS_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  setMemoryWindows(windows: any[]) {
+    try {
+      localStorage.setItem(MEMORY_WINDOWS_KEY, JSON.stringify(windows));
     } catch {
       // ignore
     }
