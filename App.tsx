@@ -27,8 +27,6 @@ const App: React.FC = () => {
   const { isOnboardingComplete } = useOnboarding();
   const location = useLocation();
 
-  const apiKey = process.env.API_KEY;
-  const isApiKeyMissing = !apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 10;
 
   if (!isOnboardingComplete && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
@@ -44,11 +42,6 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white/90">
       {showChrome && <StatusBar />}
-      {showChrome && isApiKeyMissing && (
-         <div className="bg-red-500 text-white p-2 text-center text-xs">
-           Warning: Gemini API Key is missing or invalid. AI CoPilot functionality will be limited. Please set <code>process.env.API_KEY</code>.
-         </div>
-      )}
       <main className={`flex-grow overflow-y-auto ${showChrome ? `p-3 pt-0 sm:p-4 ${isMobileLayout ? 'pb-20' : 'pb-4'}` : 'p-0'}`}>
         <Routes>
           <Route path="/onboarding" element={<OnboardingStepper />} />

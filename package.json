@@ -12,6 +12,7 @@
     "@google/genai": "^1.5.1",
     "lucide-react": "^0.517.0",
     "ollama": "^0.5.16",
+    "openai": "^4.22.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
