@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, AlertTriangle, Loader2 } from 'lucide-react';
+import { Send, AlertTriangle, Loader2, Mic, MicOff } from 'lucide-react';
 import { ChatMessage } from '../../types';
 import { createCloudChatSession, sendMessageStream, CloudProvider, CloudChatSession } from '../../services/cloudAIService';
 import { createQwenChatSession, QwenChatSession } from '../../services/qwenService';
+import { VoiceService, speakText } from '../../services/voiceService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -19,6 +20,10 @@ export const AICoPilotWidget: React.FC = () => {
   const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
   const [cloudProvider, setCloudProvider] = useState<CloudProvider>('gemini');
   const [apiKey, setApiKey] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const voiceServiceRef = useRef<VoiceService | null>(null);
+  const transcriptRef = useRef('');
+  if (!voiceServiceRef.current) voiceServiceRef.current = new VoiceService();
 
   useEffect(() => {
     if (modelPreference === 'cloud') {
@@ -50,6 +55,26 @@ export const AICoPilotWidget: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const startListening = () => {
+    const service = voiceServiceRef.current;
+    if (!service || isListening) return;
+    service.start((text, isFinal) => {
+      if (isFinal) {
+        setInput(prev => (prev ? prev + ' ' : '') + text);
+        transcriptRef.current = '';
+      } else {
+        setInput(prev => prev.replace(transcriptRef.current, '') + text);
+        transcriptRef.current = text;
+      }
+    });
+    setIsListening(true);
+  };
+
+  const stopListening = () => {
+    voiceServiceRef.current?.stop();
+    setIsListening(false);
+  };
 
   const handleSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
@@ -92,9 +117,10 @@ export const AICoPilotWidget: React.FC = () => {
         }
       }
       // Final update to ensure the message text is complete (though usually handled by loop)
-       setMessages(prev => prev.map(msg => 
-            msg.id === modelMessageId ? { ...msg, text: modelResponseText } : msg
-        ));
+      setMessages(prev => prev.map(msg =>
+        msg.id === modelMessageId ? { ...msg, text: modelResponseText } : msg
+      ));
+      speakText(modelResponseText);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
@@ -187,6 +213,13 @@ export const AICoPilotWidget: React.FC = () => {
           className="flex-grow p-2.5 bg-white/5 border border-white/10 rounded-lg text-sm placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-cyan-400/80 transition-shadow duration-200 focus:shadow-[0_0_15px_rgba(56,189,248,0.3)] disabled:opacity-50"
           disabled={isLoading || (modelPreference === 'cloud' && isApiKeyMissing)}
         />
+        <button
+          type="button"
+          onClick={isListening ? stopListening : startListening}
+          className={`p-2.5 ${isListening ? 'bg-red-600/80' : 'bg-cyan-600/70 hover:bg-cyan-500/70'} text-white rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/80`}
+        >
+          {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+        </button>
         <button
           type="submit"
           disabled={isLoading || !input.trim() || (modelPreference === 'cloud' && isApiKeyMissing)}

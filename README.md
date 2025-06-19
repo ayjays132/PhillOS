@@ -107,6 +107,12 @@ PhillOS supports running the AI CoPilot entirely on-device using the Qwen3‑1.7
 
 When you choose the *Local-First AI* option during onboarding, the CoPilot widget will use this local model and no API key is required.
 
+## Voice Interaction
+
+PhillOS includes optional voice input and output for the AI CoPilot. The widget features a microphone button that toggles speech recognition using the browser's built-in Web Speech API. When enabled, spoken phrases are transcribed into the chat input field. After the model responds, the reply is read aloud using speech synthesis.
+
+Most modern browsers support these APIs, but they may require an HTTPS context and user permission. If voice features are unavailable, the microphone button will have no effect.
+
 ## Getting Started
 
 1.  **Prerequisites**:
