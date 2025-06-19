@@ -1,38 +1,73 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import https from 'https';
+import os from 'os';
 
 export class ProtonLauncher {
   constructor(options = {}) {
     this.options = options;
-  }
-
-  resolveProtonPath() {
-    if (this.options.wineBinary) {
-      return this.options.wineBinary;
-    }
     if (!this.options.protonDir) {
-      return 'wine';
+      this.options.protonDir = path.resolve(__dirname, '../dist/proton');
     }
-    const base = this.options.protonDir;
-    if (this.options.version) {
-      return path.join(base, this.options.version, 'proton');
-    }
-    return path.join(base, 'proton');
   }
 
-  launch(executable, args = []) {
+  async downloadProton(base, version) {
+    const url = process.env.PROTON_DOWNLOAD_URL ||
+      `https://steamcdn-a.akamaihd.net/client/${version}.tar.gz`;
+    await fs.promises.mkdir(base, { recursive: true });
+    const tmp = path.join(os.tmpdir(), `${version}.tar.gz`);
+    await new Promise((resolve, reject) => {
+      const file = fs.createWriteStream(tmp);
+      https.get(url, res => {
+        if ((res.statusCode || 0) >= 400) {
+          reject(new Error(`Failed to download Proton: ${res.statusCode}`));
+          return;
+        }
+        res.pipe(file);
+        file.on('finish', () => file.close(resolve));
+      }).on('error', reject);
+    });
+    await new Promise((resolve, reject) => {
+      const tar = spawn('tar', ['-xf', tmp, '-C', base]);
+      tar.on('error', reject);
+      tar.on('exit', code => {
+        code === 0 ? resolve() : reject(new Error(`tar exited with code ${code}`));
+      });
+    });
+  }
+
+  async resolveProtonPath() {
+    const base = this.options.protonDir;
+    const version = this.options.version || 'Proton-8.0';
+    const protonPath = path.join(base, version, 'proton');
+    if (fs.existsSync(protonPath)) {
+      return protonPath;
+    }
+    try {
+      await this.downloadProton(base, version);
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+    return fs.existsSync(protonPath) ? protonPath : null;
+  }
+
+  async launch(executable, args = []) {
     const resolvedExe = path.resolve(executable);
     if (!fs.existsSync(resolvedExe) || !fs.statSync(resolvedExe).isFile()) {
-      return Promise.reject(new Error(`Executable not found: ${executable}`));
+      throw new Error(`Executable not found: ${executable}`);
     }
 
     const unsafe = /[;&|`$><]/;
     if (args.some(a => unsafe.test(a))) {
-      return Promise.reject(new Error('Unsafe arguments detected'));
+      throw new Error('Unsafe arguments detected');
     }
 
-    const runner = this.resolveProtonPath();
+    let runner = await this.resolveProtonPath();
+    if (!runner) {
+      runner = this.options.wineBinary || 'wine';
+    }
     const env = { ...process.env };
     if (this.options.prefix) {
       env.WINEPREFIX = path.resolve(this.options.prefix);
@@ -41,7 +76,7 @@ export class ProtonLauncher {
       const child = spawn(runner, [resolvedExe, ...args], { env, stdio: 'inherit' });
       child.on('error', reject);
       child.on('exit', code => {
-        code === 0 ? resolve() : reject(new Error(`Proton exited with code ${code}`));
+        code === 0 ? resolve() : reject(new Error(`${runner} exited with code ${code}`));
       });
     });
   }
