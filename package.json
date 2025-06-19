@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "server": "node backend/server.js"
+    "server": "node backend/server.js",
+    "phone-bridge": "node services/phoneBridge/server.js"
   },
   "dependencies": {
     "@google/genai": "^1.5.1",

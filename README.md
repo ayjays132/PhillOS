@@ -429,9 +429,13 @@ Basic phone integration requires the following hardware:
 - SIM card slot connected to a compatible modem
 - Bluetooth 4.0 or newer controller
 
-The drivers under `drivers/phone/` are only stubs. Building the OS with these files included will not enable real phone functionality yet, but the React UI exposes SMS and call features through `phoneService.ts` for future experimentation.
+The drivers under `drivers/phone/` are only stubs. Building the OS with these files included will not enable real phone functionality yet, but a Node service in `services/phoneBridge/` can relay calls, SMS and notifications from a paired phone. Start it with:
 
-After building the project, open the **Phone Status** widget on the dashboard to view simulated signal strength and Bluetooth state.
+```bash
+npm run phone-bridge
+```
+
+Enter your phone's Bluetooth MAC address in the **Phone Status** widget and press **Connect**. The service relies on `bluetoothctl` so you can also pair manually. Once paired the bridge works entirely offline over the local Bluetooth link.
 
 ## License
 
