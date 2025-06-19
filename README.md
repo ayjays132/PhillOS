@@ -274,6 +274,18 @@ qemu-system-x86_64 -drive format=raw,file=fat:rw:dist/bootloader \
 
 This starts QEMU with the generated EFI file as the boot volume.
 
+### Boot Arguments
+
+The bootloader forwards its command line to the kernel. A new parameter allows
+pre‑allocating memory for AI services:
+
+```bash
+ai_mem=256
+```
+
+The value is interpreted in MiB. Reserve enough memory for both games and AI
+tasks by adjusting this number as needed.
+
 ### AHCI Storage Driver
 
 The kernel contains a very small AHCI driver used only during early boot.  It

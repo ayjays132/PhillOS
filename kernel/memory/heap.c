@@ -11,6 +11,9 @@ typedef struct heap_block {
 } heap_block_t;
 
 static heap_block_t *heap_head = NULL;
+static heap_block_t *ai_heap_head = NULL;
+
+static void split_block(heap_block_t *blk, size_t size);
 
 static void *alloc_new_page(void)
 {
@@ -24,9 +27,58 @@ static void *alloc_new_page(void)
     return blk;
 }
 
+static void init_heap_region(void *base, size_t size, heap_block_t **head)
+{
+    if (!base || size <= sizeof(heap_block_t))
+        return;
+    heap_block_t *blk = (heap_block_t *)base;
+    blk->size = size - sizeof(heap_block_t);
+    blk->next = NULL;
+    blk->free = 1;
+    *head = blk;
+}
+
 void init_heap(void)
 {
     heap_head = alloc_new_page();
+}
+
+void init_ai_heap(void *base, size_t size)
+{
+    init_heap_region(base, size, &ai_heap_head);
+}
+
+static void *heap_alloc(heap_block_t **head, size_t size, int grow)
+{
+    if (!size)
+        return NULL;
+    size = (size + 7) & ~7UL;
+    heap_block_t *blk = *head;
+    heap_block_t *prev = NULL;
+    while (blk) {
+        if (blk->free && blk->size >= size) {
+            split_block(blk, size);
+            blk->free = 0;
+            return (uint8_t *)blk + sizeof(heap_block_t);
+        }
+        prev = blk;
+        blk = blk->next;
+    }
+    if (!grow)
+        return NULL;
+    heap_block_t *new_blk = alloc_new_page();
+    if (!new_blk)
+        return NULL;
+    if (prev)
+        prev->next = new_blk;
+    else
+        *head = new_blk;
+    if (new_blk->size >= size) {
+        split_block(new_blk, size);
+        new_blk->free = 0;
+        return (uint8_t *)new_blk + sizeof(heap_block_t);
+    }
+    return NULL;
 }
 
 static void split_block(heap_block_t *blk, size_t size)
@@ -43,35 +95,12 @@ static void split_block(heap_block_t *blk, size_t size)
 
 void *kmalloc(size_t size)
 {
-    if (!size)
-        return NULL;
-    size = (size + 7) & ~7UL; // align to 8 bytes
-    heap_block_t *blk = heap_head;
-    heap_block_t *prev = NULL;
-    while (blk) {
-        if (blk->free && blk->size >= size) {
-            split_block(blk, size);
-            blk->free = 0;
-            return (uint8_t *)blk + sizeof(heap_block_t);
-        }
-        prev = blk;
-        blk = blk->next;
-    }
-    // no suitable block, allocate new page
-    heap_block_t *new_blk = alloc_new_page();
-    if (!new_blk)
-        return NULL;
-    if (prev)
-        prev->next = new_blk;
-    else
-        heap_head = new_blk;
-    if (new_blk->size >= size) {
-        split_block(new_blk, size);
-        new_blk->free = 0;
-        return (uint8_t *)new_blk + sizeof(heap_block_t);
-    }
-    // not enough even after a new page (should not happen)
-    return NULL;
+    return heap_alloc(&heap_head, size, 1);
+}
+
+void *ai_malloc(size_t size)
+{
+    return heap_alloc(&ai_heap_head, size, 0);
 }
 
 static void merge_next(heap_block_t *blk)
@@ -84,17 +113,26 @@ static void merge_next(heap_block_t *blk)
     }
 }
 
-void kfree(void *ptr)
+static void heap_free(heap_block_t **head, void *ptr)
 {
     if (!ptr)
         return;
     heap_block_t *blk = (heap_block_t *)((uint8_t *)ptr - sizeof(heap_block_t));
     blk->free = 1;
     merge_next(blk);
-    // try to merge with previous
-    heap_block_t *iter = heap_head;
+    heap_block_t *iter = *head;
     while (iter && iter->next && iter->next != blk)
         iter = iter->next;
     if (iter && iter->next == blk && iter->free)
         merge_next(iter);
+}
+
+void kfree(void *ptr)
+{
+    heap_free(&heap_head, ptr);
+}
+
+void ai_free(void *ptr)
+{
+    heap_free(&ai_heap_head, ptr);
 }

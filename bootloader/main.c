@@ -3,6 +3,35 @@
 #include "init.h"
 #include "../kernel/boot_info.h"
 
+static UINTN parse_ai_pages(const char *cmd)
+{
+    const char *p = cmd;
+    while (*p) {
+        while (*p == ' ')
+            p++;
+        if (!*p)
+            break;
+        if (p[0]=='a' && p[1]=='i' && p[2]=='_' && p[3]=='m' && p[4]=='e' && p[5]=='m' && p[6]=='=') {
+            p += 7;
+            UINTN val = 0;
+            while (*p >= '0' && *p <= '9') {
+                val = val * 10 + (*p - '0');
+                p++;
+            }
+            if (*p=='G' || *p=='g') {
+                val *= 256 * 1024;
+            } else {
+                /* default MiB */
+                val *= 256;
+            }
+            return val;
+        }
+        while (*p && *p != ' ')
+            p++;
+    }
+    return 0;
+}
+
 typedef struct {
     unsigned char e_ident[16];
     uint16_t e_type;
@@ -146,6 +175,37 @@ static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
         return status;
     SetMem(info, 0, sizeof(boot_info_t));
 
+    /* Obtain boot arguments early */
+    EFI_LOADED_IMAGE *li;
+    EFI_GUID li_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+    status = uefi_call_wrapper(BS->HandleProtocol, 3, image, &li_guid, (void**)&li);
+    char cmdline_buf[128];
+    if (!EFI_ERROR(status) && li && li->LoadOptionsSize > 0) {
+        UINTN count = li->LoadOptionsSize / sizeof(CHAR16);
+        UINTN i;
+        for (i = 0; i < count - 1 && i < sizeof(cmdline_buf) - 1; i++) {
+            CHAR16 c = ((CHAR16*)li->LoadOptions)[i];
+            if (c == L'\0')
+                break;
+            cmdline_buf[i] = (char)c;
+        }
+        cmdline_buf[i] = '\0';
+    } else {
+        cmdline_buf[0] = '\0';
+    }
+    CopyMem(info->cmdline, cmdline_buf, sizeof(info->cmdline));
+
+    UINTN ai_pages = parse_ai_pages(cmdline_buf);
+    if (ai_pages) {
+        EFI_PHYSICAL_ADDRESS ai_base = 0;
+        status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages,
+                                   EfiLoaderData, ai_pages, &ai_base);
+        if (!EFI_ERROR(status)) {
+            info->ai_base = ai_base;
+            info->ai_size = ai_pages * 4096;
+        }
+    }
+
     EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
     EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
     status = uefi_call_wrapper(BS->LocateProtocol, 3, &gop_guid, NULL, (void**)&gop);
@@ -177,24 +237,6 @@ static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
     info->mmap_size = map_size;
     info->mmap_desc_size = desc_size;
     info->mmap_key = map_key;
-
-    /* Copy boot arguments from the EFI loader */
-    EFI_LOADED_IMAGE *li;
-    EFI_GUID li_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
-    status = uefi_call_wrapper(BS->HandleProtocol, 3, image, &li_guid, (void**)&li);
-    if (!EFI_ERROR(status) && li && li->LoadOptionsSize > 0) {
-        UINTN count = li->LoadOptionsSize / sizeof(CHAR16);
-        UINTN i;
-        for (i = 0; i < count - 1 && i < sizeof(info->cmdline) - 1; i++) {
-            CHAR16 c = ((CHAR16*)li->LoadOptions)[i];
-            if (c == L'\0')
-                break;
-            info->cmdline[i] = (char)c;
-        }
-        info->cmdline[i] = '\0';
-    } else {
-        info->cmdline[0] = '\0';
-    }
 
     *out_info = info;
     return EFI_SUCCESS;
