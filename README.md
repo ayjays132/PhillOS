@@ -399,6 +399,25 @@ npm run server
 
 In the UI open the **Proton Launcher** widget, supply the executable path and Proton version, and optionally check **Use Wine if Proton missing**.
 
+### API Usage
+
+The backend exposes a POST `/api/launch-proton` endpoint. Send a JSON body with
+the path to the executable and optional Proton settings:
+
+```bash
+curl -X POST http://localhost:3001/api/launch-proton \
+  -H "Content-Type: application/json" \
+  -d '{
+    "path": "/games/Foo/Game.exe",
+    "version": "Proton-8.0",
+    "prefix": "~/.local/share/proton-prefixes/foo"
+  }'
+```
+
+The server remembers the last used `version` and `prefix` for each executable in
+`backend/protonSettings.json`. Subsequent requests may omit these fields to reuse
+the stored values.
+
 ## PWA Cache Management
 
 PhillOS now ships with a basic service worker. If you make changes to the UI and deploy a new build, your browser may continue using cached files until the service worker updates.

@@ -59,7 +59,13 @@ export class ProtonLauncher {
     return fs.existsSync(protonPath) ? protonPath : null;
   }
 
-  async launch(executable: string, args: string[] = []): Promise<void> {
+  async launch(
+    executable: string,
+    args: string[] = [],
+    opts: Partial<Pick<ProtonOptions, 'version' | 'prefix'>> = {}
+  ): Promise<void> {
+    if (opts.version) this.options.version = opts.version;
+    if (opts.prefix) this.options.prefix = opts.prefix;
     const resolvedExe = path.resolve(executable);
     if (!fs.existsSync(resolvedExe) || !fs.statSync(resolvedExe).isFile()) {
       throw new Error(`Executable not found: ${executable}`);

@@ -1,19 +1,45 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
 import { createProtonLauncher } from './protonLauncher.js';
+
+const SETTINGS_FILE = path.resolve(__dirname, 'protonSettings.json');
+
+function loadSettings() {
+  try {
+    return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+function saveSettings(data) {
+  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
+}
 
 const app = express();
 app.use(express.json());
 
 app.post('/api/launch-proton', async (req, res) => {
-  const { path, version, prefix, wine } = req.body || {};
+  let { path: exePath, version, prefix, wine } = req.body || {};
 
-  if (!path) {
+  if (!exePath) {
     return res.status(400).json({ error: 'path required' });
   }
 
+  const settings = loadSettings();
+  const key = path.resolve(exePath);
+  const stored = settings[key] || {};
+
+  version = version || stored.version;
+  prefix = prefix || stored.prefix;
+  wine = wine || stored.wineBinary;
+
   try {
     const launcher = createProtonLauncher({ version, prefix, wineBinary: wine });
-    await launcher.launch(path);
+    await launcher.launch(exePath);
+    settings[key] = { version, prefix, wineBinary: wine };
+    saveSettings(settings);
     res.json({ success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to launch';
