@@ -95,14 +95,15 @@ PhillOS can optionally connect to either Google Gemini or OpenAI's ChatGPT for c
 
 ## Using a Local Qwen Model via Ollama
 
-PhillOS supports running the AI CoPilot entirely on-device using the Qwen3‑1.7B model. This requires [Ollama](https://ollama.com/) to be installed locally.
+PhillOS supports running the AI CoPilot entirely on-device using the Qwen3‑1.7B model. This requires [Ollama](https://ollama.com/) to be installed locally. By default the UI connects to the `qwen3:1.7b` model, but you can override this by setting the `VITE_LOCAL_AI_MODEL` environment variable when building or running the app.
 
 1. **Install Ollama**
     * Follow the instructions for your platform at <https://ollama.com/download> and ensure `ollama` is available on your `PATH`.
 2. **Download the Qwen model**
-    * Run `ollama pull qwen:1.7b` to download the model files.
+    * Run `ollama pull qwen3:1.7b` (or your chosen model) to download the model files.
 3. **Start the Ollama service**
     * Launch `ollama serve` in a terminal. The PhillOS UI will connect to `http://localhost:11434` by default.
+    * If you pulled a model with a different name, set `VITE_LOCAL_AI_MODEL` to that name when running or building the app.
 
 When you choose the *Local-First AI* option during onboarding, the CoPilot widget will use this local model and no API key is required.
 
