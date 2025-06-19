@@ -1,6 +1,7 @@
 #include "init.h"
 #include "memory/paging.h"
 #include "memory/alloc.h"
+#include "memory/heap.h"
 #include "../drivers/storage/ahci.h"
 #include "../drivers/graphics/framebuffer.h"
 #include "../drivers/graphics/gpu.h"
@@ -11,6 +12,7 @@ void kernel_main(void) {
     init_gpu_driver();
     init_framebuffer();
     init_paging();
+    init_heap();
     init_ahci();
     fb_draw_pixel(10, 10, 0x00FF0000); // draw red pixel for debug
     // Kernel is now initialized
