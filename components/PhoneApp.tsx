@@ -3,14 +3,19 @@ import { GlassCard } from './GlassCard';
 import { phoneService } from '../services/phoneService';
 import { usePhoneBridge } from '../hooks/usePhoneBridge';
 import { createQwenChatSession } from '../services/qwenService';
+import { createCloudChatSession, sendMessageStream, CloudProvider } from '../services/cloudAIService';
+import { useOnboarding } from '../hooks/useOnboarding';
 
 const PhoneApp: React.FC = () => {
+  const { modelPreference } = useOnboarding();
   const { status, connect, disconnect } = usePhoneBridge();
   const [address, setAddress] = useState('');
   const [smsTo, setSmsTo] = useState('');
   const [smsBody, setSmsBody] = useState('');
   const [number, setNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cloudProvider, setCloudProvider] = useState<CloudProvider>('gemini');
+  const [apiKey, setApiKey] = useState('');
 
   const toggle = () => {
     if (status.connected) {
@@ -34,12 +39,24 @@ const PhoneApp: React.FC = () => {
   const suggest = async () => {
     setLoading(true);
     try {
-      const session = await createQwenChatSession();
       let text = '';
-      for await (const chunk of session.sendMessageStream(
-        `Compose a short SMS: ${smsBody || ''}`
-      )) {
-        text += chunk;
+      if (modelPreference === 'cloud') {
+        if (!apiKey) throw new Error('API key required for cloud AI');
+        const session = await createCloudChatSession(cloudProvider, apiKey);
+        if (!session) throw new Error('Failed to initialize cloud AI session');
+        for await (const chunk of sendMessageStream(
+          session,
+          `Compose a short SMS: ${smsBody || ''}`
+        )) {
+          text += chunk;
+        }
+      } else {
+        const session = await createQwenChatSession();
+        for await (const chunk of session.sendMessageStream(
+          `Compose a short SMS: ${smsBody || ''}`
+        )) {
+          text += chunk;
+        }
       }
       setSmsBody(text.trim());
     } catch (err) {
@@ -75,6 +92,25 @@ const PhoneApp: React.FC = () => {
         </div>
       </div>
       <div className="space-y-3">
+        {modelPreference === 'cloud' && (
+          <div className="flex items-center gap-2">
+            <select
+              value={cloudProvider}
+              onChange={e => setCloudProvider(e.target.value as CloudProvider)}
+              className="bg-white/10 border border-white/20 text-xs text-white px-1 py-0.5 rounded"
+            >
+              <option value="gemini">Gemini</option>
+              <option value="openai">ChatGPT</option>
+            </select>
+            <input
+              type="password"
+              placeholder="API Key"
+              value={apiKey}
+              onChange={e => setApiKey(e.target.value)}
+              className="flex-grow px-1 py-0.5 bg-white/5 border border-white/10 rounded text-xs placeholder-white/40"
+            />
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <input
             value={smsTo}
