@@ -1,4 +1,8 @@
 #include "gpu.h"
+#include "nvidia.h"
+#include "amd.h"
+#include "intel.h"
+#include "../../kernel/debug.h"
 
 static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
                                   uint8_t func, uint8_t offset)
@@ -14,7 +18,7 @@ static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
     return data;
 }
 
-/* Scan PCI bus for Nvidia or AMD GPUs */
+/* Scan PCI bus for common GPU vendors */
 gpu_vendor_t detect_gpu_vendor(void)
 {
     for (uint8_t bus = 0; bus < 256; bus++) {
@@ -32,7 +36,39 @@ gpu_vendor_t detect_gpu_vendor(void)
                 return GPU_VENDOR_NVIDIA;
             if (vendor == 0x1002)
                 return GPU_VENDOR_AMD;
+            if (vendor == 0x8086)
+                return GPU_VENDOR_INTEL;
         }
     }
     return GPU_VENDOR_UNKNOWN;
+}
+
+void init_gpu_driver(void)
+{
+    gpu_vendor_t vendor = detect_gpu_vendor();
+    const char *name = "Unknown";
+    gpu_driver_t *drv = NULL;
+    switch (vendor) {
+    case GPU_VENDOR_NVIDIA:
+        name = "Nvidia";
+        drv = &nvidia_driver;
+        break;
+    case GPU_VENDOR_AMD:
+        name = "AMD";
+        drv = &amd_driver;
+        break;
+    case GPU_VENDOR_INTEL:
+        name = "Intel";
+        drv = &intel_driver;
+        break;
+    default:
+        break;
+    }
+
+    debug_puts("GPU vendor: ");
+    debug_puts(name);
+    debug_putc('\n');
+
+    if (drv && drv->init)
+        drv->init();
 }
