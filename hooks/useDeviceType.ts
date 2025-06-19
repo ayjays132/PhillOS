@@ -31,38 +31,48 @@ export function useDeviceType(): DeviceInfo {
     const updateTouch = () => {
       setHasTouch(navigator.maxTouchPoints > 0);
     };
-
-    const ua = navigator.userAgent;
-    if (STEAM_DECK_UA_REGEX.test(ua)) {
-      setDeviceType('steamdeck');
-      return;
-    }
-    if (MOBILE_UA_REGEX.test(ua) || window.innerWidth < 768) {
-      setDeviceType('mobile');
-      return;
-    }
-    if ((navigator as any).xr && typeof (navigator as any).xr.isSessionSupported === 'function') {
-      (navigator as any).xr.isSessionSupported('immersive-vr').then((supported: boolean) => {
-        if (supported) {
-          setDeviceType('vr');
-        }
-      }).catch(() => {
+    const updateDeviceType = () => {
+      const ua = navigator.userAgent;
+      if (STEAM_DECK_UA_REGEX.test(ua)) {
+        setDeviceType('steamdeck');
+        return;
+      }
+      if (MOBILE_UA_REGEX.test(ua) || window.innerWidth < 768) {
+        setDeviceType('mobile');
+        return;
+      }
+      if ((navigator as any).xr && typeof (navigator as any).xr.isSessionSupported === 'function') {
+        (navigator as any).xr.isSessionSupported('immersive-vr')
+          .then((supported: boolean) => {
+            if (supported) {
+              setDeviceType('vr');
+            } else {
+              setDeviceType('desktop');
+            }
+          })
+          .catch(() => setDeviceType('desktop'));
+      } else {
         setDeviceType('desktop');
-      });
-    }
+      }
+    };
+
+    const onResizeOrOrientation = () => {
+      updateOrientation();
+      updateDeviceType();
+    };
 
     updateGamepad();
     updateOrientation();
     updateTouch();
-    const onResize = () => updateOrientation();
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
+    updateDeviceType();
+    window.addEventListener('resize', onResizeOrOrientation);
+    window.addEventListener('orientationchange', onResizeOrOrientation);
     window.addEventListener('gamepadconnected', updateGamepad);
     window.addEventListener('gamepaddisconnected', updateGamepad);
     window.addEventListener('pointerdown', updateTouch, true);
     return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
+      window.removeEventListener('resize', onResizeOrOrientation);
+      window.removeEventListener('orientationchange', onResizeOrOrientation);
       window.removeEventListener('gamepadconnected', updateGamepad);
       window.removeEventListener('gamepaddisconnected', updateGamepad);
       window.removeEventListener('pointerdown', updateTouch, true);
