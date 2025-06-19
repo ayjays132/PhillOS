@@ -445,7 +445,29 @@ To force the latest version:
 1. Open the browser's dev tools and navigate to **Application → Service Workers**.
 2. Click **Unregister** or check **Update on reload** and refresh the page.
 3. Alternatively, clear site data to remove all cached files.
-4. You can also open the *Offline & Updates* widget on the dashboard and use the **Check for Updates** or **Clear Cache** buttons.
+
+## Phone integration
+
+1. Build the native helper and copy it next to `package.json`:
+
+   ```bash
+   make -C drivers/phone
+   cp drivers/phone/libphone.so .
+   ```
+
+2. Run the bridge and backend in separate terminals:
+
+   ```bash
+   npm run phone-bridge
+   npm run server
+   ```
+
+3. If the modem or Bluetooth connection fails:
+   - Check `dmesg` for modem errors and confirm the serial device path.
+   - Use `bluetoothctl` to pair manually and verify the controller is powered.
+
+
+Refer to the next section for hardware requirements and more details.
 
 ## Phone Hardware Requirements & Usage
 
