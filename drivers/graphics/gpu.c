@@ -4,6 +4,7 @@
 #include "intel.h"
 #include "vkd3d.h"
 #include "../../kernel/debug.h"
+#include "../../kernel/boot_info.h"
 
 static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
                                   uint8_t func, uint8_t offset)
@@ -51,9 +52,56 @@ gpu_driver_t *gpu_get_active_driver(void)
     return active_driver;
 }
 
+static int str_eq(const char *a, const char *b)
+{
+    while (*a && *b) {
+        if (*a != *b)
+            return 0;
+        a++; b++;
+    }
+    return *a == 0 && *b == 0;
+}
+
+static const char *get_cmdline(void)
+{
+    extern boot_info_t *boot_info_get(void);
+    boot_info_t *info = boot_info_get();
+    return info ? info->cmdline : "";
+}
+
+static gpu_vendor_t parse_gpu_param(void)
+{
+    const char *cmd = get_cmdline();
+    const char *p = cmd;
+    while (*p) {
+        while (*p == ' ')
+            p++;
+        if (!*p)
+            break;
+        if (p[0]=='g' && p[1]=='p' && p[2]=='u' && p[3]=='=') {
+            p += 4;
+            if (str_eq(p, "none"))
+                return GPU_VENDOR_UNKNOWN;
+            if (str_eq(p, "nvidia"))
+                return GPU_VENDOR_NVIDIA;
+            if (str_eq(p, "amd"))
+                return GPU_VENDOR_AMD;
+            if (str_eq(p, "intel"))
+                return GPU_VENDOR_INTEL;
+            /* unrecognized => auto */
+            break;
+        }
+        while (*p && *p != ' ')
+            p++;
+    }
+    return (gpu_vendor_t)-1; /* auto */
+}
+
 void init_gpu_driver(void)
 {
-    gpu_vendor_t vendor = detect_gpu_vendor();
+    gpu_vendor_t vendor = parse_gpu_param();
+    if (vendor == (gpu_vendor_t)-1)
+        vendor = detect_gpu_vendor();
     const char *name = "Unknown";
     gpu_driver_t *drv = NULL;
     switch (vendor) {
