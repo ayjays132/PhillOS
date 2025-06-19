@@ -4,6 +4,16 @@ import { ChatMessage } from '../types';
 // Allow overriding the local model via Vite env variable.
 // Default to the Qwen3-1.7B model as recommended in the design docs.
 const MODEL = import.meta.env.VITE_LOCAL_AI_MODEL || 'qwen3:1.7b';
+const OLLAMA_URL = 'http://localhost:11434';
+
+export const verifyOllamaAvailable = async () => {
+  try {
+    const res = await fetch(`${OLLAMA_URL}/api/version`);
+    if (!res.ok) throw new Error('Server responded with status ' + res.status);
+  } catch (err) {
+    throw new Error('Ollama server not reachable');
+  }
+};
 
 export class QwenChatSession {
   private history: { role: 'user' | 'assistant' | 'system'; content: string }[] = [];
@@ -31,4 +41,7 @@ export class QwenChatSession {
   }
 }
 
-export const createQwenChatSession = (history?: ChatMessage[]) => new QwenChatSession(history);
+export const createQwenChatSession = async (history?: ChatMessage[]) => {
+  await verifyOllamaAvailable();
+  return new QwenChatSession(history);
+};

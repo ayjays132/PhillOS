@@ -53,12 +53,18 @@ export const AICoPilotWidget: React.FC = () => {
           setIsApiKeyMissing(true);
         }
       } else {
-        const session = createQwenChatSession();
-        if (mounted) {
-          setChatSession(session);
-          setMessages([
-            { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
-          ]);
+        try {
+          const session = await createQwenChatSession();
+          if (mounted) {
+            setChatSession(session);
+            setMessages([
+              { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
+            ]);
+          }
+        } catch (err) {
+          if (mounted) {
+            setError('Ollama server not found. Start `ollama serve`.');
+          }
         }
       }
     };
