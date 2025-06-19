@@ -6,9 +6,16 @@
 typedef enum {
     GPU_VENDOR_UNKNOWN = 0,
     GPU_VENDOR_NVIDIA,
-    GPU_VENDOR_AMD
+    GPU_VENDOR_AMD,
+    GPU_VENDOR_INTEL
 } gpu_vendor_t;
 
+typedef struct {
+    gpu_vendor_t vendor;
+    void (*init)(void);
+} gpu_driver_t;
+
 gpu_vendor_t detect_gpu_vendor(void);
+void init_gpu_driver(void);
 
 #endif // PHILLOS_GPU_H

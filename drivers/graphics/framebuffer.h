@@ -10,5 +10,6 @@ uint64_t fb_get_base(void);
 uint64_t fb_get_size(void);
 uint32_t fb_get_width(void);
 uint32_t fb_get_height(void);
+uint32_t fb_get_pitch(void);
 
 #endif // PHILLOS_FRAMEBUFFER_H
