@@ -5,66 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PhillOS Concept</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style type="text/tailwindcss">
-    @layer base {
-      html.theme-dark body {
-        @apply bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white/90 antialiased;
-      }
-      html.theme-light body {
-        @apply bg-gradient-to-br from-white via-gray-200 to-blue-300 text-gray-900 antialiased;
-      }
-    }
-    @layer utilities {
-      .glass-card-style {
-        @apply backdrop-blur-3xl border transition-all duration-300 ease-out;
-      }
-      html.theme-dark .glass-card-style {
-        @apply border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.04),inset_0_0_10px_rgba(192,132,252,0.12)];
-      }
-      html.theme-light .glass-card-style {
-        @apply border-black/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.04),inset_0_0_10px_rgba(99,102,241,0.12)];
-      }
-      .glass-card-hover {
-        @apply hover:!shadow-2xl hover:!shadow-cyan-500/40 hover:scale-[1.01];
-      }
-    }
-    @keyframes pulse-slow {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-    @keyframes bounce-slow {
-      0%, 100% {
-        transform: translateY(-5%);
-        animation-timing-function: cubic-bezier(0.8,0,1,1);
-      }
-      50% {
-        transform: translateY(0);
-        animation-timing-function: cubic-bezier(0,0,0.2,1);
-      }
-    }
-    .animate-pulse-slow {
-      animation: pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    .animate-bounce-slow {
-      animation: bounce-slow 1.5s infinite;
-    }
-  </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.517.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.6.2",
-    "@google/genai": "https://esm.sh/@google/genai@^1.5.1",
-    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
-    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
-    "openai": "https://esm.sh/openai@^4.22.1"
-  }
-}
-</script>
+  <link rel="stylesheet" href="/index.css">
 </head>
 <body>
   <div id="root"></div>
