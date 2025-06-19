@@ -19,6 +19,7 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [Project Structure](#project-structure)
 - [Key Architectural Components](#key-architectural-components)
 - [Future Vision (Conceptual)](#future-vision-conceptual)
+- [Android Container (Experimental)](#android-container-experimental)
 - [License](#license)
 
 ## Introduction
@@ -319,6 +320,14 @@ This prototype serves as a visual and interactive demonstration of the PhillOS c
 -   **True Conversational Settings** allowing users to configure the OS using natural language, powered by AI.
 -   Robust **Security AI** with real-time threat detection, adaptive firewalls, and secure enclaves.
 -   And much more, all aiming to create a truly personalized, efficient, and engaging computing experience that learns and adapts to the user.
+
+## Android Container (Experimental)
+
+Early work has begun on running a full Android environment inside a container. The
+[android directory](android/) contains a small controller script written in TypeScript
+that will eventually handle starting the container and forwarding display and input.
+Play Store compatibility requires additional steps such as installing Google Play
+services or microG. This subsystem is purely a placeholder for now.
 
 ## PWA Cache Management
 
