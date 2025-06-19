@@ -12,14 +12,17 @@ export const ProtonLauncher: React.FC = () => {
   const launch = async () => {
     setMessage('Launching...');
     try {
-      // In a full implementation this would call a backend API which runs
-      // the executable using the Proton service. For now we simply log the
-      // selected options.
-      console.log('Launch', { exePath, protonVersion, prefix });
-      setMessage('Launch command sent');
+      const res = await fetch('/api/launch-proton', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: exePath, version: protonVersion, prefix })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to launch');
+      setMessage('Proton launched successfully');
     } catch (err: any) {
       console.error(err);
-      setMessage('Failed to launch game');
+      setMessage(err.message || 'Failed to launch game');
     }
   };
 
