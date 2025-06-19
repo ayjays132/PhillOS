@@ -5,18 +5,43 @@ export interface SmsMessage {
 
 class PhoneService {
   async sendSms(message: SmsMessage): Promise<boolean> {
-    console.log('sendSms stub', message);
-    return true;
+    try {
+      const res = await fetch('/phonebridge/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(message),
+      });
+      return res.ok;
+    } catch (err) {
+      console.error('sendSms failed', err);
+      return false;
+    }
   }
 
   async makeCall(number: string): Promise<boolean> {
-    console.log('makeCall stub', number);
-    return true;
+    try {
+      const res = await fetch('/phonebridge/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number }),
+      });
+      return res.ok;
+    } catch (err) {
+      console.error('makeCall failed', err);
+      return false;
+    }
   }
 
   async getSignalStrength(): Promise<number> {
-    console.log('getSignalStrength stub');
-    return 0;
+    try {
+      const res = await fetch('/phonebridge/status');
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.signalStrength || 0;
+    } catch (err) {
+      console.error('getSignalStrength failed', err);
+      return 0;
+    }
   }
 }
 

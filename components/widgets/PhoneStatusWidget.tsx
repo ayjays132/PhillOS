@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, Bluetooth } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { usePhoneBridge } from '../../hooks/usePhoneBridge';
 
 export const PhoneStatusWidget: React.FC = () => {
@@ -37,7 +38,9 @@ export const PhoneStatusWidget: React.FC = () => {
         >
           {status.connected ? 'Disconnect' : 'Connect'}
         </button>
-        <Bluetooth size={20} className="text-blue-400 ml-1" />
+        <Link to="/phone" className="ml-1 text-white/70 hover:text-white">
+          <Bluetooth size={20} className="inline" />
+        </Link>
       </div>
     </div>
   );
