@@ -1,6 +1,7 @@
 #include <efi.h>
 #include <efilib.h>
 #include "init.h"
+#include "../kernel/boot_info.h"
 
 typedef struct {
     unsigned char e_ident[16];
@@ -134,28 +135,56 @@ static EFI_STATUS setup_kernel_stack(UINT64 *stack_top)
     *stack_top = stack_base + pages * 4096;
     return EFI_SUCCESS;
 }
-static EFI_STATUS exit_boot(EFI_HANDLE image)
+static EFI_STATUS prepare_boot_info(boot_info_t **out_info)
 {
     EFI_STATUS status;
+    boot_info_t *info;
+
+    status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData,
+                               sizeof(boot_info_t), (void **)&info);
+    if (EFI_ERROR(status))
+        return status;
+    SetMem(info, 0, sizeof(boot_info_t));
+
+    EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
+    status = uefi_call_wrapper(BS->LocateProtocol, 3, &gop_guid, NULL, (void**)&gop);
+    if (!EFI_ERROR(status) && gop) {
+        info->fb.base = gop->Mode->FrameBufferBase;
+        info->fb.size = gop->Mode->FrameBufferSize;
+        info->fb.width = gop->Mode->Info->HorizontalResolution;
+        info->fb.height = gop->Mode->Info->VerticalResolution;
+        info->fb.pitch = gop->Mode->Info->PixelsPerScanLine;
+    }
+
     UINTN map_size = 0, map_key, desc_size;
     UINT32 desc_ver;
-
     status = uefi_call_wrapper(BS->GetMemoryMap, 5, &map_size, NULL, &map_key, &desc_size, &desc_ver);
     if (status != EFI_BUFFER_TOO_SMALL)
         return status;
 
     map_size += desc_size * 8;
-    EFI_MEMORY_DESCRIPTOR *map;
+    efi_memory_descriptor_t *map;
     status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, map_size, (void**)&map);
     if (EFI_ERROR(status))
         return status;
 
-    status = uefi_call_wrapper(BS->GetMemoryMap, 5, &map_size, map, &map_key, &desc_size, &desc_ver);
+    status = uefi_call_wrapper(BS->GetMemoryMap, 5, &map_size, (EFI_MEMORY_DESCRIPTOR*)map, &map_key, &desc_size, &desc_ver);
     if (EFI_ERROR(status))
         return status;
 
-    status = uefi_call_wrapper(BS->ExitBootServices, 2, image, map_key);
-    return status;
+    info->mmap = map;
+    info->mmap_size = map_size;
+    info->mmap_desc_size = desc_size;
+    info->mmap_key = map_key;
+
+    *out_info = info;
+    return EFI_SUCCESS;
+}
+
+static EFI_STATUS exit_boot(EFI_HANDLE image, boot_info_t *info)
+{
+    return uefi_call_wrapper(BS->ExitBootServices, 2, image, info->mmap_key);
 }
 
 EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
@@ -176,18 +205,26 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
         return status;
     }
 
-    status = exit_boot(ImageHandle);
+    boot_info_t *boot_info = NULL;
+    status = prepare_boot_info(&boot_info);
+    if (EFI_ERROR(status)) {
+        Print(L"Failed to prepare boot info: %r\n", status);
+        return status;
+    }
+
+    status = exit_boot(ImageHandle, boot_info);
     if (EFI_ERROR(status)) {
         Print(L"Failed to exit boot services: %r\n", status);
         return status;
     }
 
-    void (*kernel_entry)(void) = entry;
+    void (*kernel_entry)(boot_info_t *) = entry;
     __asm__ volatile(
-        "mov %0, %%rsp\n"
-        "jmp *%1\n"
+        "mov %0, %%rdi\n"
+        "mov %1, %%rsp\n"
+        "jmp *%2\n"
         :
-        : "r"(stack_top), "r"(kernel_entry)
+        : "r"(boot_info), "r"(stack_top), "r"(kernel_entry)
         : "memory");
 
     return EFI_SUCCESS;

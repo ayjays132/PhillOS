@@ -3,7 +3,9 @@
 
 #include <stdint.h>
 
-void init_framebuffer(void);
+#include "../../kernel/boot_info.h"
+
+void init_framebuffer(framebuffer_info_t *info);
 void fb_draw_pixel(uint32_t x, uint32_t y, uint32_t color);
 
 uint64_t fb_get_base(void);

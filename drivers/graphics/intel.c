@@ -2,6 +2,7 @@
 #include "framebuffer.h"
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
+#include "../../kernel/init.h"
 
 static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
                                   uint8_t func, uint8_t offset)
@@ -43,7 +44,7 @@ static void intel_init_stub(void)
             debug_puthex64(fb);
             debug_putc('\n');
 
-            init_framebuffer();
+            init_framebuffer(&boot_info_get()->fb);
             return;
         }
     }

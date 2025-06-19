@@ -1,6 +1,5 @@
 #include "alloc.h"
-#include <efi.h>
-#include <efilib.h>
+#include "../boot_info.h"
 
 // Simple stack of free 4KiB pages. Each free page stores the pointer to the
 // next page at its beginning. This uses the UEFI memory map to populate the
@@ -21,48 +20,26 @@ static void *pop_page(void) {
     return page;
 }
 
-void init_physical_memory(void) {
-    EFI_STATUS status;
-    EFI_MEMORY_DESCRIPTOR *mem_map = NULL;
-    UINTN map_size = 0, map_key, desc_size;
-    UINT32 desc_ver;
-
-    // Query size of the memory map
-    status = ST->BootServices->GetMemoryMap(&map_size, mem_map, &map_key,
-                                            &desc_size, &desc_ver);
-    if (status != EFI_BUFFER_TOO_SMALL)
-        return; // Unable to obtain size
-
-    // Allocate buffer for memory map
-    map_size += desc_size * 8; // Some slack for new allocations
-    status = ST->BootServices->AllocatePool(EfiLoaderData, map_size,
-                                            (void **)&mem_map);
-    if (EFI_ERROR(status))
+void init_physical_memory(boot_info_t *boot_info) {
+    if (!boot_info)
         return;
 
-    // Retrieve the memory map
-    status = ST->BootServices->GetMemoryMap(&map_size, mem_map, &map_key,
-                                            &desc_size, &desc_ver);
-    if (EFI_ERROR(status)) {
-        ST->BootServices->FreePool(mem_map);
-        return;
-    }
+    uint8_t *mem_map = (uint8_t *)boot_info->mmap;
+    uint64_t map_size = boot_info->mmap_size;
+    uint64_t desc_size = boot_info->mmap_desc_size;
 
-    // Walk descriptors and push conventional memory pages on the stack
-    for (UINTN offset = 0; offset < map_size; offset += desc_size) {
-        EFI_MEMORY_DESCRIPTOR *desc =
-            (EFI_MEMORY_DESCRIPTOR *)((UINT8 *)mem_map + offset);
+    for (uint64_t offset = 0; offset < map_size; offset += desc_size) {
+        efi_memory_descriptor_t *desc =
+            (efi_memory_descriptor_t *)(mem_map + offset);
 
-        if (desc->Type != EfiConventionalMemory)
+        if (desc->Type != 7) /* EfiConventionalMemory */
             continue;
 
-        UINT64 addr = desc->PhysicalStart;
-        for (UINTN i = 0; i < desc->NumberOfPages; i++) {
+        uint64_t addr = desc->PhysicalStart;
+        for (uint64_t i = 0; i < desc->NumberOfPages; i++) {
             push_page((void *)(addr + i * 4096));
         }
     }
-
-    ST->BootServices->FreePool(mem_map);
 }
 
 void* alloc_page(void) {
