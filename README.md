@@ -403,6 +403,11 @@ PhillOS uses the open source **vkd3d-proton** layer to translate DirectX 12 call
 
 The backend includes a small server that can start Windows executables through Proton. It first looks for a bundled Proton build under `dist/proton/<version>/`. If the directory is missing the launcher will attempt to download the archive defined by the `PROTON_DOWNLOAD_URL` environment variable. When Proton cannot be located, it falls back to using Wine.
 
+For offline systems you can pre-populate this directory by running
+`./scripts/setup-proton.sh` before building the ISO. Set `PROTON_VERSION` and
+optionally `PROTON_SHA256`/`PROTON_DOWNLOAD_URL` to control the exact release and
+checksum verification.
+
 Start the server with:
 
 ```bash
