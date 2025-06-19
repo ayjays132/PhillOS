@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import fs from 'fs';
 import path from 'path';
 
 export interface ProtonOptions {
@@ -26,13 +27,23 @@ export class ProtonLauncher {
   }
 
   launch(executable: string, args: string[] = []): Promise<void> {
+    const resolvedExe = path.resolve(executable);
+    if (!fs.existsSync(resolvedExe) || !fs.statSync(resolvedExe).isFile()) {
+      return Promise.reject(new Error(`Executable not found: ${executable}`));
+    }
+
+    const unsafe = /[;&|`$><]/;
+    if (args.some(a => unsafe.test(a))) {
+      return Promise.reject(new Error('Unsafe arguments detected'));
+    }
+
     const runner = this.resolveProtonPath();
     const env = { ...process.env };
     if (this.options.prefix) {
       env.WINEPREFIX = path.resolve(this.options.prefix);
     }
     return new Promise((resolve, reject) => {
-      const child = spawn(runner, [executable, ...args], { env, stdio: 'inherit' });
+      const child = spawn(runner, [resolvedExe, ...args], { env, stdio: 'inherit' });
       child.on('error', reject);
       child.on('exit', code => {
         code === 0 ? resolve() : reject(new Error(`Proton exited with code ${code}`));
@@ -62,6 +73,18 @@ if (require.main === module) {
 
   if (!exe) {
     console.error('Usage: node protonLauncher.js <exe> [--protonDir DIR --version V] [--prefix PATH] [--wine /path/to/wine]');
+    process.exit(1);
+  }
+
+  const resolvedExe = path.resolve(exe);
+  if (!fs.existsSync(resolvedExe) || !fs.statSync(resolvedExe).isFile()) {
+    console.error(`Executable not found: ${exe}`);
+    process.exit(1);
+  }
+
+  const unsafe = /[;&|`$><]/;
+  if (extraArgs.some(a => unsafe.test(a))) {
+    console.error('Unsafe arguments detected');
     process.exit(1);
   }
 
