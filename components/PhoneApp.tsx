@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { GlassCard } from './GlassCard';
 import { phoneService } from '../services/phoneService';
-import { usePhoneBridge } from '../hooks/usePhoneBridge';
+import { usePhone } from '../contexts/PhoneContext';
 import { createQwenChatSession } from '../services/qwenService';
 import { createCloudChatSession, sendMessageStream, CloudProvider } from '../services/cloudAIService';
 import { useOnboarding } from '../hooks/useOnboarding';
 
 const PhoneApp: React.FC = () => {
   const { modelPreference } = useOnboarding();
-  const { status, connect, disconnect } = usePhoneBridge();
+  const { status, connect, disconnect } = usePhone();
   const [address, setAddress] = useState('');
   const [smsTo, setSmsTo] = useState('');
   const [smsBody, setSmsBody] = useState('');

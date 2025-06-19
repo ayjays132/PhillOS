@@ -7,6 +7,7 @@ import { HashRouter } from 'react-router-dom';
 import { StorageProvider } from './contexts/StorageProvider';
 import { CloudSyncProvider } from './contexts/CloudSyncContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { PhoneProvider } from './contexts/PhoneContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -20,7 +21,9 @@ root.render(
       <StorageProvider>
         <CloudSyncProvider>
           <ThemeProvider>
-            <App />
+            <PhoneProvider>
+              <App />
+            </PhoneProvider>
           </ThemeProvider>
         </CloudSyncProvider>
       </StorageProvider>

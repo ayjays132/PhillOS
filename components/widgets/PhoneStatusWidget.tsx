@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Phone, Bluetooth } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { usePhoneBridge } from '../../hooks/usePhoneBridge';
+import { usePhone } from '../../contexts/PhoneContext';
 
 export const PhoneStatusWidget: React.FC = () => {
-  const { status, connect, disconnect } = usePhoneBridge();
+  const { status, connect, disconnect } = usePhone();
   const [address, setAddress] = useState('');
 
   const toggle = () => {

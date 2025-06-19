@@ -11,7 +11,7 @@ import {
   SignalZero,
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { usePhoneBridge } from '../hooks/usePhoneBridge';
+import { usePhone } from '../contexts/PhoneContext';
 
 export const StatusBar: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -25,7 +25,7 @@ export const StatusBar: React.FC = () => {
 
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const { status } = usePhoneBridge();
+  const { status } = usePhone();
 
   let SignalIcon = SignalZero;
   if (status.connected && status.signalStrength !== undefined) {
