@@ -13,9 +13,29 @@ const SETTINGS_KEYS = [
 
 const QUEUE_KEY = 'phillos_cloud_sync_queue';
 
+// Select which backend to use for synchronizing settings. Supported values:
+// "webdav", "s3", or "api". Defaults to WebDAV for backwards compatibility.
+const BACKEND = (import.meta.env.VITE_CLOUD_SYNC_BACKEND || 'webdav') as
+  | 'webdav'
+  | 's3'
+  | 'api';
+
+// WebDAV configuration
 const DAV_URL = import.meta.env.VITE_WEBDAV_URL as string | undefined;
 const DAV_USERNAME = import.meta.env.VITE_WEBDAV_USERNAME as string | undefined;
 const DAV_PASSWORD = import.meta.env.VITE_WEBDAV_PASSWORD as string | undefined;
+
+// Amazon S3 (or compatible) configuration. VITE_S3_URL should point to the
+// object where settings are stored. It can be a presigned URL or a bucket URL
+// that accepts anonymous requests. If authentication is required, provide an
+// "Authorization" header via VITE_S3_AUTH_HEADER.
+const S3_URL = import.meta.env.VITE_S3_URL as string | undefined;
+const S3_AUTH_HEADER = import.meta.env.VITE_S3_AUTH_HEADER as string | undefined;
+
+// Custom API backend. The API should accept a POST with JSON to update settings
+// and respond to a GET request with the same JSON structure.
+const API_URL = import.meta.env.VITE_SYNC_API_URL as string | undefined;
+const API_TOKEN = import.meta.env.VITE_SYNC_API_TOKEN as string | undefined;
 
 function loadQueue(): string[] {
   try {
@@ -30,28 +50,76 @@ function saveQueue(q: string[]) {
 }
 
 async function upload(data: string) {
-  if (!DAV_URL) return;
-  await fetch(`${DAV_URL}/settings.json`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(DAV_USERNAME ? { Authorization: 'Basic ' + btoa(`${DAV_USERNAME}:${DAV_PASSWORD || ''}`) } : {}),
-    },
-    body: data,
-  });
+  switch (BACKEND) {
+    case 's3':
+      if (!S3_URL) return;
+      await fetch(S3_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(S3_AUTH_HEADER ? { Authorization: S3_AUTH_HEADER } : {}),
+        },
+        body: data,
+      });
+      break;
+    case 'api':
+      if (!API_URL) return;
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {}),
+        },
+        body: data,
+      });
+      break;
+    case 'webdav':
+    default:
+      if (!DAV_URL) return;
+      await fetch(`${DAV_URL}/settings.json`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(DAV_USERNAME
+            ? { Authorization: 'Basic ' + btoa(`${DAV_USERNAME}:${DAV_PASSWORD || ''}`) }
+            : {}),
+        },
+        body: data,
+      });
+  }
 }
 
 async function download(): Promise<SyncData | null> {
-  if (!DAV_URL) return null;
   try {
-    const res = await fetch(`${DAV_URL}/settings.json`, {
-      headers: DAV_USERNAME
-        ? { Authorization: 'Basic ' + btoa(`${DAV_USERNAME}:${DAV_PASSWORD || ''}`) }
-        : undefined,
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json as SyncData;
+    switch (BACKEND) {
+      case 's3': {
+        if (!S3_URL) return null;
+        const res = await fetch(S3_URL, {
+          headers: S3_AUTH_HEADER ? { Authorization: S3_AUTH_HEADER } : undefined,
+        });
+        if (!res.ok) return null;
+        return (await res.json()) as SyncData;
+      }
+      case 'api': {
+        if (!API_URL) return null;
+        const res = await fetch(API_URL, {
+          headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : undefined,
+        });
+        if (!res.ok) return null;
+        return (await res.json()) as SyncData;
+      }
+      case 'webdav':
+      default: {
+        if (!DAV_URL) return null;
+        const res = await fetch(`${DAV_URL}/settings.json`, {
+          headers: DAV_USERNAME
+            ? { Authorization: 'Basic ' + btoa(`${DAV_USERNAME}:${DAV_PASSWORD || ''}`) }
+            : undefined,
+        });
+        if (!res.ok) return null;
+        return (await res.json()) as SyncData;
+      }
+    }
   } catch {
     return null;
   }
