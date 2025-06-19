@@ -3,9 +3,10 @@ import React, { useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { NavItem } from '../types';
 import { DeviceType } from '../hooks/useDeviceType';
-import { useDock } from '../hooks/useDock';
+import { useDock, EXTERNAL_ITEM_TYPE } from '../hooks/useDock';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Trash2 } from 'lucide-react';
 
 interface DockProps {
   deviceType?: DeviceType;
@@ -14,7 +15,6 @@ interface DockProps {
 }
 
 const ITEM_TYPE = 'DOCK_ITEM';
-const EXTERNAL_ITEM = 'NEW_DOCK_ITEM';
 
 const DockItem: React.FC<{ item: NavItem; index: number; move: (from: number, to: number) => void; iconSize: number; padding: string; register: (el: HTMLAnchorElement | null, idx: number) => void }> = ({ item, index, move, iconSize, padding, register }) => {
   const ref = useRef<HTMLAnchorElement>(null);
@@ -56,7 +56,7 @@ const DockItem: React.FC<{ item: NavItem; index: number; move: (from: number, to
 };
 
 export const Dock: React.FC<DockProps> = ({ deviceType = 'desktop', orientation = 'portrait', hasGamepad = false }) => {
-  const { navItems, moveDockItem, addDockItem } = useDock();
+  const { navItems, moveDockItem, addDockItem, removeDockItem } = useDock();
   const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const register = (el: HTMLAnchorElement | null, idx: number) => {
     linkRefs.current[idx] = el;
@@ -66,7 +66,7 @@ export const Dock: React.FC<DockProps> = ({ deviceType = 'desktop', orientation 
   const containerPadding = deviceType === 'vr' || hasGamepad ? 'p-4' : isVertical ? 'p-3' : 'p-2';
   const buttonPadding = deviceType === 'vr' || hasGamepad ? 'p-4' : 'p-3';
   const [, drop] = useDrop<{ item: NavItem }>({
-    accept: EXTERNAL_ITEM,
+    accept: EXTERNAL_ITEM_TYPE,
     drop: (data) => addDockItem(data.item),
   });
 
@@ -84,18 +84,43 @@ export const Dock: React.FC<DockProps> = ({ deviceType = 'desktop', orientation 
     }
   };
 
+  const [, removeDrop] = useDrop<{ index: number }>({
+    accept: ITEM_TYPE,
+    drop: (dragged) => removeDockItem(navItems[dragged.index].id),
+  });
+
   return (
     <DndProvider backend={HTML5Backend}>
-      <nav ref={drop} className={`fixed z-50 ${isVertical ? 'left-4 top-1/2 -translate-y-1/2' : 'bottom-4 left-1/2 -translate-x-1/2'}`}
-        onKeyDown={handleKeyDown}
+      <div
+        className={`fixed z-50 ${isVertical ? 'left-4 top-1/2 -translate-y-1/2 flex flex-col items-center' : 'bottom-4 left-1/2 -translate-x-1/2 flex items-center'}`}
       >
-        <div className={`flex ${isVertical ? 'flex-col' : 'flex-row'} items-center gap-2 ${containerPadding} glass-card-style bg-white/10 rounded-full shadow-2xl shadow-purple-700/50`}
+        <nav
+          ref={drop}
+          onKeyDown={handleKeyDown}
         >
-          {navItems.map((item, index) => (
-            <DockItem key={item.id} item={item} index={index} move={moveDockItem} iconSize={iconSize} padding={buttonPadding} register={register} />
-          ))}
+          <div
+            className={`flex ${isVertical ? 'flex-col' : 'flex-row'} items-center gap-2 ${containerPadding} glass-card-style bg-white/10 rounded-full shadow-2xl shadow-purple-700/50`}
+          >
+            {navItems.map((item, index) => (
+              <DockItem
+                key={item.id}
+                item={item}
+                index={index}
+                move={moveDockItem}
+                iconSize={iconSize}
+                padding={buttonPadding}
+                register={register}
+              />
+            ))}
+          </div>
+        </nav>
+        <div
+          ref={removeDrop}
+          className={`${isVertical ? 'mt-2' : 'ml-2'} ${buttonPadding} bg-red-500/30 rounded-full hover:bg-red-500/50`}
+        >
+          <Trash2 size={Math.round(iconSize * 0.6)} />
         </div>
-      </nav>
+      </div>
     </DndProvider>
   );
 };
