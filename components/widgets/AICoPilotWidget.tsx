@@ -8,6 +8,7 @@ import { VoiceService, speakText } from '../../services/voiceService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOnboarding } from '../../hooks/useOnboarding';
+import { memoryService } from '../../services/memoryService';
 
 export const AICoPilotWidget: React.FC = () => {
   const { modelPreference } = useOnboarding();
@@ -41,20 +42,26 @@ export const AICoPilotWidget: React.FC = () => {
         return;
       }
       try {
+        const history = memoryService.getMessages();
         const session = await createModelSession(modelPreference, {
           provider: cloudProvider,
           apiKey,
+          history,
         });
         if (mounted && session) {
           setChatSession(session);
-          setMessages([
-            {
+          if (history.length) {
+            setMessages(history);
+          } else {
+            const greeting: ChatMessage = {
               id: 'initial-greeting',
               role: 'model',
               text: 'Hello! I am PhillOS CoPilot. How can I assist you today?',
               timestamp: new Date(),
-            },
-          ]);
+            };
+            setMessages([greeting]);
+            memoryService.addMessage(greeting);
+          }
           setIsApiKeyMissing(false);
         } else if (mounted) {
           setError('Failed to initialize AI CoPilot session.');
@@ -105,6 +112,7 @@ export const AICoPilotWidget: React.FC = () => {
       timestamp: new Date(),
     };
     setMessages(prev => [...prev, userMessage]);
+    memoryService.addMessage(userMessage);
     setInput('');
     setIsLoading(true);
     setError(null);
@@ -131,13 +139,21 @@ export const AICoPilotWidget: React.FC = () => {
       setMessages(prev => prev.map(msg =>
         msg.id === modelMessageId ? { ...msg, text: modelResponseText } : msg
       ));
+      memoryService.addMessage({
+        id: modelMessageId,
+        role: 'model',
+        text: modelResponseText,
+        timestamp: new Date(),
+      });
       speakText(modelResponseText);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
       console.error("AI CoPilot Error:", err);
       setError(`Error: ${errorMessage}. Please check your API key and network connection.`);
-      setMessages(prev => [...prev, { id: Date.now().toString() + '-error', role: 'system', text: `Error: ${errorMessage}`, timestamp: new Date() }]);
+      const sysMsg: ChatMessage = { id: Date.now().toString() + '-error', role: 'system', text: `Error: ${errorMessage}`, timestamp: new Date() };
+      setMessages(prev => [...prev, sysMsg]);
+      memoryService.addMessage(sysMsg);
     } finally {
       setIsLoading(false);
     }
