@@ -2,8 +2,8 @@
 import React from 'react';
 import { GlassCard } from './GlassCard';
 import { WidgetConfig, StratumConfig } from '../types';
-import { 
-  BotMessageSquare, BarChart3, Search, Zap, Gamepad2, UserCircle, Rss, BrainCircuit
+import {
+  BotMessageSquare, BarChart3, Search, Zap, Gamepad2, UserCircle, Rss, BrainCircuit, RefreshCw
 } from 'lucide-react';
 import { AICoPilotWidget } from './widgets/AICoPilotWidget';
 import { AIShadowSearchWidget } from './widgets/AIShadowSearchWidget';
@@ -13,6 +13,7 @@ import { QuickActionsWidget } from './widgets/QuickActionsWidget';
 import { GamingModeWidget } from './widgets/GamingModeWidget';
 import { UserProfileWidget } from './widgets/UserProfileWidget';
 import { PersonalizedNewsWidget } from './widgets/PersonalizedNewsWidget';
+import { CacheManagementWidget } from './widgets/CacheManagementWidget';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { useWidgetLayout } from '../hooks/useWidgetLayout';
 
@@ -34,6 +35,7 @@ const strataConfig: StratumConfig[] = [
     widgets: [
       { id: 'systemhealth', title: 'System Health', icon: BarChart3, iconColor: 'text-green-400', component: SystemHealthWidget, colSpanDesktop: 1, colSpanTablet: 1},
       { id: 'userprofile', title: 'User Profile', icon: UserCircle, iconColor: 'text-orange-300', component: UserProfileWidget, colSpanDesktop: 1, colSpanTablet: 1},
+      { id: 'cache', title: 'Offline & Updates', icon: RefreshCw, iconColor: 'text-blue-300', component: CacheManagementWidget, colSpanDesktop: 1, colSpanTablet: 1 },
     ],
     gridColsDesktop: 2,
     gridColsTablet: 2,

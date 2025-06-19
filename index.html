@@ -12,7 +12,8 @@
   <script type="module" src="/index.tsx"></script>
   <script type="module">
     import { registerSW } from 'virtual:pwa-register';
-    registerSW();
+    const updateSW = registerSW({ immediate: true });
+    window.updateServiceWorker = updateSW;
   </script>
 </body>
 </html>
