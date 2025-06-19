@@ -7,6 +7,7 @@ import { useDock, EXTERNAL_ITEM_TYPE } from '../hooks/useDock';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Trash2 } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface DockProps {
   deviceType?: DeviceType;
@@ -57,6 +58,8 @@ const DockItem: React.FC<{ item: NavItem; index: number; move: (from: number, to
 
 export const Dock: React.FC<DockProps> = ({ deviceType = 'desktop', orientation = 'portrait', hasGamepad = false }) => {
   const { navItems, moveDockItem, addDockItem, removeDockItem } = useDock();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const register = (el: HTMLAnchorElement | null, idx: number) => {
     linkRefs.current[idx] = el;
@@ -99,7 +102,7 @@ export const Dock: React.FC<DockProps> = ({ deviceType = 'desktop', orientation 
           onKeyDown={handleKeyDown}
         >
           <div
-            className={`flex ${isVertical ? 'flex-col' : 'flex-row'} items-center gap-2 ${containerPadding} glass-card-style bg-white/10 rounded-full shadow-2xl shadow-purple-700/50`}
+            className={`flex ${isVertical ? 'flex-col' : 'flex-row'} items-center gap-2 ${containerPadding} glass-card-style ${isDark ? 'bg-white/10 shadow-purple-700/50' : 'bg-black/10 shadow-indigo-300/50'} rounded-full shadow-2xl`}
           >
             {navItems.map((item, index) => (
               <DockItem
@@ -116,7 +119,7 @@ export const Dock: React.FC<DockProps> = ({ deviceType = 'desktop', orientation 
         </nav>
         <div
           ref={removeDrop}
-          className={`${isVertical ? 'mt-2' : 'ml-2'} ${buttonPadding} bg-red-500/30 rounded-full hover:bg-red-500/50`}
+          className={`${isVertical ? 'mt-2' : 'ml-2'} ${buttonPadding} ${isDark ? 'bg-red-500/30 hover:bg-red-500/50' : 'bg-red-500/20 hover:bg-red-500/40'} rounded-full`}
         >
           <Trash2 size={Math.round(iconSize * 0.6)} />
         </div>

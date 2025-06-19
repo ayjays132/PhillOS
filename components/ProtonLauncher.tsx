@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const ProtonLauncher: React.FC = () => {
   const [exePath, setExePath] = useState('');
   const [protonVersion, setProtonVersion] = useState('');
   const [prefix, setPrefix] = useState('');
   const [message, setMessage] = useState('');
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const launch = async () => {
     setMessage('Launching...');
@@ -53,12 +56,12 @@ export const ProtonLauncher: React.FC = () => {
         </label>
         <button
           onClick={launch}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className={`${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white'} px-4 py-2 rounded`}
         >
           Launch
         </button>
       </div>
-      {message && <p className="text-sm text-white/80">{message}</p>}
+      {message && <p className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-800/80'}`}>{message}</p>}
     </div>
   );
 };

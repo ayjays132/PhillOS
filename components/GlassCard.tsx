@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -9,7 +10,9 @@ interface GlassCardProps {
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', onClick, elementType = 'div' }) => {
-  const baseStyle = "glass-card-style bg-white/5 rounded-2xl p-4 sm:p-5 shadow-xl shadow-purple-900/30";
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const baseStyle = `glass-card-style ${isDark ? 'bg-white/5 shadow-purple-900/30' : 'bg-white/60 shadow-gray-500/30'} rounded-2xl p-4 sm:p-5 shadow-xl`;
   const hoverStyle = onClick ? "glass-card-hover cursor-pointer" : "glass-card-hover";
   
   const Element = elementType;
