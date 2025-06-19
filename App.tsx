@@ -12,6 +12,7 @@ import PhoneApp from './components/PhoneApp';
 import { AgentConsole } from './components/AgentConsole';
 import { OnboardingStepper } from './components/onboarding/OnboardingStepper';
 import { ConversationalSettingsView } from './components/settings/ConversationalSettingsView';
+import PhoneSettingsView from './components/settings/PhoneSettingsView';
 import { useResponsive } from './hooks/useResponsive';
 import { useDeviceType } from './hooks/useDeviceType';
 import { useOnboarding } from './hooks/useOnboarding';
@@ -57,6 +58,7 @@ const App: React.FC = () => {
           <Route path="/gaming" element={<ProtonLauncher />} />
           <Route path="/phone" element={<PhoneApp />} />
           <Route path="/settings" element={<ConversationalSettingsView />} />
+          <Route path="/settings/phone" element={<PhoneSettingsView />} />
           <Route path="*" element={isOnboardingComplete ? <Navigate to="/home" replace /> : <Navigate to="/onboarding" replace />} />
         </Routes>
       </main>
