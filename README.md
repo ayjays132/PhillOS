@@ -124,8 +124,9 @@ Most modern browsers support these APIs, but they may require an HTTPS context a
 ## Getting Started
 
 1.  **Prerequisites**:
+    *   Node.js and npm.
     *   A modern web browser (Chrome, Firefox, Edge, Safari).
-    *   (Optional, but recommended for easier `process.env` handling) Node.js and npm/yarn if you plan to use a development server like Vite.
+    *   Build tools for the bootloader (`make`, `x86_64-elf-gcc`, `binutils`, `gnu-efi`, `dosfstools`, `mtools`, `grub-mkrescue`).
 
 2.  **Clone the Repository** (if applicable, otherwise download the files):
     ```bash
@@ -189,23 +190,23 @@ sudo dnf install make mtools dosfstools grub2-tools \
 
 ### Build Steps
 
-Run `make` in the `bootloader` directory to build the EFI file and
-create an EFI System Partition image:
+Use the top‑level build script to compile the bootloader/kernel and the web
+interface in one step. Artifacts are written to the common `dist/` directory:
 
 ```bash
-cd bootloader
-make            # builds BOOTX64.EFI and esp.img
-make iso        # optional - creates phillos.iso
+./scripts/build.sh
 ```
 
-The resulting artifacts will appear in `bootloader/build`.
+Internally this runs `make -C bootloader` and `npm run build`. Bootloader files
+land in `dist/bootloader` and the UI build is placed directly in `dist/`.
+To generate an ISO, run `make -C bootloader OUT_DIR=../dist/bootloader iso`.
 
 ### Running in QEMU
 
 You can test the image using QEMU's UEFI firmware:
 
 ```bash
-qemu-system-x86_64 -drive format=raw,file=fat:rw:bootloader/build \
+qemu-system-x86_64 -drive format=raw,file=fat:rw:dist/bootloader \
   -bios /usr/share/OVMF/OVMF_CODE.fd
 ```
 
