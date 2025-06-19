@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { NavItem } from '../types';
+import { storageService } from '../services/storageService';
 import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail, BrainCircuit } from 'lucide-react';
 
 export const EXTERNAL_ITEM_TYPE = 'NEW_DOCK_ITEM';
@@ -14,30 +15,17 @@ const DEFAULT_ITEMS: NavItem[] = [
   { id: 'settings', label: 'Settings', path: '/settings', icon: Settings },
 ];
 
-const STORAGE_KEY = 'phillos_dock_items_v1';
-
 export function useDock() {
   const [navItems, setNavItems] = useState<NavItem[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as NavItem[];
-        if (Array.isArray(parsed) && parsed.every(i => i && i.id && i.path)) {
-          return parsed;
-        }
-      }
-    } catch {
-      // ignore parsing errors
+    const stored = storageService.getDockItems();
+    if (stored && Array.isArray(stored) && stored.every(i => i && i.id && i.path)) {
+      return stored;
     }
     return DEFAULT_ITEMS;
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(navItems));
-    } catch {
-      // ignore
-    }
+    storageService.setDockItems(navItems);
   }, [navItems]);
 
   const moveDockItem = useCallback((from: number, to: number) => {

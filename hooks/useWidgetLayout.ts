@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { StratumConfig } from '../types';
-
-export interface WidgetOrder {
-  [stratumId: string]: string[];
-}
-
-const STORAGE_KEY = 'phillos_widget_order';
+import { StratumConfig, WidgetOrder } from '../types';
+import { storageService } from '../services/storageService';
 
 function buildDefaultOrder(strata: StratumConfig[]): WidgetOrder {
   const order: WidgetOrder = {};
@@ -17,24 +12,12 @@ function buildDefaultOrder(strata: StratumConfig[]): WidgetOrder {
 
 export function useWidgetLayout(strata: StratumConfig[]) {
   const [order, setOrder] = useState<WidgetOrder>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as WidgetOrder;
-        return parsed;
-      }
-    } catch {
-      // ignore
-    }
-    return buildDefaultOrder(strata);
+    const stored = storageService.getWidgetOrder();
+    return stored || buildDefaultOrder(strata);
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
-    } catch {
-      // ignore
-    }
+    storageService.setWidgetOrder(order);
   }, [order]);
 
   const moveWidget = useCallback((stratumId: string, from: number, to: number) => {

@@ -29,6 +29,10 @@ export interface StratumConfig {
   gridColsTablet?: number; // for widgets within this stratum on tablet
 }
 
+export interface WidgetOrder {
+  [stratumId: string]: string[];
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'model' | 'system';
