@@ -46,3 +46,26 @@ PhillOS intends to run modern Windows games that rely on DirectX 12. The initial
 
 This roadmap aims to provide near-native compatibility for Windows games while keeping the core OS lightweight.
 
+## PWA Service Worker and Updates
+
+PhillOS uses the Vite PWA plugin to generate a service worker during `vite build`.
+The plugin's `generateSW` strategy scans the final build output and writes
+`service-worker.js` with precache information derived from the `globPatterns`
+and `additionalManifestEntries` options in `vite.config.ts`. The service worker
+is registered in **auto-update** mode so every page load checks for a newer
+version.
+
+### How updates are applied
+
+When a new build is deployed, the browser downloads the updated service worker
+in the background. After the next reload it becomes active and serves the new
+assets, automatically clearing outdated caches.
+
+### Troubleshooting stale caches
+
+If you still see an older UI after deploying a new version:
+
+1. Open the browser's developer tools and navigate to **Application → Service Workers**.
+2. Click **Unregister** or enable **Update on reload**, then refresh the page.
+3. If the issue persists, clear the site's stored data to remove cached files.
+
