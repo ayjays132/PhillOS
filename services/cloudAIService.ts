@@ -1,6 +1,6 @@
-import { GoogleGenAI, Chat, GenerateContentResponse, Part, Content } from "@google/genai";
+import type { GoogleGenAI, Chat, GenerateContentResponse, Part, Content } from "@google/genai";
+import type OpenAI from 'openai';
 import { ChatMessage } from '../types';
-import OpenAI from 'openai';
 
 export type CloudProvider = 'gemini' | 'openai';
 
@@ -11,9 +11,10 @@ export interface CloudChatSession {
 }
 
 // Gemini setup
-const createGeminiSession = (apiKey: string, history?: ChatMessage[]): Chat | null => {
+const createGeminiSession = async (apiKey: string, history?: ChatMessage[]): Promise<Chat | null> => {
   if (!apiKey) return null;
   try {
+    const { GoogleGenAI } = await import('@google/genai');
     const ai = new GoogleGenAI({ apiKey });
     const formattedHistory: Content[] = history ? history.map(msg => ({
       role: msg.role === 'system' ? 'model' : (msg.role as 'user' | 'model'),
@@ -41,9 +42,9 @@ const createOpenAISession = (apiKey: string, history?: ChatMessage[]): OpenAI.Ch
   } as OpenAI.Chat.CompletionsCreateParams;
 };
 
-export const createCloudChatSession = (provider: CloudProvider, apiKey: string, history?: ChatMessage[]): CloudChatSession | null => {
+export const createCloudChatSession = async (provider: CloudProvider, apiKey: string, history?: ChatMessage[]): Promise<CloudChatSession | null> => {
   if (provider === 'gemini') {
-    const chat = createGeminiSession(apiKey, history);
+    const chat = await createGeminiSession(apiKey, history);
     return chat ? { provider, apiKey, session: chat } : null;
   }
   if (provider === 'openai') {
@@ -63,6 +64,7 @@ export async function* sendMessageStream(session: CloudChatSession, message: str
     }
   } else if (session.provider === 'openai') {
     const params = session.session as OpenAI.Chat.CompletionsCreateParams;
+    const { default: OpenAI } = await import('openai');
     const openai = new OpenAI({ apiKey: session.apiKey });
     const iterable = await openai.chat.completions.create({ ...params, messages: [...params.messages, { role: 'user', content: message }] });
     for await (const chunk of iterable) {

@@ -33,30 +33,37 @@ export const AICoPilotWidget: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (modelPreference === 'cloud') {
-      if (!apiKey) {
-        setIsApiKeyMissing(true);
-        setError('API key required for cloud AI.');
-        return;
-      }
-      const session = createCloudChatSession(cloudProvider, apiKey);
-      if (session) {
-        setChatSession(session);
-        setMessages([
-          { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
-        ]);
-        setIsApiKeyMissing(false);
+    let mounted = true;
+    const initSession = async () => {
+      if (modelPreference === 'cloud') {
+        if (!apiKey) {
+          setIsApiKeyMissing(true);
+          setError('API key required for cloud AI.');
+          return;
+        }
+        const session = await createCloudChatSession(cloudProvider, apiKey);
+        if (mounted && session) {
+          setChatSession(session);
+          setMessages([
+            { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
+          ]);
+          setIsApiKeyMissing(false);
+        } else if (mounted) {
+          setError('Failed to initialize AI CoPilot session.');
+          setIsApiKeyMissing(true);
+        }
       } else {
-        setError('Failed to initialize AI CoPilot session.');
-        setIsApiKeyMissing(true);
+        const session = createQwenChatSession();
+        if (mounted) {
+          setChatSession(session);
+          setMessages([
+            { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
+          ]);
+        }
       }
-    } else {
-      const session = createQwenChatSession();
-      setChatSession(session);
-      setMessages([
-        { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
-      ]);
-    }
+    };
+    initSession();
+    return () => { mounted = false; };
   }, [modelPreference, apiKey, cloudProvider]);
 
   useEffect(() => {
