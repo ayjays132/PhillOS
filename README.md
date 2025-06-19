@@ -454,6 +454,11 @@ The drivers under `drivers/phone/` are only stubs. Building the OS with these fi
 npm run phone-bridge
 ```
 
+Start `npm run server` in another terminal to run the main backend. Requests to
+`/phonebridge/*` on that server are automatically proxied to the phone bridge
+service (default `http://localhost:3002`). Set `PHONE_BRIDGE_URL` to override the
+target URL.
+
 Enter your phone's Bluetooth MAC address in the **Phone Status** widget and press **Connect**. The service relies on `bluetoothctl` so you can also pair manually. Once paired the bridge works entirely offline over the local Bluetooth link.
 
 ## License
