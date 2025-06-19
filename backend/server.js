@@ -5,14 +5,14 @@ const app = express();
 app.use(express.json());
 
 app.post('/api/launch-proton', async (req, res) => {
-  const { path, version, prefix } = req.body || {};
+  const { path, version, prefix, wine } = req.body || {};
 
   if (!path) {
     return res.status(400).json({ error: 'path required' });
   }
 
   try {
-    const launcher = createProtonLauncher({ version, prefix });
+    const launcher = createProtonLauncher({ version, prefix, wineBinary: wine });
     await launcher.launch(path);
     res.json({ success: true });
   } catch (err) {

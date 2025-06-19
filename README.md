@@ -378,6 +378,18 @@ See [android/README.md](android/README.md) for additional details.
 
 PhillOS uses the open source **vkd3d-proton** layer to translate DirectX 12 calls into Vulkan. During boot the kernel initializes this library after detecting the GPU vendor so both native applications and Proton/Wine games can run without network access. See [docs/vkd3d.md](docs/vkd3d.md) for setup instructions.
 
+## Proton Launcher
+
+The backend includes a small server that can start Windows executables through Proton. It first looks for a bundled Proton build under `dist/proton/<version>/`. If the directory is missing the launcher will attempt to download the archive defined by the `PROTON_DOWNLOAD_URL` environment variable. When Proton cannot be located, it falls back to using Wine.
+
+Start the server with:
+
+```bash
+npm run server
+```
+
+In the UI open the **Proton Launcher** widget, supply the executable path and Proton version, and optionally check **Use Wine if Proton missing**.
+
 ## PWA Cache Management
 
 PhillOS now ships with a basic service worker. If you make changes to the UI and deploy a new build, your browser may continue using cached files until the service worker updates.

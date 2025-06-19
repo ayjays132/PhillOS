@@ -5,6 +5,7 @@ export const ProtonLauncher: React.FC = () => {
   const [exePath, setExePath] = useState('');
   const [protonVersion, setProtonVersion] = useState('');
   const [prefix, setPrefix] = useState('');
+  const [useWine, setUseWine] = useState(false);
   const [message, setMessage] = useState('');
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -15,7 +16,7 @@ export const ProtonLauncher: React.FC = () => {
       const res = await fetch('/api/launch-proton', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: exePath, version: protonVersion, prefix })
+        body: JSON.stringify({ path: exePath, version: protonVersion, prefix, wine: useWine ? 'wine' : undefined })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Failed to launch');
@@ -56,6 +57,14 @@ export const ProtonLauncher: React.FC = () => {
             onChange={e => setPrefix(e.target.value)}
             placeholder="~/.local/share/proton-prefixes/game"
           />
+        </label>
+        <label className="inline-flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={useWine}
+            onChange={e => setUseWine(e.target.checked)}
+          />
+          <span className="text-sm">Use Wine if Proton missing</span>
         </label>
         <button
           onClick={launch}
