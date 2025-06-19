@@ -33,6 +33,7 @@ function run(cmd: string, args: string[] = []): Promise<void> {
 export async function startContainer(): Promise<void> {
   console.log('Starting Android container...');
   await run('waydroid', ['container', 'start']);
+  await run('waydroid', ['session', 'start']);
 }
 
 /**
@@ -40,6 +41,7 @@ export async function startContainer(): Promise<void> {
  */
 export async function stopContainer(): Promise<void> {
   console.log('Stopping Android container...');
+  await run('waydroid', ['session', 'stop']);
   await run('waydroid', ['container', 'stop']);
 }
 
@@ -47,8 +49,8 @@ export async function stopContainer(): Promise<void> {
  * Start the display and input bridge using Waydroid's session service.
  */
 export async function forwardDisplay(): Promise<void> {
-  console.log('Starting display forwarding...');
-  await run('waydroid', ['session', 'start']);
+  console.log('Opening Waydroid UI window...');
+  await run('waydroid', ['show-full-ui']);
 }
 
 /**
@@ -56,7 +58,7 @@ export async function forwardDisplay(): Promise<void> {
  * This helper exists for API completeness.
  */
 export async function forwardInput(): Promise<void> {
-  console.log('Input forwarding active (handled by Waydroid session)');
+  console.log('Input forwarding active (handled by Waydroid UI)');
 }
 
 if (require.main === module) {

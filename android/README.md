@@ -32,3 +32,22 @@ Google Play Store compatibility is achieved by installing the open-source **micr
    ```bash
    ts-node controller.ts stop
    ```
+
+## Offline Usage
+
+`setup-microg.sh` caches the required APKs under `android/downloads/`. Once the
+files exist you can copy them to another system and run the installer with
+offline mode enabled:
+
+```bash
+OFFLINE=1 ./setup-microg.sh
+```
+
+The container itself works without internet connectivity after it has been
+installed. Simply start and stop as usual:
+
+```bash
+ts-node controller.ts start
+...
+ts-node controller.ts stop
+```
