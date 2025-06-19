@@ -23,7 +23,9 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.6.2",
     "remark-gfm": "^4.0.1",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "ffi-napi": "^4.0.3",
+    "ref-napi": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

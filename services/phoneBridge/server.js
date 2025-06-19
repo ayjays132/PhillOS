@@ -1,6 +1,8 @@
 import express from 'express';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import ffi from 'ffi-napi';
+import ref from 'ref-napi';
 
 const execAsync = promisify(exec);
 
@@ -8,6 +10,20 @@ const app = express();
 app.use(express.json());
 
 let connectedDevice = '';
+let native = null;
+
+try {
+  native = ffi.Library('./libphone', {
+    init_sim: ['void', []],
+    sim_read_iccid: ['int', ['char *', 'int']],
+    init_bluetooth: ['void', []],
+    bluetooth_start_pairing: ['int', ['string']],
+  });
+  native.init_sim();
+  native.init_bluetooth();
+} catch (err) {
+  console.log('Native phone library not loaded:', err.message);
+}
 
 async function runCtl(cmd) {
   try {
@@ -43,6 +59,24 @@ app.post('/disconnect', async (_req, res) => {
   res.json({ connected: false });
 });
 
+app.post('/pair', async (req, res) => {
+  const { name } = req.body || {};
+  if (native) {
+    const ret = native.bluetooth_start_pairing(name || '');
+    return res.json({ success: ret === 0 });
+  }
+  try {
+    if (name) await runCtl(`system-alias ${name}`);
+    await runCtl('pairable on');
+    await runCtl('discoverable on');
+    await runCtl('agent NoInputNoOutput');
+    await runCtl('default-agent');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'pairing failed' });
+  }
+});
+
 app.get('/status', (_req, res) => {
   res.json({ connected: !!connectedDevice, device: connectedDevice });
 });
@@ -57,6 +91,19 @@ app.post('/call', (req, res) => {
   const { number } = req.body || {};
   console.log('makeCall', number);
   res.json({ success: true });
+});
+
+app.get('/sim/iccid', (_req, res) => {
+  if (native) {
+    const buf = Buffer.alloc(32);
+    const ret = native.sim_read_iccid(buf, buf.length);
+    if (ret === 0) {
+      const iccid = ref.readCString(buf, 0);
+      return res.json({ iccid });
+    }
+    return res.status(500).json({ error: 'read failed' });
+  }
+  res.status(500).json({ error: 'not supported' });
 });
 
 app.post('/notify', (req, res) => {
