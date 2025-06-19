@@ -330,11 +330,37 @@ This prototype serves as a visual and interactive demonstration of the PhillOS c
 
 ## Android Container (Experimental)
 
-Early work has begun on running a full Android environment inside a container. The
-[android directory](android/) contains a small controller script written in TypeScript
-that will eventually handle starting the container and forwarding display and input.
-Play Store compatibility requires additional steps such as installing Google Play
-services or microG. This subsystem is purely a placeholder for now.
+PhillOS can run Android apps inside a [Waydroid](https://waydro.id/) container. The
+`android` directory now includes a functional controller script and a helper
+script for installing **microG** so the Play Store works inside the container.
+
+### Prerequisites
+
+- Linux system with Waydroid and `adb` installed
+
+### Running
+
+1. Start the container and attach the display bridge:
+
+   ```bash
+   ts-node android/controller.ts start
+   ```
+
+2. (Optional) Install microG packages:
+
+   ```bash
+   ./android/setup-microg.sh
+   ```
+
+   Reboot the container after the script finishes and sign in to the Play Store.
+
+3. Stop the container when finished:
+
+   ```bash
+   ts-node android/controller.ts stop
+   ```
+
+See [android/README.md](android/README.md) for additional details.
 
 ## PWA Cache Management
 

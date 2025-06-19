@@ -1,45 +1,76 @@
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
+
+/**
+ * Run a command and stream stdio. Resolves when the process exits
+ * successfully, rejects otherwise.
+ */
+function run(cmd: string, args: string[] = []): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { stdio: 'inherit' });
+    child.on('error', reject);
+    child.on('exit', code => {
+      code === 0
+        ? resolve()
+        : reject(new Error(`${cmd} exited with code ${code}`));
+    });
+  });
+}
 
 /**
  * Minimal controller for the experimental Android container.
- * These functions currently only log actions and should be
- * replaced with real container management commands.
+ * Uses Waydroid to spawn an Android environment and forward
+ * its display and input back to the host.
  */
 
-export function startContainer(): void {
+/**
+ * Start the Waydroid container.
+ */
+export async function startContainer(): Promise<void> {
   console.log('Starting Android container...');
-  // TODO: spawn container runtime (e.g. Docker/Podman/Anbox)
-  exec('echo start android container');
+  await run('waydroid', ['container', 'start']);
 }
 
-export function stopContainer(): void {
+/**
+ * Stop the Waydroid container.
+ */
+export async function stopContainer(): Promise<void> {
   console.log('Stopping Android container...');
-  // TODO: stop the container instance
-  exec('echo stop android container');
+  await run('waydroid', ['container', 'stop']);
 }
 
-export function forwardDisplay(): void {
-  console.log('Forwarding display from container...');
-  // TODO: bridge container display (VNC, Wayland, etc.)
+/**
+ * Start the display and input bridge using Waydroid's session service.
+ */
+export async function forwardDisplay(): Promise<void> {
+  console.log('Starting display forwarding...');
+  await run('waydroid', ['session', 'start']);
 }
 
-export function forwardInput(): void {
-  console.log('Forwarding input to container...');
-  // TODO: relay keyboard/mouse/touch events
+/**
+ * Input events are automatically forwarded by the Waydroid session.
+ * This helper exists for API completeness.
+ */
+export async function forwardInput(): Promise<void> {
+  console.log('Input forwarding active (handled by Waydroid session)');
 }
 
 if (require.main === module) {
   const command = process.argv[2];
-  switch (command) {
-    case 'start':
-      startContainer();
-      forwardDisplay();
-      forwardInput();
-      break;
-    case 'stop':
-      stopContainer();
-      break;
-    default:
-      console.log('Usage: ts-node controller.ts <start|stop>');
-  }
+  (async () => {
+    switch (command) {
+      case 'start':
+        await startContainer();
+        await forwardDisplay();
+        await forwardInput();
+        break;
+      case 'stop':
+        await stopContainer();
+        break;
+      default:
+        console.log('Usage: ts-node controller.ts <start|stop>');
+    }
+  })().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
 }
