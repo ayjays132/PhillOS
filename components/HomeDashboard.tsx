@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { GlassCard } from './GlassCard';
 import { WidgetConfig, StratumConfig } from '../types';
 import { 
@@ -13,6 +13,9 @@ import { QuickActionsWidget } from './widgets/QuickActionsWidget';
 import { GamingModeWidget } from './widgets/GamingModeWidget';
 import { UserProfileWidget } from './widgets/UserProfileWidget';
 import { PersonalizedNewsWidget } from './widgets/PersonalizedNewsWidget';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useWidgetLayout } from '../hooks/useWidgetLayout';
 
 const strataConfig: StratumConfig[] = [
   {
@@ -63,55 +66,93 @@ const rowSpanClasses: Record<number, string> = {
   4: 'row-span-4',
 };
 
-const WidgetHost: React.FC<{ widget: WidgetConfig }> = ({ widget }) => {
+interface DragItem {
+  id: string;
+  index: number;
+  stratumId: string;
+}
+
+const WidgetHost: React.FC<{
+  widget: WidgetConfig;
+  index: number;
+  stratumId: string;
+  move: (from: number, to: number) => void;
+}> = ({ widget, index, stratumId, move }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [, drop] = useDrop<DragItem>({
+    accept: 'WIDGET',
+    hover(item) {
+      if (item.stratumId !== stratumId) return;
+      if (!ref.current) return;
+      if (item.index === index) return;
+      move(item.index, index);
+      item.index = index;
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: 'WIDGET',
+    item: { id: widget.id, index, stratumId } as DragItem,
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+  });
+
+  drag(drop(ref));
+
   const IconComponent = widget.icon;
   const tabletCol = colSpanClasses[widget.colSpanTablet ?? 1] ?? colSpanClasses[1];
   const tabletRow = rowSpanClasses[widget.rowSpanTablet ?? 1] ?? rowSpanClasses[1];
   const desktopCol = colSpanClasses[widget.colSpanDesktop ?? 1] ?? colSpanClasses[1];
   const desktopRow = rowSpanClasses[widget.rowSpanDesktop ?? 1] ?? rowSpanClasses[1];
+
   return (
-    <GlassCard
-      className={`
-        flex flex-col
-        md:${tabletCol} md:${tabletRow}
-        lg:${desktopCol} lg:${desktopRow}
-        !bg-white/3 !border-white/5 !rounded-xl
-      `}
-    >
-      <div className="flex items-center mb-3">
-        <IconComponent size={20} className={`${widget.iconColor || 'text-white/80'} mr-2`} />
-        <h3 className="text-lg font-semibold text-white/90">{widget.title}</h3>
-      </div>
-      <div className="flex-grow overflow-y-auto">
-        <widget.component {...widget.props} />
-      </div>
-    </GlassCard>
+    <div ref={ref} className={`${isDragging ? 'opacity-50' : ''}`}>
+      <GlassCard
+        className={`
+          flex flex-col
+          md:${tabletCol} md:${tabletRow}
+          lg:${desktopCol} lg:${desktopRow}
+          !bg-white/3 !border-white/5 !rounded-xl
+        `}
+      >
+        <div className="flex items-center mb-3 cursor-move">
+          <IconComponent size={20} className={`${widget.iconColor || 'text-white/80'} mr-2`} />
+          <h3 className="text-lg font-semibold text-white/90">{widget.title}</h3>
+        </div>
+        <div className="flex-grow overflow-y-auto">
+          <widget.component {...widget.props} />
+        </div>
+      </GlassCard>
+    </div>
   );
 };
 
 
 export const HomeDashboard: React.FC = () => {
+  const { orderedWidgets, moveWidget } = useWidgetLayout(strataConfig);
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {strataConfig.map((stratum) => (
-        <section key={stratum.id} aria-labelledby={stratum.id + "-title"}>
-          {stratum.title && (
-            <h2 id={stratum.id + "-title"} className="text-xl sm:text-2xl font-bold text-white/80 mb-3 ml-1">{stratum.title}</h2>
-          )}
-          <div 
-            className={`
-              grid gap-3 sm:gap-4 
-              grid-cols-1 
-              md:grid-cols-${stratum.gridColsTablet || 2} 
-              lg:grid-cols-${stratum.gridColsDesktop || 4}
-            `}
-          >
-            {stratum.widgets.map((widget) => (
-              <WidgetHost key={widget.id} widget={widget} />
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
+    <DndProvider backend={HTML5Backend}>
+      <div className="space-y-4 sm:space-y-6">
+        {strataConfig.map((stratum) => (
+          <section key={stratum.id} aria-labelledby={stratum.id + "-title"}>
+            {stratum.title && (
+              <h2 id={stratum.id + "-title"} className="text-xl sm:text-2xl font-bold text-white/80 mb-3 ml-1">{stratum.title}</h2>
+            )}
+            <div
+              className={`
+                grid gap-3 sm:gap-4
+                grid-cols-1
+                md:grid-cols-${stratum.gridColsTablet || 2}
+                lg:grid-cols-${stratum.gridColsDesktop || 4}
+              `}
+            >
+              {orderedWidgets(stratum).map((widget, index) => (
+                <WidgetHost key={widget.id} widget={widget} index={index} stratumId={stratum.id} move={(from, to) => moveWidget(stratum.id, from, to)} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </DndProvider>
   );
 };
