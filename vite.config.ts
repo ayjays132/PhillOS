@@ -26,6 +26,18 @@ export default defineConfig(({ mode }) => {
                     maxAgeSeconds: 24 * 60 * 60
                   }
                 }
+              },
+              {
+                urlPattern: /\/phonebridge\/.*$/,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'phonebridge-cache',
+                  networkTimeoutSeconds: 5,
+                  expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 24 * 60 * 60
+                  }
+                }
               }
             ]
           }
