@@ -33,3 +33,16 @@ The blueprint describes an orchestration layer of **PhillOS Agents**:
 
 This architecture aims to turn the OS into a proactive digital partner that manages workflows on the user's behalf.
 
+
+## Roadmap: DX12 Compatibility
+
+PhillOS intends to run modern Windows games that rely on DirectX 12. The initial approach leverages Proton with the vkd3d-proton project to translate DX12 calls into Vulkan commands.
+
+1. **Integrate Proton in a container** so Windows games run isolated from the host OS.
+2. **Expose Vulkan drivers** from the host kernel to the Proton environment.
+3. **Bundle vkd3d-proton** and keep it updated through the PhillOS package manager.
+4. **Create a launcher service** that configures per-game prefixes, shader caches and FSR settings automatically.
+5. **Iterate with real-world testing** on popular DX12 titles and tune performance.
+
+This roadmap aims to provide near-native compatibility for Windows games while keeping the core OS lightweight.
+
