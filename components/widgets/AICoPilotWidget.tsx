@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, AlertTriangle, Loader2, Mic, MicOff } from 'lucide-react';
 import { ChatMessage } from '../../types';
-import { createCloudChatSession, sendMessageStream, CloudProvider, CloudChatSession } from '../../services/cloudAIService';
-import { createQwenChatSession, QwenChatSession } from '../../services/qwenService';
+import { createModelSession, sendModelMessageStream, ModelSession } from '../../services/modelManager';
+import { CloudProvider } from '../../services/cloudAIService';
 import { VoiceService, speakText } from '../../services/voiceService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -11,7 +11,7 @@ import { useOnboarding } from '../../hooks/useOnboarding';
 
 export const AICoPilotWidget: React.FC = () => {
   const { modelPreference } = useOnboarding();
-  const [chatSession, setChatSession] = useState<CloudChatSession | QwenChatSession | null>(null);
+  const [chatSession, setChatSession] = useState<ModelSession | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,36 +35,33 @@ export const AICoPilotWidget: React.FC = () => {
   useEffect(() => {
     let mounted = true;
     const initSession = async () => {
-      if (modelPreference === 'cloud') {
-        if (!apiKey) {
-          setIsApiKeyMissing(true);
-          setError('API key required for cloud AI.');
-          return;
-        }
-        const session = await createCloudChatSession(cloudProvider, apiKey);
+      if (modelPreference === 'cloud' && !apiKey) {
+        setIsApiKeyMissing(true);
+        setError('API key required for cloud AI.');
+        return;
+      }
+      try {
+        const session = await createModelSession(modelPreference, {
+          provider: cloudProvider,
+          apiKey,
+        });
         if (mounted && session) {
           setChatSession(session);
           setMessages([
-            { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
+            {
+              id: 'initial-greeting',
+              role: 'model',
+              text: 'Hello! I am PhillOS CoPilot. How can I assist you today?',
+              timestamp: new Date(),
+            },
           ]);
           setIsApiKeyMissing(false);
         } else if (mounted) {
           setError('Failed to initialize AI CoPilot session.');
-          setIsApiKeyMissing(true);
         }
-      } else {
-        try {
-          const session = await createQwenChatSession();
-          if (mounted) {
-            setChatSession(session);
-            setMessages([
-              { id: 'initial-greeting', role: 'model', text: 'Hello! I am PhillOS CoPilot. How can I assist you today?', timestamp: new Date() }
-            ]);
-          }
-        } catch (err) {
-          if (mounted) {
-            setError('Ollama server not found. Start `ollama serve`.');
-          }
+      } catch (err) {
+        if (mounted) {
+          setError('Ollama server not found. Start `ollama serve`.');
         }
       }
     };
@@ -113,13 +110,7 @@ export const AICoPilotWidget: React.FC = () => {
     setError(null);
 
     try {
-      const stream = modelPreference === 'cloud'
-        ? sendMessageStream(chatSession as CloudChatSession, userMessage.text)
-        : (chatSession as QwenChatSession).sendMessageStream(userMessage.text);
-
-      if (!stream) {
-        throw new Error('Failed to get response stream from AI.');
-      }
+      const stream = sendModelMessageStream(chatSession as ModelSession, userMessage.text);
       
       let modelResponseText = '';
       const modelMessageId = Date.now().toString() + '-model';
