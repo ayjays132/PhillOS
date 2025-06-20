@@ -502,6 +502,13 @@ npx ts-node cli/phillos-cli.ts android start
 npx ts-node cli/phillos-cli.ts phone sms +12345550123 "Hello"
 ```
 
+### Running Tests and Lint
+
+```bash
+npm test       # run vitest unit tests
+npm run lint   # check TypeScript sources with ESLint
+```
+
 
 ## License
 
