@@ -4,7 +4,13 @@ PhillOS relies on the open source [vkd3d-proton](https://github.com/HansKristian
 
 ## Setup
 
-Run `./scripts/setup-vkd3d.sh` once to download the sources. The script places them in `external/vkd3d` so future builds work entirely offline. If the directory already exists the script does nothing.
+Run `./scripts/setup-vkd3d.sh` once to download the sources. The script places them in `external/vkd3d` so future builds work entirely offline. If the directory already exists the script does nothing. The script verifies the archive's SHA256 before extraction. The expected checksum for version `v2.10` is:
+
+```
+e9bf8b39d1f424da27e9c5c14d629abf4760dd9791500c3c2b25d23b9fae2799
+```
+
+Update `VKD3D_SHA256` in `scripts/setup-vkd3d.sh` and here when bumping the version.
 
 After building the project, copy `libvkd3d-proton.so` from `external/vkd3d` into the boot image:
 
