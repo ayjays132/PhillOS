@@ -115,13 +115,15 @@ static void pci_scan(void)
 
 void driver_manager_init(void)
 {
-    pci_scan();
+    pci_scan_changes();
 }
 
 void driver_manager_rescan(void)
 {
-    pci_scan();
+    pci_scan_changes();
 }
+
+void driver_manager_unload(uint8_t bus, uint8_t slot, uint8_t func);
 ```
 
 The same logic is used by `driver_manager_rescan()` which is exposed
@@ -135,9 +137,9 @@ fall back to the generic framebuffer helper.  The storage directory
 contains an AHCI driver using the same `driver_t` interface.  These
 stubs establish the pattern for future vendor specific modules.
 
-## Looking Ahead
 
-Issue #1 tracks the plan to load drivers as dynamic modules and to
-support true hot‑plug detection.  The current static list provides the
-foundation for that work by defining a consistent driver structure and
-scanning routine.
+## Kernel Modules
+
+PhillOS now supports loading drivers as ELF modules from the boot partition. Modules are placed under `/modules/` and must export a `driver_entry` symbol of type `driver_t`. When `driver_manager_init()` detects hardware without a built-in driver it calls `module_load()` with a file name like `/modules/<vendor>_<device>.ko`. The returned driver is registered and its `init` callback invoked.
+
+If a device disappears the manager calls `driver_manager_unload()` to unload the module.
