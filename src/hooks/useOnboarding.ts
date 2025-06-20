@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { OnboardingState, AIModelPreference, UserProfile, UserInterest, ConnectedService } from '../types';
+import { OnboardingState, AIModelPreference, VoiceModelPreference, UserProfile, UserInterest, ConnectedService } from '../types';
 
-const ONBOARDING_STORAGE_KEY = 'phillos_onboarding_state_v3'; // Incremented version for new structure
+const ONBOARDING_STORAGE_KEY = 'phillos_onboarding_state_v4'; // Incremented version for new structure
 
 const defaultUserProfile: UserProfile = {
   username: 'PhillOS User',
@@ -12,7 +12,8 @@ const getDefaultState = (): OnboardingState => ({
   currentStep: 0,
   isComplete: false,
   modelPreference: 'local', // Default to local as per PhillOS document
-  userProfile: null, 
+  voiceModelPreference: 'browser',
+  userProfile: null,
   userInterests: [],
   connectedServices: [],
 });
@@ -28,7 +29,12 @@ export function useOnboarding() {
           typeof parsedState.isComplete === 'boolean' &&
           typeof parsedState.currentStep === 'number' &&
           (parsedState.modelPreference === 'local' || parsedState.modelPreference === 'cloud') &&
-          (parsedState.userProfile === null || (typeof parsedState.userProfile === 'object' && parsedState.userProfile && typeof parsedState.userProfile.username === 'string' && typeof parsedState.userProfile.avatarSeed === 'string')) &&
+          (parsedState.voiceModelPreference === 'browser' || parsedState.voiceModelPreference === 'whisper') &&
+          (parsedState.userProfile === null ||
+            (typeof parsedState.userProfile === 'object' &&
+              parsedState.userProfile &&
+              typeof parsedState.userProfile.username === 'string' &&
+              typeof parsedState.userProfile.avatarSeed === 'string')) &&
           Array.isArray(parsedState.userInterests) &&
           Array.isArray(parsedState.connectedServices)
         ) {
@@ -69,6 +75,10 @@ export function useOnboarding() {
     setOnboardingState(prev => ({ ...prev, modelPreference: preference }));
   }, []);
 
+  const setVoiceModelPreference = useCallback((preference: VoiceModelPreference) => {
+    setOnboardingState(prev => ({ ...prev, voiceModelPreference: preference }));
+  }, []);
+
   const setUserProfile = useCallback((profile: UserProfile) => {
     setOnboardingState(prev => ({ ...prev, userProfile: profile }));
   }, []);
@@ -92,12 +102,14 @@ export function useOnboarding() {
     currentStep: onboardingState.currentStep,
     isOnboardingComplete: onboardingState.isComplete,
     modelPreference: onboardingState.modelPreference,
+    voiceModelPreference: onboardingState.voiceModelPreference,
     userProfile: onboardingState.userProfile || defaultUserProfile,
     userInterests: onboardingState.userInterests,
     connectedServices: onboardingState.connectedServices,
     setStep,
     completeOnboarding,
     setModelPreference,
+    setVoiceModelPreference,
     setUserProfile,
     setUserInterests,
     setConnectedServices,
