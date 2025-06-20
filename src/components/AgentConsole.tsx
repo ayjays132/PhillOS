@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { agentService, AgentAction } from '../../services/agentService';
+import { agentOrchestrator } from '../../services/agentOrchestrator';
+import type { AgentAction } from '../../services/agentService';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard } from './GlassCard';
 import { useTheme } from '../contexts/ThemeContext';
@@ -16,12 +17,12 @@ export const AgentConsole: React.FC = () => {
     e.preventDefault();
     if (!input.trim() || isProcessing) return;
     setIsProcessing(true);
-    const action = await agentService.processCommand(input);
-    setOutput(action);
+    const task = await agentOrchestrator.processIntent(input);
+    setOutput(task?.action || null);
     setInput('');
     setIsProcessing(false);
-    if (action?.action === 'open_app' && typeof action.parameters?.app === 'string') {
-      navigate(`/${action.parameters.app}`);
+    if (task?.action.action === 'open_app' && typeof task.action.parameters?.app === 'string') {
+      navigate(`/${task.action.parameters.app}`);
     }
   };
 
