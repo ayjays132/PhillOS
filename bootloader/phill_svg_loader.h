@@ -4,6 +4,7 @@
 #include <efilib.h>
 
 EFI_STATUS load_boot_animation(EFI_HANDLE image, const char *cmdline,
+                               UINT8 theme_dark,
                                VOID **svg_data, UINTN *svg_size,
                                VOID **sprite_data, UINTN *sprite_size);
 

@@ -269,11 +269,14 @@ static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
         info->fb.pitch = gop->Mode->Info->PixelsPerScanLine;
     }
 
+    load_theme_cfg(image, info);
+
     VOID *svg_data = NULL;
     UINTN svg_size = 0;
     VOID *sprite_data = NULL;
     UINTN sprite_size = 0;
-    status = load_boot_animation(image, cmdline_buf, &svg_data, &svg_size,
+    status = load_boot_animation(image, cmdline_buf, info->theme_dark,
+                                 &svg_data, &svg_size,
                                  &sprite_data, &sprite_size);
     if (!EFI_ERROR(status)) {
         if (svg_data) {
@@ -305,8 +308,6 @@ static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
     info->mmap_size = map_size;
     info->mmap_desc_size = desc_size;
     info->mmap_key = map_key;
-
-    load_theme_cfg(image, info);
 
     *out_info = info;
     return EFI_SUCCESS;

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { storageService } from '../services/storageService';
 
 export type Theme = 'light' | 'dark';
 
@@ -9,7 +10,6 @@ interface ThemeContextProps {
 }
 
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
-const STORAGE_KEY = 'phillos-theme';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>('dark');
@@ -20,30 +20,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setThemeState(win.boot_info.theme_dark ? 'dark' : 'light');
       return;
     }
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    if (stored === 'light' || stored === 'dark') {
-      setThemeState(stored);
-    } else {
-      fetch('/api/theme')
-        .then(r => r.ok ? r.json() : null)
-        .then(d => {
-          if (d && (d.theme === 'light' || d.theme === 'dark')) {
-            setThemeState(d.theme);
-          }
-        })
-        .catch(() => {});
-    }
+    storageService.getTheme().then(t => {
+      if (t === 'light' || t === 'dark') {
+        setThemeState(t);
+      }
+    });
   }, []);
 
   useEffect(() => {
     document.documentElement.classList.remove('theme-light', 'theme-dark');
     document.documentElement.classList.add(`theme-${theme}`);
-    localStorage.setItem(STORAGE_KEY, theme);
-    fetch('/api/theme', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ theme }),
-    }).catch(() => {});
+    storageService.setTheme(theme);
   }, [theme]);
 
   const setTheme = (t: Theme) => setThemeState(t);
