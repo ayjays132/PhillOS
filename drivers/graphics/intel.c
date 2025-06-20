@@ -10,7 +10,9 @@ static int intel_match(const pci_device_t *dev)
     return dev->vendor_id == 0x8086 && dev->class_code == 0x03;
 }
 
-static void intel_init(const pci_device_t *dev)
+static const pci_device_t *intel_dev = NULL;
+
+static void intel_hw_init(const pci_device_t *dev)
 {
     debug_puts("Initializing Intel GPU\n");
 
@@ -25,13 +27,25 @@ static void intel_init(const pci_device_t *dev)
     gpu_set_active_driver(&intel_driver);
 }
 
+static void intel_init(void)
+{
+    if (intel_dev)
+        intel_hw_init(intel_dev);
+}
+
+static void intel_pnp_init(const pci_device_t *dev)
+{
+    intel_dev = dev;
+    intel_hw_init(dev);
+}
+
 gpu_driver_t intel_driver = {
     .vendor = GPU_VENDOR_INTEL,
-    .init = NULL,
+    .init = intel_init,
 };
 
 driver_t intel_pnp_driver = {
     .name = "Intel GPU",
     .match = intel_match,
-    .init = intel_init,
+    .init = intel_pnp_init,
 };

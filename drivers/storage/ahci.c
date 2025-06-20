@@ -71,7 +71,13 @@ typedef struct {
     uint32_t rsv1[4];
 } hba_cmd_header_t;
 
-static hba_port_t *boot_port = NULL;
+typedef struct {
+    hba_port_t *port;
+} ahci_port_t;
+
+static ahci_port_t ahci_ports[32];
+static unsigned ahci_port_count = 0;
+static hba_mem_t *ahci_abar = NULL;
 
 static void start_port(hba_port_t *port)
 {
@@ -92,12 +98,13 @@ static int wait_for_clear(volatile uint32_t *reg, uint32_t mask, uint32_t timeou
     return -1;
 }
 
-static int port_rw(hba_port_t *port, uint64_t lba, uint32_t count,
+static int port_rw(ahci_port_t *p, uint64_t lba, uint32_t count,
                    void *buf, int write)
 {
-    if (!port)
+    if (!p || !p->port)
         return -1;
 
+    hba_port_t *port = p->port;
     hba_cmd_header_t *cl = (hba_cmd_header_t*)(uintptr_t)(port->clb);
     hba_cmd_tbl_t *tbl = (hba_cmd_tbl_t*)(((uintptr_t)cl) + sizeof(hba_cmd_header_t)*0);
     memset(tbl, 0, sizeof(hba_cmd_tbl_t));
@@ -150,9 +157,9 @@ static void ahci_init_controller(uint8_t bus, uint8_t slot, uint8_t func,
     uint32_t bar5 = pci_config_read32(bus, slot, func, 0x24);
     uint64_t abar_phys = bar5 & ~0xF;
     map_identity_range(abar_phys, sizeof(hba_mem_t));
-    hba_mem_t *abar = (hba_mem_t*)(uintptr_t)abar_phys;
-    uint32_t version = abar->vs;
-    uint32_t pi = abar->pi;
+    ahci_abar = (hba_mem_t*)(uintptr_t)abar_phys;
+    uint32_t version = ahci_abar->vs;
+    uint32_t pi = ahci_abar->pi;
 
     debug_puts("AHCI version 0x");
     debug_puthex(version);
@@ -160,20 +167,23 @@ static void ahci_init_controller(uint8_t bus, uint8_t slot, uint8_t func,
     debug_puthex(pi);
     debug_puts("\n");
 
-    for (int i = 0; i < 32; i++) {
+    ahci_port_count = 0;
+    for (int i = 0; i < 32 && ahci_port_count < 32; i++) {
         if (pi & (1 << i)) {
-            hba_port_t *port = &abar->ports[i];
+            hba_port_t *port = &ahci_abar->ports[i];
             port->clb = (uint32_t)(uintptr_t)alloc_page();
             port->fb  = (uint32_t)(uintptr_t)alloc_page();
             memset((void*)(uintptr_t)port->clb, 0, 4096);
             memset((void*)(uintptr_t)port->fb, 0, 4096);
-            boot_port = port;
-            break;
+            port->ie = 0xFFFFFFFF;
+            ahci_ports[ahci_port_count++].port = port;
         }
     }
+    if (ahci_port_count)
+        ahci_abar->ghc |= (1 << 1); /* enable interrupts */
 }
 
-/* Detect first AHCI controller and prepare a single port */
+/* Detect first AHCI controller and initialize all ports */
 void init_ahci(void)
 {
     debug_puts("Scanning for AHCI controller\n");
@@ -200,18 +210,22 @@ void init_ahci(void)
     debug_puts("No AHCI controller found\n");
 }
 
+static int ahci_rw_port(unsigned port, uint64_t lba, uint32_t count,
+                        void *buffer, int write)
+{
+    if (port >= ahci_port_count)
+        return -1;
+    return port_rw(&ahci_ports[port], lba, count, buffer, write);
+}
+
 int ahci_read(uint64_t lba, uint32_t count, void *buffer)
 {
-    if (!boot_port)
-        return -1;
-    return port_rw(boot_port, lba, count, buffer, 0);
+    return ahci_rw_port(0, lba, count, buffer, 0);
 }
 
 int ahci_write(uint64_t lba, uint32_t count, const void *buffer)
 {
-    if (!boot_port)
-        return -1;
-    return port_rw(boot_port, lba, count, (void *)buffer, 1);
+    return ahci_rw_port(0, lba, count, (void *)buffer, 1);
 }
 
 static int ahci_match(const pci_device_t *dev)
@@ -230,3 +244,18 @@ driver_t ahci_pnp_driver = {
     .match = ahci_match,
     .init = ahci_pnp_init,
 };
+
+unsigned ahci_get_port_count(void)
+{
+    return ahci_port_count;
+}
+
+int ahci_read_port(unsigned port, uint64_t lba, uint32_t count, void *buffer)
+{
+    return ahci_rw_port(port, lba, count, buffer, 0);
+}
+
+int ahci_write_port(unsigned port, uint64_t lba, uint32_t count, const void *buf)
+{
+    return ahci_rw_port(port, lba, count, (void *)buf, 1);
+}

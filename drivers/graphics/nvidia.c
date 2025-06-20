@@ -10,7 +10,9 @@ static int nvidia_match(const pci_device_t *dev)
     return dev->vendor_id == 0x10DE && dev->class_code == 0x03;
 }
 
-static void nvidia_init(const pci_device_t *dev)
+static const pci_device_t *nvidia_dev = NULL;
+
+static void nvidia_hw_init(const pci_device_t *dev)
 {
     debug_puts("Initializing Nvidia GPU\n");
 
@@ -25,13 +27,25 @@ static void nvidia_init(const pci_device_t *dev)
     gpu_set_active_driver(&nvidia_driver);
 }
 
+static void nvidia_init(void)
+{
+    if (nvidia_dev)
+        nvidia_hw_init(nvidia_dev);
+}
+
+static void nvidia_pnp_init(const pci_device_t *dev)
+{
+    nvidia_dev = dev;
+    nvidia_hw_init(dev);
+}
+
 gpu_driver_t nvidia_driver = {
     .vendor = GPU_VENDOR_NVIDIA,
-    .init = NULL,
+    .init = nvidia_init,
 };
 
 driver_t nvidia_pnp_driver = {
     .name = "Nvidia GPU",
     .match = nvidia_match,
-    .init = nvidia_init,
+    .init = nvidia_pnp_init,
 };

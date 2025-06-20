@@ -24,3 +24,16 @@ when an Nvidia, AMD or Intel device is discovered.  Each driver stub now probes
 its device's BAR registers, maps the framebuffer region and then calls the
 generic `init_framebuffer()` helper so early graphics output continues to work.
 The active driver can be queried with `gpu_get_active_driver()`.
+
+## Supported Hardware
+
+PhillOS currently supports basic initialization for discrete Nvidia and AMD GPUs
+as well as integrated Intel graphics.  The drivers map the framebuffer BAR and
+enable a simple linear framebuffer.  Devices are matched solely by PCI vendor
+ID:
+
+- Nvidia (`0x10DE`)
+- AMD/ATI (`0x1002`)
+- Intel (`0x8086`)
+
+Other GPUs fall back to the EFI framebuffer driver.
