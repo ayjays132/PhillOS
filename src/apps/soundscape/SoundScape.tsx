@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { soundScapeService } from '../../services/soundScapeService';
+import { soundAnalyzer, calculateEqForNoise, EQSettings } from '../../services/soundAnalyzer';
 
 interface Track {
   id: number;
@@ -10,9 +11,11 @@ interface Track {
 
 export const SoundScape: React.FC = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [eq, setEq] = useState<EQSettings>({ low: 0, mid: 0, high: 0 });
 
   useEffect(() => {
     soundScapeService.getTracks().then(setTracks);
+    soundAnalyzer.getNoiseLevel().then(level => setEq(calculateEqForNoise(level)));
   }, []);
 
   return (
@@ -23,6 +26,7 @@ export const SoundScape: React.FC = () => {
             <li key={t.id}>{t.title} - {t.artist}</li>
           ))}
         </ul>
+        <div className="text-xs mt-2">EQ: low {eq.low} / mid {eq.mid} / high {eq.high}</div>
       </AppPanel>
   );
 };
