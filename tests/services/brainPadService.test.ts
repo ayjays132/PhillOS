@@ -35,4 +35,16 @@ describe('brainPadService message API', () => {
     const entries = brainPadService.getEntries();
     expect(entries[entries.length - 1].content).toBe('hello');
   });
+
+  it('summarizes notes with cloudAIService', async () => {
+    vi.doMock('../../services/cloudAIService', () => ({
+      createCloudChatSession: vi.fn(async () => ({ provider: 'gemini', apiKey: 'k', session: {} })),
+      sendMessageStream: vi.fn(async function* () {
+        yield 'Bullet one\nBullet two';
+      }),
+    }));
+    const { brainPadService } = await import('../../services/brainPadService');
+    const bullets = await brainPadService.summarize('test note', 'k');
+    expect(bullets).toEqual(['Bullet one', 'Bullet two']);
+  });
 });
