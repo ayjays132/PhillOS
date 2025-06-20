@@ -7,9 +7,22 @@ import { URL } from 'url';
 import { createProtonLauncher } from './protonLauncher.js';
 import { initDb, query, execute } from './db.js';
 
-const SETTINGS_FILE = path.resolve(__dirname, 'protonSettings.json');
-const STORAGE_DIR = process.env.PHILLOS_STORAGE_DIR || path.resolve(__dirname, '../storage');
-const THEME_FILE = path.join(STORAGE_DIR, 'theme.cfg');
+const STORAGE_DIR = path.resolve(process.env.PHILLOS_STORAGE_DIR || path.join(__dirname, '../storage'));
+const ALLOWED_FILES = new Set(['protonSettings.json', 'theme.cfg']);
+
+function sanitizeStoragePath(name) {
+  const base = path.basename(name);
+  if (!ALLOWED_FILES.has(base)) throw new Error('invalid filename');
+  return path.join(STORAGE_DIR, base);
+}
+
+const SETTINGS_FILE = sanitizeStoragePath('protonSettings.json');
+const THEME_FILE = sanitizeStoragePath('theme.cfg');
+
+function sanitizeUserPath(p) {
+  if (typeof p !== 'string' || p.includes('\0')) throw new Error('invalid path');
+  return path.resolve(p);
+}
 
 function loadSettings() {
   try {
@@ -20,6 +33,7 @@ function loadSettings() {
 }
 
 function saveSettings(data) {
+  fs.mkdirSync(STORAGE_DIR, { recursive: true });
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
 }
 
@@ -83,8 +97,14 @@ app.post('/api/launch-proton', async (req, res) => {
     return res.status(400).json({ error: 'path required' });
   }
 
+  try {
+    exePath = sanitizeUserPath(exePath);
+  } catch {
+    return res.status(400).json({ error: 'invalid path' });
+  }
+
   const settings = loadSettings();
-  const key = path.resolve(exePath);
+  const key = exePath;
   const stored = settings[key] || {};
 
   version = version || stored.version;
@@ -297,3 +317,4 @@ if (!process.env.VITEST) {
 }
 
 export default app;
+export { sanitizeUserPath, sanitizeStoragePath, STORAGE_DIR };
