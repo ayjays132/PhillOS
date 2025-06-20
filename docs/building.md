@@ -60,3 +60,7 @@ The bootloader expects `bootanim.svgz` to be compressed and then have the eight-
 `PHILSVG` trailer appended. Run `scripts/embed_svg.py` to embed the file in the
 EFI image and ensure the trailer is present before signing. If the loader does
 not detect this marker it will refuse to load the animation.
+
+The animation can optionally read the `theme_dark` flag passed via `boot_info_t`
+and switch its gradient colors accordingly. When generating the SVG, define two
+gradients (light and dark) and toggle their visibility based on this flag.
