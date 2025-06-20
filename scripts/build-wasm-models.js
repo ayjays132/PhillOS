@@ -53,6 +53,14 @@ const artefacts = [
       await run('ggml-wasm', [src, '-o', out]);
     },
   },
+  {
+    name: 'translator.onnx.wasm',
+    wasm: path.join(projectRoot, 'models', 'translator.onnx.wasm'),
+    src: path.join(projectRoot, 'models', 'translator.onnx'),
+    build: async (src, out) => {
+      await run('onnxruntime_web', ['wasm', src, '--out', out]);
+    },
+  },
 ];
 
 for (const art of artefacts) {

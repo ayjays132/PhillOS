@@ -158,9 +158,42 @@ app.post('/api/theme', async (req, res) => {
 });
 
 // --- ConverseAI ---
-app.post('/api/converseai', (req, res) => {
-  const { message } = req.body || {};
-  res.json({ reply: `Echo: ${message || ''}` });
+let converseSession = null;
+app.post('/api/converseai', async (req, res) => {
+  const { message, toneMatch } = req.body || {};
+  if (!message) return res.status(400).json({ error: 'message required' });
+
+  try {
+    const mod = await import('../services/cloudAIService.ts');
+    if (!converseSession) {
+      converseSession = await mod.createCloudChatSession('gemini', process.env.CLOUD_API_KEY || '');
+    }
+    let finalMsg = String(message);
+    if (toneMatch) {
+      finalMsg = `Match my style and reply accordingly.\n${message}`;
+    }
+    let reply = '';
+    for await (const chunk of mod.sendMessageStream(converseSession, finalMsg)) {
+      reply += chunk;
+    }
+    res.json({ reply });
+  } catch (err) {
+    console.error('converseai error', err);
+    res.json({ reply: `Echo: ${message || ''}` });
+  }
+});
+
+app.post('/api/converseai/digest', async (req, res) => {
+  const { messages } = req.body || {};
+  const text = Array.isArray(messages) ? messages.map(m => m.text || '').join('\n') : '';
+  try {
+    const mod = await import('../services/modelManager.ts');
+    const digest = text ? await mod.summarize(text) : '';
+    res.json({ digest });
+  } catch (err) {
+    console.error('digest error', err);
+    res.status(500).json({ error: 'digest failed' });
+  }
 });
 
 // --- InBoxAI ---
