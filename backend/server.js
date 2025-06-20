@@ -4,6 +4,7 @@ import path from 'path';
 import os from 'os';
 import { request } from 'http';
 import { URL } from 'url';
+import { spawn } from 'child_process';
 import { createProtonLauncher } from './protonLauncher.js';
 import { initDb, query, execute } from './db.js';
 
@@ -225,6 +226,55 @@ app.post('/api/mediasphere/analyze', (req, res) => {
     }
   } catch {}
   res.json({ result: 'Not found' });
+});
+
+
+async function detectScenes(file) {
+  const duration = await new Promise(resolve => {
+    const p = spawn('ffprobe', [
+      '-v', 'error',
+      '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1',
+      file,
+    ]);
+    let out = '';
+    p.stdout.on('data', d => { out += d; });
+    p.on('close', () => resolve(parseFloat(out.trim()) || 0));
+    p.on('error', () => resolve(0));
+  });
+
+  const times = await new Promise(resolve => {
+    const args = [
+      '-i', file,
+      '-vf', "select=gt(scene\\,0.4),showinfo",
+      '-f', 'null',
+      '-',
+    ];
+    const p = spawn('ffmpeg', args);
+    let err = '';
+    p.stderr.on('data', d => { err += d; });
+    p.on('close', () => {
+      const matches = [...err.matchAll(/pts_time:([0-9.]+)/g)];
+      resolve(matches.map(m => parseFloat(m[1])).filter(n => !Number.isNaN(n)));
+    });
+    p.on('error', () => resolve([]));
+  });
+
+  return { duration, chapters: times.map((t, i) => ({ start: t, title: `Scene ${i + 1}` })) };
+}
+
+app.post('/api/mediasphere/chapters', async (req, res) => {
+  const { id } = req.body || {};
+  const dir = path.join(STORAGE_DIR, 'media');
+  try {
+    const files = fs.readdirSync(dir).filter(f => !fs.statSync(path.join(dir, f)).isDirectory());
+    const file = files[id - 1];
+    if (file) {
+      const data = await detectScenes(path.join(dir, file));
+      return res.json(data);
+    }
+  } catch {}
+  res.json({ chapters: [], duration: 0 });
 });
 
 // --- SoundScape ---

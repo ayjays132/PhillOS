@@ -23,6 +23,20 @@ class MediaSphereService {
       return { result: '' };
     }
   }
+
+  async getChapters(id: number) {
+    try {
+      const res = await fetch('/api/mediasphere/chapters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) return { chapters: [], duration: 0 };
+      return await res.json();
+    } catch {
+      return { chapters: [], duration: 0 };
+    }
+  }
 }
 
 import { agentOrchestrator } from './agentOrchestrator';
@@ -31,3 +45,4 @@ export const mediaSphereService = new MediaSphereService();
 
 agentOrchestrator.registerAction('mediasphere.analyze', params => mediaSphereService.analyzeVideo(Number(params?.id)));
 agentOrchestrator.registerAction('mediasphere.get_media', () => mediaSphereService.getMedia());
+agentOrchestrator.registerAction('mediasphere.get_chapters', params => mediaSphereService.getChapters(Number(params?.id)));
