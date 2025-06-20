@@ -19,6 +19,11 @@ The project ships with a minimal bootloader and C-based kernel. Building an imag
 3. Creating an ISO with `make -C bootloader OUT_DIR=../dist/bootloader iso` and flashing it to a USB drive with `dd` or a graphical tool.
 4. Booting on UEFI hardware (Secure Boot disabled) or via QEMU.
 
+During this early boot phase, the kernel reserves a few pages exclusively for
+the agent subsystem. `AGENT_MEMORY_PAGES` defines how many 4&nbsp;KiB pages are
+set aside and these can be accessed through `agent_alloc()` and
+`agent_free()`.
+
 ## Kernel Architecture
 
 PhillOS envisions a single **AI‑native kernel** that integrates machine‑learning models for dynamic resource allocation, intelligent process scheduling, and self‑healing. Memory management and task prioritization adapt to predicted user needs. A responsive UI layer sits above this kernel, scaling across phones, desktops, and other devices.

@@ -12,6 +12,7 @@ typedef struct heap_block {
 
 static heap_block_t *heap_head = NULL;
 static heap_block_t *ai_heap_head = NULL;
+static heap_block_t *agent_heap_head = NULL;
 
 static void split_block(heap_block_t *blk, size_t size);
 
@@ -41,6 +42,18 @@ static void init_heap_region(void *base, size_t size, heap_block_t **head)
 void init_heap(void)
 {
     heap_head = alloc_new_page();
+    agent_heap_head = NULL;
+    heap_block_t *prev = NULL;
+    for (size_t i = 0; i < AGENT_MEMORY_PAGES; i++) {
+        heap_block_t *blk = alloc_new_page();
+        if (!blk)
+            break;
+        if (!agent_heap_head)
+            agent_heap_head = blk;
+        if (prev)
+            prev->next = blk;
+        prev = blk;
+    }
 }
 
 void init_ai_heap(void *base, size_t size)
@@ -136,3 +149,14 @@ void ai_free(void *ptr)
 {
     heap_free(&ai_heap_head, ptr);
 }
+
+void *agent_alloc(size_t size)
+{
+    return heap_alloc(&agent_heap_head, size, 0);
+}
+
+void agent_free(void *ptr)
+{
+    heap_free(&agent_heap_head, ptr);
+}
+
