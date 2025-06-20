@@ -8,6 +8,24 @@ export interface PciDevice {
   subclass: number;
 }
 
+export interface IDevice extends PciDevice {}
+
+export interface IHotSwapListener {
+  deviceAdded?(dev: IDevice): void;
+  deviceRemoved?(dev: IDevice): void;
+}
+
+export interface IDriverManager {
+  registerDriver(d: Driver): void;
+  unregisterDriver(d: Driver): void;
+  init(): void;
+  rescan(): void;
+  unload(bus: number, slot: number, func: number): void;
+  poll(): void;
+  addHotSwapListener(l: IHotSwapListener): void;
+  removeHotSwapListener(l: IHotSwapListener): void;
+}
+
 export interface Driver {
   name: string;
   match?: (dev: PciDevice) => boolean;
@@ -27,6 +45,7 @@ type Record = {
 
 let drivers: Driver[] = [];
 let records: Record[] = [];
+let listeners: IHotSwapListener[] = [];
 export let pciDevices: PciDevice[] = [];
 export let moduleLoad = (path: string): Module | null => null;
 export let moduleUnload = (m: Module): void => {};
@@ -45,6 +64,25 @@ export function driver_manager_unregister(d: Driver) {
   drivers = drivers.filter(dr => dr !== d);
 }
 
+export function driver_manager_unload(bus: number, slot: number, func: number) {
+  records = records.filter(r => {
+    if (r.dev.bus===bus && r.dev.slot===slot && r.dev.func===func) {
+      if (r.module) moduleUnload(r.module);
+      for (const lis of listeners) lis.deviceRemoved?.(r.dev);
+      return false;
+    }
+    return true;
+  });
+}
+
+export function driver_manager_add_listener(l: IHotSwapListener) {
+  listeners.unshift(l);
+}
+
+export function driver_manager_remove_listener(l: IHotSwapListener) {
+  listeners = listeners.filter(x => x !== l);
+}
+
 function handle_new_device(dev: PciDevice) {
   const rec: Record = { dev, driver: drivers[0], present: true } as any;
   for (const drv of drivers) {
@@ -52,6 +90,7 @@ function handle_new_device(dev: PciDevice) {
       drv.init?.(dev);
       rec.driver = drv;
       records.push(rec);
+      for (const lis of listeners) lis.deviceAdded?.(dev);
       return;
     }
   }
@@ -62,6 +101,7 @@ function handle_new_device(dev: PciDevice) {
     rec.driver = mod.driver;
     rec.module = mod;
     records.push(rec);
+    for (const lis of listeners) lis.deviceAdded?.(dev);
   }
 }
 
@@ -78,6 +118,7 @@ function pci_scan_changes() {
   records = records.filter(r => {
     if (!r.present) {
       if (r.module) moduleUnload(r.module);
+      for (const lis of listeners) lis.deviceRemoved?.(r.dev);
       return false;
     }
     return true;
@@ -96,3 +137,14 @@ export function driver_manager_rescan() {
 export function driver_manager_poll() {
   pci_scan_changes();
 }
+
+export const driverManager: IDriverManager = {
+  registerDriver: driver_manager_register,
+  unregisterDriver: driver_manager_unregister,
+  init: driver_manager_init,
+  rescan: driver_manager_rescan,
+  unload: driver_manager_unload,
+  poll: driver_manager_poll,
+  addHotSwapListener: driver_manager_add_listener,
+  removeHotSwapListener: driver_manager_remove_listener,
+};

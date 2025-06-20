@@ -160,3 +160,63 @@ cat module.sig >> module.ko
 ```
 
 Unsigned or mismatched modules will be rejected by `module_load()`.
+
+## Platform Examples
+
+Below are minimal sketches showing how a hot swap listener might be used on
+different platforms. These examples assume the interfaces defined in
+`include/phillos/driver/` are available.
+
+### Windows
+
+```c
+#include <phillos/driver/IDriverManager.h>
+
+static void on_add(const IDevice *dev) {
+    printf("Device %04x:%04x added\n", dev->vendor_id, dev->device_id);
+}
+
+static IHotSwapListener listener = { .device_added = on_add };
+
+int main(void) {
+    driver_manager.add_hot_swap_listener(&listener);
+    driver_manager.poll();
+}
+```
+
+### Linux
+
+```c
+#include <phillos/driver/IDriverManager.h>
+
+static void removed(const IDevice *dev) {
+    syslog(LOG_INFO, "removed %04x:%04x", dev->vendor_id, dev->device_id);
+}
+
+static IHotSwapListener l = { .device_removed = removed };
+
+int main(void) {
+    driver_manager.add_hot_swap_listener(&l);
+    while (1) {
+        driver_manager.poll();
+        sleep(1);
+    }
+}
+```
+
+### macOS
+
+```c
+#include <phillos/driver/IDriverManager.h>
+
+static void add_cb(const IDevice *dev) {
+    NSLog(@"device added %04x:%04x", dev->vendor_id, dev->device_id);
+}
+
+static IHotSwapListener l = { .device_added = add_cb };
+
+int main(void) {
+    driver_manager.add_hot_swap_listener(&l);
+    driver_manager_rescan();
+}
+```

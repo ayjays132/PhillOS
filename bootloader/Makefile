@@ -16,8 +16,8 @@ BOOTANIM ?= $(OUT_DIR)/bootanim.svgz
 SIGN_KEY ?= keys/db.key
 SIGN_CERT ?= keys/db.crt
 SIGNED_BOOTLOADER := $(OUT_DIR)/BOOTX64.EFI.signed
-CFLAGS := -fpic -fshort-wchar -mno-red-zone -fno-stack-protector 	-ffreestanding -I/usr/include/efi -I/usr/include/efi/x86_64 	-I../kernel -I../kernel/memory
-KERNEL_CFLAGS := -fpic -fshort-wchar -mno-red-zone -fno-stack-protector 	-ffreestanding -I../kernel -I../kernel/memory -I../kernel/fs -I../drivers/storage -I../drivers/graphics 	-I/usr/include/efi -I/usr/include/efi/x86_64
+CFLAGS := -fpic -fshort-wchar -mno-red-zone -fno-stack-protector 	-ffreestanding -I/usr/include/efi -I/usr/include/efi/x86_64 	-I../kernel -I../kernel/memory -I../include
+KERNEL_CFLAGS := -fpic -fshort-wchar -mno-red-zone -fno-stack-protector 	-ffreestanding -I../kernel -I../kernel/memory -I../kernel/fs -I../drivers/storage -I../drivers/graphics -I../include 	-I/usr/include/efi -I/usr/include/efi/x86_64
 LDFLAGS := -nostdlib -znocombreloc -T /usr/lib/elf_x86_64_efi.lds 	-shared -Bsymbolic -L/usr/lib -lefi -lgnuefi
 
 BOOTLOADER := $(OUT_DIR)/BOOTX64.EFI

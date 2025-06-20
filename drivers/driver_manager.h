@@ -2,6 +2,8 @@
 #define PHILLOS_DRIVER_MANAGER_H
 
 #include <stdint.h>
+#include <phillos/driver/IDriverManager.h>
+#include <phillos/driver/IHotSwapListener.h>
 
 typedef struct pci_device {
     uint8_t bus;
@@ -27,5 +29,10 @@ void driver_manager_rescan(void);
 void driver_manager_unload(uint8_t bus, uint8_t slot, uint8_t func);
 void driver_manager_poll(void);
 uint32_t pci_config_read32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+
+void driver_manager_add_listener(IHotSwapListener *listener);
+void driver_manager_remove_listener(IHotSwapListener *listener);
+
+extern const IDriverManager driver_manager;
 
 #endif // PHILLOS_DRIVER_MANAGER_H
