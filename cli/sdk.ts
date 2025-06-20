@@ -23,6 +23,7 @@ export class PhillosCLI {
 
   async run(argv: string[] = process.argv) {
     const program = new Command();
+    program.exitOverride();
     program
       .name('phillos-cli')
       .description('PhillOS command line interface');

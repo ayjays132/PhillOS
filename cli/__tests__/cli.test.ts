@@ -1,0 +1,33 @@
+import { describe, it, expect, vi } from 'vitest';
+import { PhillosCLI } from '../sdk';
+
+vi.mock('../../android/controller.ts', () => ({
+  startContainer: vi.fn(),
+  stopContainer: vi.fn(),
+  forwardDisplay: vi.fn(),
+  forwardInput: vi.fn(),
+}));
+
+const fetchMock = vi.fn(async () => ({ json: async () => ({ ok: true }) } as any));
+
+describe('PhillosCLI', () => {
+  it('runs android start sequence', async () => {
+    const { startContainer, forwardDisplay, forwardInput } = await import('../../android/controller.ts');
+    const cli = new PhillosCLI();
+    vi.stubGlobal('fetch', fetchMock);
+    await cli.run(['node', 'phillos-cli', 'android', 'start']);
+    expect(startContainer).toHaveBeenCalled();
+    expect(forwardDisplay).toHaveBeenCalled();
+    expect(forwardInput).toHaveBeenCalled();
+  });
+
+  it('sends phone sms', async () => {
+    const cli = new PhillosCLI({ phoneBridgeUrl: 'http://test' });
+    fetchMock.mockClear();
+    vi.stubGlobal('fetch', fetchMock);
+    await cli.run(['node', 'phillos-cli', 'phone', 'sms', '123', 'hello']);
+    expect(fetchMock).toHaveBeenCalled();
+    const url = new URL((fetchMock.mock.calls[0] as any)[0]);
+    expect(url.pathname).toBe('/sms');
+  });
+});
