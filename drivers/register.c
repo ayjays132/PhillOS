@@ -5,6 +5,7 @@
 #include "storage/ahci.h"
 #include "phone/bluetooth.h"
 #include "phone/sim.h"
+#include "query_dev.h"
 
 extern driver_t nvidia_pnp_driver;
 extern driver_t amd_pnp_driver;
@@ -21,4 +22,5 @@ void drivers_register_all(void)
     driver_manager_register(&ahci_pnp_driver);
     driver_manager_register(&bluetooth_pnp_driver);
     driver_manager_register(&sim_pnp_driver);
+    query_dev_register();
 }

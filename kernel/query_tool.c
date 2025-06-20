@@ -9,12 +9,13 @@
 #include "query.h"
 
 #define QUERY_DEV "/dev/phillos-query"
-#define QUERY_IOCTL _IOWR('p', 1, struct query_ioc)
 
 typedef struct {
     kernel_query_request_t req;
     kernel_query_response_t res;
 } query_ioc_t;
+
+#define QUERY_IOCTL _IOWR('p', 1, query_ioc_t)
 
 static uint32_t sign_token(uint32_t nonce, uint32_t query)
 {
