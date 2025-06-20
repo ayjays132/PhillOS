@@ -19,6 +19,7 @@ import { useDeviceType } from './hooks/useDeviceType';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useDock } from './hooks/useDock';
 import { useTheme } from './contexts/ThemeContext';
+import { useTrainingScheduler } from './hooks/useTrainingScheduler';
 
 
 const App: React.FC = () => {
@@ -28,6 +29,10 @@ const App: React.FC = () => {
   const { navItems } = useDock();
   const { theme } = useTheme();
   const location = useLocation();
+
+  const trainingEnabled = import.meta.env.VITE_TRAINING_ENABLED !== 'false';
+  const trainingFreq = parseInt(import.meta.env.VITE_TRAINING_FREQUENCY_MS || '3600000', 10);
+  useTrainingScheduler(trainingEnabled, trainingFreq);
 
 
   if (!isOnboardingComplete && location.pathname !== '/onboarding') {
