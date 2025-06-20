@@ -3,7 +3,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 import { invoke } from '@tauri-apps/api/tauri';
 import { CalendarEvent } from '../../types';
 
@@ -71,7 +71,7 @@ export const TimeAI: React.FC = () => {
   };
 
   return (
-    <GlassCard className="h-full flex flex-col">
+    <AppPanel>
       <div className="flex items-center mb-2">
         <input
           className="flex-grow text-sm rounded border border-gray-300 bg-transparent px-2 py-1"
@@ -109,7 +109,7 @@ export const TimeAI: React.FC = () => {
           Reschedule
         </button>
       </div>
-    </GlassCard>
+    </AppPanel>
   );
 };
 

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Lightbulb, CalendarDays, MapPin } from 'lucide-react';
+import { WidgetCard } from '../layout/WidgetCard';
 
 const mockStreamItems = [
   { id: 1, icon: Lightbulb, text: "AI Suggestion: Review Q3 financial report based on recent activity.", time: "2m ago", iconColor: "text-yellow-300" },
@@ -11,7 +12,7 @@ const mockStreamItems = [
 
 export const ContextStreamWidget: React.FC = () => {
   return (
-    <div className="space-y-2.5 h-full overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+    <WidgetCard className="space-y-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
       {mockStreamItems.map(item => (
         <div key={item.id} className="flex items-start p-2.5 bg-black/10 rounded-lg hover:bg-black/20 transition-colors">
           <item.icon size={18} className={`${item.iconColor} mr-2.5 mt-0.5 flex-shrink-0`} />
@@ -21,6 +22,6 @@ export const ContextStreamWidget: React.FC = () => {
           </div>
         </div>
       ))}
-    </div>
+    </WidgetCard>
   );
 };

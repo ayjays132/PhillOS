@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 import { soundScapeService } from '../../services/soundScapeService';
 
 interface Track {
@@ -16,16 +16,14 @@ export const SoundScape: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-4 h-full">
-      <GlassCard className="h-full flex flex-col">
+    <AppPanel>
         <h1 className="text-3xl font-bold mb-4">SoundScape</h1>
         <ul className="text-sm space-y-1 overflow-auto">
           {tracks.map(t => (
             <li key={t.id}>{t.title} - {t.artist}</li>
           ))}
         </ul>
-      </GlassCard>
-    </div>
+      </AppPanel>
   );
 };
 

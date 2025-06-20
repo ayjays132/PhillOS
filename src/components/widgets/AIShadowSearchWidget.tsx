@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Search, Brain } from 'lucide-react';
+import { WidgetCard } from '../layout/WidgetCard';
 
 export const AIShadowSearchWidget: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +25,7 @@ export const AIShadowSearchWidget: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <WidgetCard>
       <form onSubmit={handleSearch} className="flex items-center gap-2 mb-3">
         <input
           type="text"
@@ -59,6 +60,6 @@ export const AIShadowSearchWidget: React.FC = () => {
           </div>
         ))}
       </div>
-    </div>
+    </WidgetCard>
   );
 };

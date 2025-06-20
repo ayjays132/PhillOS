@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 import { pulseMonitorService } from '../../services/pulseMonitorService';
 
 export const PulseMonitor: React.FC = () => {
@@ -13,12 +13,10 @@ export const PulseMonitor: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-4 h-full">
-      <GlassCard className="h-full flex flex-col items-center justify-center">
+    <AppPanel className="items-center justify-center">
         <h1 className="text-3xl font-bold mb-2">Pulse Monitor</h1>
         <p className="text-lg">{bpm} BPM</p>
-      </GlassCard>
-    </div>
+    </AppPanel>
   );
 };
 

@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { memoryService } from '../../../services/memoryService';
+import { WidgetCard } from '../layout/WidgetCard';
 
 export const AICoPilotWidget: React.FC = () => {
   const { modelPreference, voiceModelPreference } = useOnboarding();
@@ -219,20 +220,20 @@ export const AICoPilotWidget: React.FC = () => {
   }, [input, isLoading, chatSession, isApiKeyMissing, modelPreference, cloudProvider, apiKey]);
 
   if (modelPreference === 'cloud' && isApiKeyMissing && !messages.some(msg => msg.id === 'initial-greeting')) {
-     return (
-        <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-            <AlertTriangle size={48} className="text-red-400 mb-4" />
-            <p className="text-lg font-semibold text-red-300">AI CoPilot Unavailable</p>
-            <p className="text-sm text-white/70">
-                Enter a valid API key to use cloud AI features.
-            </p>
-        </div>
+    return (
+      <WidgetCard className="items-center justify-center text-center">
+        <AlertTriangle size={48} className="text-red-400 mb-4" />
+        <p className="text-lg font-semibold text-red-300">AI CoPilot Unavailable</p>
+        <p className="text-sm text-white/70">
+          Enter a valid API key to use cloud AI features.
+        </p>
+      </WidgetCard>
     );
   }
 
 
   return (
-    <div className="flex flex-col h-[350px] sm:h-[400px] md:h-[450px] bg-black/20 rounded-lg overflow-hidden">
+    <WidgetCard className="h-[350px] sm:h-[400px] md:h-[450px] !p-0 overflow-hidden">
       <div className="flex-grow p-3 space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -314,6 +315,6 @@ export const AICoPilotWidget: React.FC = () => {
           {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
         </button>
       </form>
-    </div>
+    </WidgetCard>
   );
 };

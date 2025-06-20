@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 import { brainPadService, BrainPadEntry } from '../../services/brainPadService';
 import { summarize } from '../../services/modelManager';
 
@@ -31,8 +31,7 @@ export const BrainPad: React.FC = () => {
   };
 
   return (
-    <div className="p-4 h-full">
-      <GlassCard className="h-full flex flex-col">
+    <AppPanel>
         <h1 className="text-3xl font-bold mb-4">BrainPad</h1>
         <textarea className="bg-transparent border border-white/20 rounded p-2 mb-2 text-sm" value={text} onChange={e => setText(e.target.value)} />
         {summary && (
@@ -44,8 +43,7 @@ export const BrainPad: React.FC = () => {
             <li key={i}>{new Date(e.timestamp).toLocaleString()} - {e.content}</li>
           ))}
         </ul>
-      </GlassCard>
-    </div>
+    </AppPanel>
   );
 };
 

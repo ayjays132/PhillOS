@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 
 export const WebLens: React.FC = () => {
   const [url, setUrl] = useState('');
@@ -20,7 +20,7 @@ export const WebLens: React.FC = () => {
   };
 
   return (
-    <GlassCard className="flex flex-col h-full">
+    <AppPanel>
       <div className="flex gap-2 mb-2">
         <input
           className="flex-grow text-sm rounded border border-white/20 bg-transparent px-2 py-1"
@@ -33,7 +33,7 @@ export const WebLens: React.FC = () => {
         </button>
       </div>
       <pre className="flex-grow overflow-auto text-sm whitespace-pre-wrap">{summary}</pre>
-    </GlassCard>
+    </AppPanel>
   );
 };
 

@@ -44,3 +44,12 @@
 .animate-bounce-slow {
   animation: bounce-slow 1.5s infinite;
 }
+
+@layer components {
+  .app-panel {
+    @apply p-4 h-full;
+  }
+  .widget-card {
+    @apply glass-card-style glass-card-hover p-3 h-full flex flex-col overflow-hidden;
+  }
+}

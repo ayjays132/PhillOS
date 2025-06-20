@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Moon, Sun, Volume2, WifiOff, Settings2 } from 'lucide-react';
+import { WidgetCard } from '../layout/WidgetCard';
 
 const ActionButton: React.FC<{ icon: React.ElementType; label: string; onClick?: () => void; color?: string }> = ({ icon: Icon, label, onClick, color = 'text-white/80' }) => (
   <button
@@ -14,13 +15,13 @@ const ActionButton: React.FC<{ icon: React.ElementType; label: string; onClick?:
 
 export const QuickActionsWidget: React.FC = () => {
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+    <WidgetCard className="grid grid-cols-3 gap-2 sm:gap-2.5">
       <ActionButton icon={Moon} label="Dark Mode" color="text-purple-300" />
       <ActionButton icon={Sun} label="Light Mode" color="text-yellow-300" />
       <ActionButton icon={Volume2} label="Volume" color="text-green-300" />
       <ActionButton icon={WifiOff} label="Airplane" color="text-blue-300" />
       <ActionButton icon={Settings2} label="All Settings" color="text-gray-300" />
       {/* Add more actions as needed */}
-    </div>
+    </WidgetCard>
   );
 };

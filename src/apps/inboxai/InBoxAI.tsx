@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 import { inboxAIService, InboxMessage } from '../../services/inboxAIService';
 
 export const InBoxAI: React.FC = () => {
@@ -32,7 +32,8 @@ export const InBoxAI: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4 h-full">
+    <AppPanel className="!p-0">
+      <div className="grid grid-cols-2 gap-4 h-full">
       <GlassCard className="overflow-auto">
         <ul>
           {messages.map(m => (
@@ -60,7 +61,8 @@ export const InBoxAI: React.FC = () => {
           </>
         )}
       </GlassCard>
-    </div>
+      </div>
+    </AppPanel>
   );
 };
 

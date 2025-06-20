@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 import { mediaSphereService } from '../../services/mediaSphereService';
 
 interface Item { id: number; title: string; }
@@ -18,8 +18,7 @@ export const MediaSphere: React.FC = () => {
   };
 
   return (
-    <div className="p-4 h-full">
-      <GlassCard className="h-full flex flex-col">
+    <AppPanel>
         <h1 className="text-3xl font-bold mb-4">MediaSphere</h1>
         <ul className="space-y-1 flex-grow overflow-auto mb-4 text-sm">
           {items.map(item => (
@@ -33,8 +32,7 @@ export const MediaSphere: React.FC = () => {
           <button onClick={analyze} className="px-2 py-1 text-xs rounded bg-blue-500 text-white">Analyze</button>
           {result && <span className="text-sm">{result}</span>}
         </div>
-      </GlassCard>
-    </div>
+    </AppPanel>
   );
 };
 

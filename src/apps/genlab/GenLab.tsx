@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 import { BrainPadTray } from '../../components/BrainPadTray';
 
 export const GenLab: React.FC = () => {
@@ -33,9 +33,10 @@ export const GenLab: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4 h-full">
-      <GlassCard className="flex flex-col">
-        <Editor
+    <AppPanel className="!p-0">
+      <div className="grid grid-cols-2 gap-4 h-full">
+        <GlassCard className="flex flex-col">
+          <Editor
           height="100%"
           defaultLanguage="markdown"
           theme="vs-dark"
@@ -61,7 +62,8 @@ export const GenLab: React.FC = () => {
         </GlassCard>
         <BrainPadTray />
       </div>
-    </div>
+      </div>
+    </AppPanel>
   );
 };
 
