@@ -106,6 +106,10 @@ app.post('/api/theme', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Proton launcher server listening on port ${PORT}`);
-});
+if (!process.env.VITEST) {
+  app.listen(PORT, () => {
+    console.log(`Proton launcher server listening on port ${PORT}`);
+  });
+}
+
+export default app;
