@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define MODULE_SIG_LEN 16
+#define MODULE_SIG_LEN 256
 
 int verify_module_signature(const void *data, size_t size, const uint8_t *sig);
 

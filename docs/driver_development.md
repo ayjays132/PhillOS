@@ -36,11 +36,10 @@ The driver manager calls `match` and `init` during PCI scanning. When a device d
 
 ## Signing Modules
 
-When Secure Boot is active, the kernel only loads modules signed with a trusted private key. Append a 16‑byte RSA signature to each `.ko` file:
+When Secure Boot is active, the kernel only loads modules signed with a trusted private key. Modules must now contain a 256‑byte RSA‑2048 signature. Use the helper script to sign a module:
 
 ```bash
-openssl dgst -sha256 -sign privkey.pem -out module.sig mydriver.ko
-cat module.sig >> mydriver.ko
+scripts/sign_module.py privkey.pem mydriver.ko
 ```
 
 `verify_module_signature()` in `kernel/security/signature.c` checks this trailer before loading the module. Unsigned or mismatched modules will be rejected.
