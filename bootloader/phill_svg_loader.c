@@ -1,6 +1,7 @@
 #include "phill_svg_loader.h"
+#include <string.h>
 
-EFI_STATUS load_svg_animation(EFI_HANDLE image, VOID **data, UINTN *size) {
+static EFI_STATUS load_file(EFI_HANDLE image, const CHAR16 *path, VOID **data, UINTN *size) {
     EFI_STATUS status;
     EFI_LOADED_IMAGE *loaded_image;
     EFI_GUID li_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
@@ -20,7 +21,7 @@ EFI_STATUS load_svg_animation(EFI_HANDLE image, VOID **data, UINTN *size) {
         return status;
 
     EFI_FILE_PROTOCOL *file;
-    status = uefi_call_wrapper(root->Open, 5, root, &file, L"\\EFI\\PHILLOS\\bootanim.svgz", EFI_FILE_MODE_READ, 0);
+    status = uefi_call_wrapper(root->Open, 5, root, &file, path, EFI_FILE_MODE_READ, 0);
     if (EFI_ERROR(status))
         return status;
 
@@ -58,13 +59,42 @@ EFI_STATUS load_svg_animation(EFI_HANDLE image, VOID **data, UINTN *size) {
         return EFI_LOAD_ERROR;
     }
 
-    if (file_size < 8 ||
-        CompareMem((UINT8 *)buf + file_size - 8, "PHILSVG", 8) != 0) {
-        BS->FreePool(buf);
-        return EFI_LOAD_ERROR;
-    }
-
     *data = buf;
     *size = file_size;
     return EFI_SUCCESS;
+}
+
+EFI_STATUS load_boot_animation(EFI_HANDLE image, const char *cmdline,
+                               VOID **svg_data, UINTN *svg_size,
+                               VOID **sprite_data, UINTN *sprite_size) {
+    *svg_data = NULL;
+    *svg_size = 0;
+    *sprite_data = NULL;
+    *sprite_size = 0;
+
+    BOOLEAN use_sprite = FALSE;
+    if (cmdline && strstr(cmdline, "nomodeset") != NULL) {
+        use_sprite = TRUE;
+    }
+
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
+    EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+    if (!use_sprite) {
+        EFI_STATUS status = uefi_call_wrapper(BS->LocateProtocol, 3, &gop_guid, NULL, (void**)&gop);
+        if (EFI_ERROR(status)) {
+            use_sprite = TRUE;
+        }
+    }
+
+    EFI_STATUS status;
+    if (use_sprite) {
+        status = load_file(image, L"\\EFI\\PHILLOS\\bootanim_sprite.svgz", sprite_data, sprite_size);
+    } else {
+        status = load_file(image, L"\\EFI\\PHILLOS\\bootanim.svgz", svg_data, svg_size);
+        if (EFI_ERROR(status)) {
+            /* fallback to sprite if SVG missing */
+            status = load_file(image, L"\\EFI\\PHILLOS\\bootanim_sprite.svgz", sprite_data, sprite_size);
+        }
+    }
+    return status;
 }
