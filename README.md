@@ -293,6 +293,8 @@ initializes the first detected SATA port and supports basic DMA reads and
 writes.  Buffers passed to the read/write helpers must reside in identity mapped
 physical memory.  Only simple single-page transfers are currently tested.
 
+See [docs/driver_system.md](docs/driver_system.md) for an overview of the driver framework.
+
 ## Offline Installation and Usage
 
 PhillOS can run without an internet connection once the UI files are cached by the service worker.
