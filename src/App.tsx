@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { BotMessageSquare, BrainCircuit, Files, Mail, Settings, Phone } from 'lucide-react';
+import { BotMessageSquare, BrainCircuit, Files, Mail, Settings, Phone, CalendarDays } from 'lucide-react';
 import { StatusBar } from './components/StatusBar';
 import { Dock } from './components/Dock';
 import { MobileBottomNavigationBar } from './components/MobileBottomNavigationBar';
 import { HomeDashboard } from './components/HomeDashboard';
 import { PlaceholderAppView } from './components/PlaceholderAppView';
 import Vault from './src/apps/vault';
+import TimeAI from './src/apps/timeai';
 import { ProtonLauncher } from './components/ProtonLauncher';
 import PhoneApp from './components/PhoneApp';
 import { AgentConsole } from './components/AgentConsole';
@@ -75,6 +76,7 @@ const App: React.FC = () => {
           <Route path="/files" element={<Vault />} />
           <Route path="/mail" element={<PlaceholderAppView appName="Mail Client" icon={Mail} />} />
           <Route path="/gaming" element={<ProtonLauncher />} />
+          <Route path="/timeai" element={<TimeAI />} />
           <Route path="/phone" element={<PhoneApp />} />
           <Route path="/settings" element={<ConversationalSettingsView />} />
           <Route path="/settings/phone" element={<PhoneSettingsView />} />
