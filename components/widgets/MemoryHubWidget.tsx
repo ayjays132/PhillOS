@@ -1,5 +1,6 @@
 import React from 'react';
 import { Download, Trash2, List } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useMemoryHub } from '../../contexts/MemoryHubContext';
 
 export const MemoryHubWidget: React.FC = () => {
@@ -55,6 +56,12 @@ export const MemoryHubWidget: React.FC = () => {
             </div>
           ))}
       </div>
+      <Link
+        to="/memory-hub"
+        className="block text-center p-1.5 bg-blue-600/70 hover:bg-blue-500/70 rounded text-xs"
+      >
+        Open Hub
+      </Link>
     </div>
   );
 };
