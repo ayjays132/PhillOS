@@ -105,6 +105,40 @@ app.post('/api/theme', (req, res) => {
   res.json({ success: true });
 });
 
+// --- ConverseAI ---
+app.post('/api/converseai', (req, res) => {
+  const { message } = req.body || {};
+  res.json({ reply: `Echo: ${message || ''}` });
+});
+
+// --- InBoxAI ---
+const demoMessages = [
+  { id: 1, from: 'alice@example.com', subject: 'Welcome to PhillOS', body: 'Thanks for trying PhillOS. Let us know what you think!' },
+  { id: 2, from: 'bob@example.com', subject: 'Meeting Tomorrow', body: 'Reminder about our meeting at 10am.' },
+];
+
+app.get('/api/inboxai/messages', (req, res) => {
+  res.json({ messages: demoMessages });
+});
+
+app.post('/api/inboxai/summary', (req, res) => {
+  const { id } = req.body || {};
+  const msg = demoMessages.find(m => m.id === id);
+  const summary = msg ? `${msg.body.slice(0, 50)}...` : 'Not found';
+  res.json({ summary });
+});
+
+app.post('/api/inboxai/reply', (req, res) => {
+  const { id } = req.body || {};
+  res.json({ success: true, reply: `Auto reply to message ${id}` });
+});
+
+// --- WebLens ---
+app.get('/api/weblens/summarize', (req, res) => {
+  const url = req.query.url || '';
+  res.json({ summary: `Summary of ${url}` });
+});
+
 const PORT = process.env.PORT || 3001;
 if (!process.env.VITEST) {
   app.listen(PORT, () => {
