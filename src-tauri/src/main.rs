@@ -124,6 +124,21 @@ fn call_scheduler(action: String, payload: String) -> Result<String, String> {
     }
 }
 
+#[command]
+fn smart_tags(path: String) -> Result<Vec<String>, String> {
+    let output = Command::new("node")
+        .arg("services/tagger.js")
+        .arg(path)
+        .output()
+        .map_err(|e| e.to_string())?;
+    if output.status.success() {
+        let out = String::from_utf8_lossy(&output.stdout);
+        serde_json::from_str::<Vec<String>>(&out).map_err(|e| e.to_string())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).into())
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -132,7 +147,8 @@ fn main() {
             move_file,
             save_event,
             load_events,
-            call_scheduler
+            call_scheduler,
+            smart_tags
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
