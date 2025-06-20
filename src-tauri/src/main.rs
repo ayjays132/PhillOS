@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf, Component};
 use std::process::Command;
 use tauri::command;
 use serde::{Serialize, Deserialize};
@@ -13,9 +13,47 @@ pub struct FsEntry {
     is_dir: bool,
 }
 
+fn normalize_path<P: AsRef<Path>>(path: P) -> PathBuf {
+    let mut result = PathBuf::new();
+    for comp in path.as_ref().components() {
+        match comp {
+            Component::ParentDir => {
+                result.pop();
+            }
+            Component::CurDir => {}
+            other => result.push(other.as_os_str()),
+        }
+    }
+    result
+}
+
+fn ensure_safe_path(p: &str) -> Result<PathBuf, String> {
+    if p.contains('\0') {
+        return Err("invalid path".into());
+    }
+    let base_env = std::env::var("PHILLOS_STORAGE_DIR").unwrap_or_else(|_| "storage".into());
+    let mut base = PathBuf::from(base_env);
+    if base.is_relative() {
+        base = std::env::current_dir().map_err(|e| e.to_string())?.join(base);
+    }
+    base = normalize_path(base);
+
+    let mut path = PathBuf::from(p);
+    if !path.is_absolute() {
+        path = base.join(path);
+    }
+    path = normalize_path(path);
+
+    if path.starts_with(&base) {
+        Ok(path)
+    } else {
+        Err("path outside allowed directory".into())
+    }
+}
+
 #[command]
 fn list_dir(path: String) -> Result<Vec<FsEntry>, String> {
-    let path = PathBuf::from(path);
+    let path = ensure_safe_path(&path)?;
     let mut entries = Vec::new();
     if path.is_dir() {
         for entry in fs::read_dir(&path).map_err(|e| e.to_string())? {
@@ -33,11 +71,15 @@ fn list_dir(path: String) -> Result<Vec<FsEntry>, String> {
 
 #[command]
 fn copy_file(src: String, dest: String) -> Result<(), String> {
+    let src = ensure_safe_path(&src)?;
+    let dest = ensure_safe_path(&dest)?;
     fs::copy(src, dest).map(|_| ()).map_err(|e| e.to_string())
 }
 
 #[command]
 fn move_file(src: String, dest: String) -> Result<(), String> {
+    let src = ensure_safe_path(&src)?;
+    let dest = ensure_safe_path(&dest)?;
     fs::rename(src, dest).map_err(|e| e.to_string())
 }
 
@@ -126,9 +168,10 @@ fn call_scheduler(action: String, payload: String) -> Result<String, String> {
 
 #[command]
 fn smart_tags(path: String) -> Result<Vec<String>, String> {
+    let path = ensure_safe_path(&path)?;
     let output = Command::new("node")
         .arg("services/tagger.js")
-        .arg(path)
+        .arg(path.to_string_lossy().into())
         .output()
         .map_err(|e| e.to_string())?;
     if output.status.success() {
@@ -162,10 +205,11 @@ mod tests {
     #[test]
     fn list_dir_returns_entries() {
         let dir = tempdir().unwrap();
+        std::env::set_var("PHILLOS_STORAGE_DIR", dir.path());
         std::fs::write(dir.path().join("a.txt"), b"hi").unwrap();
         std::fs::create_dir(dir.path().join("sub")).unwrap();
 
-        let mut entries = list_dir(dir.path().to_string_lossy().into()).unwrap();
+        let mut entries = list_dir(".".into()).unwrap();
         entries.sort_by(|a, b| a.name.cmp(&b.name));
         assert_eq!(entries.len(), 2);
         assert!(entries.iter().any(|e| e.is_dir));
@@ -174,10 +218,28 @@ mod tests {
     #[test]
     fn copy_file_works() {
         let dir = tempdir().unwrap();
+        std::env::set_var("PHILLOS_STORAGE_DIR", dir.path());
         let src = dir.path().join("src.txt");
         let dest = dir.path().join("dst.txt");
         std::fs::write(&src, b"hi").unwrap();
-        copy_file(src.to_string_lossy().into(), dest.to_string_lossy().into()).unwrap();
+        copy_file("src.txt".into(), "dst.txt".into()).unwrap();
         assert!(dest.exists());
+    }
+
+    #[test]
+    fn rejects_outside_paths() {
+        let dir = tempdir().unwrap();
+        let base = dir.path().join("base");
+        std::fs::create_dir(&base).unwrap();
+        std::env::set_var("PHILLOS_STORAGE_DIR", &base);
+
+        let outside_dir = dir.path().join("outside");
+        std::fs::create_dir(&outside_dir).unwrap();
+        std::fs::write(outside_dir.join("a.txt"), b"hi").unwrap();
+
+        assert!(list_dir(outside_dir.to_string_lossy().into()).is_err());
+        assert!(copy_file(outside_dir.join("a.txt").to_string_lossy().into(), "b.txt".into()).is_err());
+        assert!(move_file("b.txt".into(), outside_dir.join("c.txt").to_string_lossy().into()).is_err());
+        assert!(smart_tags(outside_dir.join("a.txt").to_string_lossy().into()).is_err());
     }
 }
