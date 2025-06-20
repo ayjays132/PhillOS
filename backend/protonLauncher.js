@@ -5,37 +5,37 @@ import https from 'https';
 import os from 'os';
 import { sanitizeArgs } from '../cli/utils/validate.ts';
 
+export async function downloadProton(base, version) {
+  const url = process.env.PROTON_DOWNLOAD_URL ||
+    `https://steamcdn-a.akamaihd.net/client/${version}.tar.gz`;
+  await fs.promises.mkdir(base, { recursive: true });
+  const tmp = path.join(os.tmpdir(), `${version}.tar.gz`);
+  await new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(tmp);
+    https.get(url, res => {
+      if ((res.statusCode || 0) >= 400) {
+        reject(new Error(`Failed to download Proton: ${res.statusCode}`));
+        return;
+      }
+      res.pipe(file);
+      file.on('finish', () => file.close(resolve));
+    }).on('error', reject);
+  });
+  await new Promise((resolve, reject) => {
+    const tar = spawn('tar', ['-xf', tmp, '-C', base]);
+    tar.on('error', reject);
+    tar.on('exit', code => {
+      code === 0 ? resolve() : reject(new Error(`tar exited with code ${code}`));
+    });
+  });
+}
+
 export class ProtonLauncher {
   constructor(options = {}) {
     this.options = options;
     if (!this.options.protonDir) {
       this.options.protonDir = path.resolve(__dirname, '../dist/proton');
     }
-  }
-
-  async downloadProton(base, version) {
-    const url = process.env.PROTON_DOWNLOAD_URL ||
-      `https://steamcdn-a.akamaihd.net/client/${version}.tar.gz`;
-    await fs.promises.mkdir(base, { recursive: true });
-    const tmp = path.join(os.tmpdir(), `${version}.tar.gz`);
-    await new Promise((resolve, reject) => {
-      const file = fs.createWriteStream(tmp);
-      https.get(url, res => {
-        if ((res.statusCode || 0) >= 400) {
-          reject(new Error(`Failed to download Proton: ${res.statusCode}`));
-          return;
-        }
-        res.pipe(file);
-        file.on('finish', () => file.close(resolve));
-      }).on('error', reject);
-    });
-    await new Promise((resolve, reject) => {
-      const tar = spawn('tar', ['-xf', tmp, '-C', base]);
-      tar.on('error', reject);
-      tar.on('exit', code => {
-        code === 0 ? resolve() : reject(new Error(`tar exited with code ${code}`));
-      });
-    });
   }
 
   async resolveProtonPath() {
@@ -46,7 +46,7 @@ export class ProtonLauncher {
       return protonPath;
     }
     try {
-      await this.downloadProton(base, version);
+      await downloadProton(base, version);
     } catch (err) {
       console.error(err);
       return null;
