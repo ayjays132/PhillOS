@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { BrainPadTray } from '../../components/BrainPadTray';
+import { brainPadService } from '../../services/brainPadService';
+import { GlassCard } from '../../components/GlassCard';
 
 export const GenLab: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -52,13 +54,27 @@ export const GenLab: React.FC = () => {
         </button>
       </GlassCard>
       <div className="flex flex-col gap-4">
-        <GlassCard className="flex-grow overflow-auto">
+        <GlassCard className="flex-grow overflow-auto flex flex-col">
           <div className="mb-2 font-bold border-b border-white/10">Model A</div>
-          <pre className="whitespace-pre-wrap text-sm">{outA}</pre>
+          <pre className="whitespace-pre-wrap text-sm flex-grow">{outA}</pre>
+          <button
+            className="mt-2 px-2 py-1 bg-blue-500 text-white rounded self-start text-xs"
+            disabled={!outA}
+            onClick={() => brainPadService.postSnippet(outA)}
+          >
+            Send to BrainPad
+          </button>
         </GlassCard>
-        <GlassCard className="flex-grow overflow-auto">
+        <GlassCard className="flex-grow overflow-auto flex flex-col">
           <div className="mb-2 font-bold border-b border-white/10">Model B</div>
-          <pre className="whitespace-pre-wrap text-sm">{outB}</pre>
+          <pre className="whitespace-pre-wrap text-sm flex-grow">{outB}</pre>
+          <button
+            className="mt-2 px-2 py-1 bg-blue-500 text-white rounded self-start text-xs"
+            disabled={!outB}
+            onClick={() => brainPadService.postSnippet(outB)}
+          >
+            Send to BrainPad
+          </button>
         </GlassCard>
         <BrainPadTray />
       </div>

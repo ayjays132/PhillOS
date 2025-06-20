@@ -7,6 +7,12 @@ const STORAGE_KEY = 'phillos_brainpad_entries_v1';
 
 class BrainPadService {
   private entries: BrainPadEntry[] = [];
+  private msgHandler = (e: MessageEvent) => {
+    const data = e.data;
+    if (data && data.type === 'brainpad.snippet') {
+      this.addEntry(String(data.content || ''));
+    }
+  };
 
   init() {
     try {
@@ -17,6 +23,9 @@ class BrainPadService {
       }
     } catch {
       // ignore
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('message', this.msgHandler);
     }
   }
 
@@ -39,6 +48,18 @@ class BrainPadService {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.entries));
     } catch {
       // ignore
+    }
+  }
+
+  postSnippet(content: string) {
+    if (typeof window !== 'undefined' && window.postMessage) {
+      window.postMessage({ type: 'brainpad.snippet', content }, '*');
+    }
+  }
+
+  destroy() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('message', this.msgHandler);
     }
   }
 }
