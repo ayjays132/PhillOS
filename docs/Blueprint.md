@@ -89,3 +89,43 @@ If you still see an older UI after deploying a new version:
 2. Click **Unregister** or enable **Update on reload**, then refresh the page.
 3. If the issue persists, clear the site's stored data to remove cached files.
 
+## Application Layout and Backends
+
+PhillOS keeps each system application in its own folder under `src/apps/`. Every
+subdirectory exposes a React component through an `index.ts` entry point so apps
+can be imported lazily by the main shell. For example `src/apps/vault/` contains
+the **Vault** file manager implemented in `Vault.tsx`.
+
+Two small native backends complement the TypeScript UI:
+
+- `src-tauri/` – a Rust project built with Tauri that provides file system
+  commands (`list_dir`, `copy_file`, `move_file`) which the Vault app invokes
+  through the Tauri JavaScript API.
+- `src/backend/` – a Go server offering HTTP endpoints for theme management and
+  Proton game launching. It proxies phone bridge requests and spawns the Node
+  `protonLauncher.js` helper when needed.
+
+The **Agent Service** (`services/agentService.ts`) orchestrates these pieces. It
+interprets natural language commands, opens the required app, and calls the Rust
+or Go backends to perform native operations. Apps themselves stay focused on
+their UI logic while the Agent routes user intent between them.
+
+### Building the Rust backend
+
+```bash
+cd src-tauri
+cargo build --release
+```
+
+The resulting binary can be bundled with the UI to enable the Vault's native
+file operations.
+
+### Building the Go server
+
+```bash
+cd src/backend
+go build -o ../../dist/phillos-server
+```
+
+Run the produced executable to serve `/api` endpoints alongside the web UI.
+
