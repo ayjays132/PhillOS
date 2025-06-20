@@ -3,7 +3,6 @@
 PREFIX ?= $(CROSS_COMPILE)x86_64-elf-
 CC := $(PREFIX)gcc
 	LD := $(PREFIX)ld
-OBJCOPY := $(PREFIX)objcopy
 
 OUT_DIR ?= build
 ESP_IMG ?= $(OUT_DIR)/esp.img
@@ -46,13 +45,13 @@ $(OUT_DIR)/heap.o: ../kernel/memory/heap.c | $(OUT_DIR)
 $(OUT_DIR)/query.o: ../kernel/query.c | $(OUT_DIR)
 	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 $(OUT_DIR)/debug.o: ../kernel/debug.c | $(OUT_DIR)
-        $(CC) $(KERNEL_CFLAGS) -c $< -o $@
+	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 $(OUT_DIR)/driver_manager.o: ../drivers/driver_manager.c | $(OUT_DIR)
-        $(CC) $(KERNEL_CFLAGS) -c $< -o $@
+	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 $(OUT_DIR)/register.o: ../drivers/register.c | $(OUT_DIR)
-        $(CC) $(KERNEL_CFLAGS) -c $< -o $@
+	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 $(OUT_DIR)/ahci.o: ../drivers/storage/ahci.c | $(OUT_DIR)
-        $(CC) $(KERNEL_CFLAGS) -c $< -o $@
+	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 $(OUT_DIR)/framebuffer.o: ../drivers/graphics/framebuffer.c | $(OUT_DIR)
 	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 $(OUT_DIR)/gpu.o: ../drivers/graphics/gpu.c | $(OUT_DIR)
@@ -75,17 +74,25 @@ $(OUT_DIR)/elf.o: ../kernel/elf.c | $(OUT_DIR)
 
 $(KERNEL_ELF): $(KERNEL_OBJS)
 	$(LD) -e kernel_main $(LDFLAGS) -o $@ $(KERNEL_OBJS)
+	@if [ -f "$(SIGN_KEY)" ]; then \
+		python3 ../scripts/sign_module.py $(SIGN_KEY) $@; \
+	fi
 
 # Bootloader
 $(OUT_DIR)/main.o: main.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 $(OUT_DIR)/phill_svg_loader.o: phill_svg_loader.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
-
 $(OUT_DIR)/phill_svg_update.o: phill_svg_update.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
+$(OUT_DIR)/bn.o: ../kernel/security/bn.c | $(OUT_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+$(OUT_DIR)/signature.o: ../kernel/security/signature.c | $(OUT_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BOOTLOADER): $(OUT_DIR)/main.o $(OUT_DIR)/phill_svg_loader.o $(OUT_DIR)/phill_svg_update.o | $(OUT_DIR)
+BOOTLOADER_OBJS := $(OUT_DIR)/main.o $(OUT_DIR)/phill_svg_loader.o $(OUT_DIR)/phill_svg_update.o $(OUT_DIR)/bn.o $(OUT_DIR)/signature.o
+
+$(BOOTLOADER): $(BOOTLOADER_OBJS) | $(OUT_DIR)
 	$(LD) $(LDFLAGS) -o $(OUT_DIR)/bootloader.so /usr/lib/crt0-efi-x86_64.o $^
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym 		-j .rel -j .rela -j .reloc -j .eh_frame 		--target=efi-app-x86_64 $(OUT_DIR)/bootloader.so $@
 

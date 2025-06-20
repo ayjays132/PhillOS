@@ -4,6 +4,7 @@
 #include "../kernel/boot_info.h"
 #include "phill_svg_loader.h"
 #include "phill_svg_update.h"
+#include "../kernel/security/signature.h"
 
 static UINTN parse_ai_pages(const char *cmd)
 {
@@ -122,6 +123,18 @@ static EFI_STATUS load_kernel(EFI_HANDLE image, void **entry)
     if (EFI_ERROR(status) || read_size != file_size) {
         BS->FreePool(buf);
         return EFI_LOAD_ERROR;
+    }
+
+    if (file_size < MODULE_SIG_LEN) {
+        BS->FreePool(buf);
+        return EFI_SECURITY_VIOLATION;
+    }
+
+    UINTN code_size = file_size - MODULE_SIG_LEN;
+    uint8_t *sig = (uint8_t *)buf + code_size;
+    if (!verify_module_signature(buf, code_size, sig)) {
+        BS->FreePool(buf);
+        return EFI_SECURITY_VIOLATION;
     }
 
     Elf64_Ehdr *eh = (Elf64_Ehdr*)buf;
