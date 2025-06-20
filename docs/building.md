@@ -44,6 +44,16 @@ Both commands should succeed. If not, review your install steps or adjust your e
 
 Before the first build run `./scripts/setup-vkd3d.sh` to fetch the vkd3d-proton sources. They are cached under `external/vkd3d` so subsequent builds work offline.
 
+If you plan to use the WASM AI models, compile them once before building the
+rest of the project:
+
+```bash
+npm run build-wasm
+```
+
+This step invokes the `onnxruntime-web` and `ggml` toolchains (when installed)
+and places `summarizer.onnx.wasm` and `classifier.ggml.wasm` in `src/wasm/`.
+
 ## Building
 
 With the prerequisites installed, run the top-level build script:

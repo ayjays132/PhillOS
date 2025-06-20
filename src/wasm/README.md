@@ -1,8 +1,9 @@
 This directory is meant to hold WebAssembly builds of local AI models.
 
-The actual WASM binaries are not tracked in git. Instead run `npm run build-wasm`
-to copy prebuilt artifacts from the project `models/` directory or place them
-here manually.
+The actual WASM binaries are not tracked in git. Run `npm run build-wasm` to
+compile or copy them from the project `models/` directory. When `.onnx` or
+`.ggml` sources are present the script invokes the `onnxruntime-web` or `ggml`
+toolchains to produce the final `.wasm` files.
 
 Expected files:
 - `summarizer.onnx.wasm`
@@ -14,9 +15,9 @@ available. If they are missing the system falls back to the JS pipelines from
 
 ### Building models
 
-1. Put your compiled WASM files (or source `.onnx`/`.ggml` models you have
-   converted) into the top-level `models/` directory. The build script expects:
-   - `models/summarizer.onnx.wasm`
-   - `models/classifier.ggml.wasm`
-2. Run `npm run build-wasm`. The script copies these files into `src/wasm` so
-   they can be loaded at runtime.
+1. Place either prebuilt WASM files or the source `.onnx`/`.ggml` models in the
+   top-level `models/` directory. The script looks for:
+   - `models/summarizer.onnx` or `models/summarizer.onnx.wasm`
+   - `models/classifier.ggml` or `models/classifier.ggml.wasm`
+2. Run `npm run build-wasm`. The files are compiled if needed and copied into
+   `src/wasm` so they can be loaded at runtime.
