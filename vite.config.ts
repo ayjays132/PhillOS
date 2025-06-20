@@ -1,6 +1,7 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
@@ -41,6 +42,14 @@ export default defineConfig(({ mode }) => {
               }
             ]
           }
+        }),
+        viteStaticCopy({
+          targets: [
+            {
+              src: path.resolve(__dirname, 'src/wasm/*'),
+              dest: 'wasm'
+            }
+          ]
         })
       ],
       resolve: {

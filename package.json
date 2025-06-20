@@ -11,6 +11,7 @@
     "phone-bridge": "node services/phoneBridge/server.js",
     "training-pipeline": "node services/trainingPipeline.ts",
     "setup-db": "node scripts/setup-db.js",
+    "build-wasm": "node scripts/build-wasm-models.js",
     "test": "vitest run && go test ./... && cargo test --manifest-path src-tauri/Cargo.toml && pytest -q",
     "lint": "eslint \"**/*.ts\" \"**/*.tsx\""
   },
@@ -54,6 +55,7 @@
     "vite": "^6.2.0",
     "vite-plugin-pwa": "^1.0.0",
     "vitest": "^3.2.4",
-    "supertest": "^6.3.4"
+    "supertest": "^6.3.4",
+    "vite-plugin-static-copy": "^1.5.0"
   }
 }
