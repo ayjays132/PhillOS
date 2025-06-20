@@ -6,11 +6,13 @@ import listPlugin from '@fullcalendar/list';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { invoke } from '@tauri-apps/api/tauri';
 import { CalendarEvent } from '../../types';
+import { useFocusBurst } from '../../hooks/useFocusBurst';
 
 export const TimeAI: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [taskInput, setTaskInput] = useState('');
   const [tasks, setTasks] = useState<string[]>([]);
+  const { phase, timeLeft, running, start: startBurst, stop: stopBurst } = useFocusBurst();
 
   const loadEvents = async () => {
     try {
@@ -127,6 +129,25 @@ export const TimeAI: React.FC = () => {
         <button className="px-2 py-1 text-xs rounded bg-orange-500 text-white" onClick={resolveConflicts}>
           Resolve Conflicts
         </button>
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        {phase !== 'idle' && (
+          <span className="text-sm">
+            {phase === 'work' ? 'Work' : 'Break'}:{' '}
+            {`${Math.floor(timeLeft / 60).toString().padStart(2, '0')}:${(timeLeft % 60)
+              .toString()
+              .padStart(2, '0')}`}
+          </span>
+        )}
+        {running ? (
+          <button className="px-2 py-1 text-xs rounded bg-red-500 text-white" onClick={stopBurst}>
+            Stop
+          </button>
+        ) : (
+          <button className="px-2 py-1 text-xs rounded bg-blue-500 text-white" onClick={startBurst}>
+            Start
+          </button>
+        )}
       </div>
     </AppPanel>
   );
