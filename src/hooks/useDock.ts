@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { NavItem } from '../types';
 import { storageService } from '../../services/storageService';
-import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail, BrainCircuit, Phone, FlaskConical } from 'lucide-react';
+import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail, BrainCircuit, Phone, FlaskConical, CalendarDays } from 'lucide-react';
 
 export const EXTERNAL_ITEM_TYPE = 'NEW_DOCK_ITEM';
 
