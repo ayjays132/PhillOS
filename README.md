@@ -492,7 +492,14 @@ Open the **Phone** app from the dock to send SMS messages or initiate calls. The
 
 ## CLI SDK
 
-The `cli` directory provides a TypeScript command line interface. Run `npx ts-node cli/phillos-cli.ts` with the subcommands below or embed the `PhillosCLI` class in your own tools. Global flags `--cloud`, `--provider <name>`, and `--api-key <key>` control cloud AI usage.
+The `cli` directory provides two command line utilities built with the
+`commander` package.  `phillos-cli.ts` exposes the original SDK class while
+`phillos.ts` offers a lightweight executable with a few common tasks.  Both
+tools support the global flags `--cloud`, `--provider <name>`, and
+`--api-key <key>` for selecting a remote AI provider.
+
+`phillos.ts` performs a safety check before running the build script and will
+abort unless executed with root privileges.
 
 All CLI commands sanitize their arguments before spawning any child processes. Inputs containing shell metacharacters like `;`, `|`, or `&` will be rejected to prevent command injection.
 
@@ -502,6 +509,9 @@ npx ts-node cli/phillos-cli.ts agent "open files"
 npx ts-node cli/phillos-cli.ts proton /path/to/Game.exe --version Proton-8.0
 npx ts-node cli/phillos-cli.ts android start
 npx ts-node cli/phillos-cli.ts phone sms +12345550123 "Hello"
+npx ts-node cli/phillos.ts build
+npx ts-node cli/phillos.ts launch /games/Game.exe
+npx ts-node cli/phillos.ts agent start --cloud
 ```
 
 ### Running Tests and Lint
