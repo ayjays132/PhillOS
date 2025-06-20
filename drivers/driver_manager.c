@@ -3,6 +3,7 @@
 #include "../kernel/modules/modules.h"
 
 static driver_t *driver_list = NULL;
+static IHotSwapListener *listener_list = NULL;
 
 typedef struct {
     uint8_t bus, slot, func;
@@ -16,6 +17,27 @@ typedef struct {
 #define MAX_DEVICES 64
 static device_record_t devices[MAX_DEVICES];
 static unsigned device_count = 0;
+
+void driver_manager_add_listener(IHotSwapListener *listener)
+{
+    if (!listener)
+        return;
+    listener->next = listener_list;
+    listener_list = listener;
+}
+
+void driver_manager_remove_listener(IHotSwapListener *listener)
+{
+    IHotSwapListener **p = &listener_list;
+    while (*p) {
+        if (*p == listener) {
+            *p = listener->next;
+            listener->next = NULL;
+            break;
+        }
+        p = &(*p)->next;
+    }
+}
 
 void driver_manager_register(driver_t *drv)
 {
@@ -65,6 +87,20 @@ static void remove_record(device_record_t *rec)
     else if (rec->driver)
         driver_manager_unregister(rec->driver);
 
+    IDevice idev = {
+        .bus = rec->bus,
+        .slot = rec->slot,
+        .func = rec->func,
+        .vendor_id = rec->vendor,
+        .device_id = rec->device,
+        .class_code = rec->class_code,
+        .subclass = rec->subclass,
+    };
+    for (IHotSwapListener *l = listener_list; l; l = l->next) {
+        if (l->device_removed)
+            l->device_removed(&idev);
+    }
+
     unsigned idx = rec - devices;
     if (idx < device_count - 1)
         devices[idx] = devices[device_count - 1];
@@ -95,42 +131,60 @@ static void handle_new_device(const pci_device_t *dev)
             if (d->init)
                 d->init(dev);
             rec->driver = d;
-            return;
+            break;
         }
     }
 
-    char path[32];
-    debug_puts("Loading module for vendor 0x");
-    debug_puthex(dev->vendor_id);
-    debug_puts(" device 0x");
-    debug_puthex(dev->device_id);
-    debug_putc('\n');
-    const char hex[] = "0123456789abcdef";
-    int idx = 0;
-    const char *pre = "/modules/";
-    while (pre[idx]) { path[idx] = pre[idx]; idx++; }
-    path[idx++] = hex[(dev->vendor_id >> 12) & 0xF];
-    path[idx++] = hex[(dev->vendor_id >> 8) & 0xF];
-    path[idx++] = hex[(dev->vendor_id >> 4) & 0xF];
-    path[idx++] = hex[dev->vendor_id & 0xF];
-    path[idx++] = '_';
-    path[idx++] = hex[(dev->device_id >> 12) & 0xF];
-    path[idx++] = hex[(dev->device_id >> 8) & 0xF];
-    path[idx++] = hex[(dev->device_id >> 4) & 0xF];
-    path[idx++] = hex[dev->device_id & 0xF];
-    path[idx++] = '.'; path[idx++] = 'k'; path[idx++] = 'o';
-    path[idx] = '\0';
-    module_t *mod = module_load(path);
-    if (mod && mod->driver) {
-        driver_t *drv = mod->driver;
-        if (!drv->match || drv->match(dev)) {
-            if (drv->init)
-                drv->init(dev);
-            rec->driver = drv;
-            rec->module = mod;
-            return;
+    if (!rec->driver) {
+        char path[32];
+        debug_puts("Loading module for vendor 0x");
+        debug_puthex(dev->vendor_id);
+        debug_puts(" device 0x");
+        debug_puthex(dev->device_id);
+        debug_putc('\n');
+        const char hex[] = "0123456789abcdef";
+        int idx = 0;
+        const char *pre = "/modules/";
+        while (pre[idx]) { path[idx] = pre[idx]; idx++; }
+        path[idx++] = hex[(dev->vendor_id >> 12) & 0xF];
+        path[idx++] = hex[(dev->vendor_id >> 8) & 0xF];
+        path[idx++] = hex[(dev->vendor_id >> 4) & 0xF];
+        path[idx++] = hex[dev->vendor_id & 0xF];
+        path[idx++] = '_';
+        path[idx++] = hex[(dev->device_id >> 12) & 0xF];
+        path[idx++] = hex[(dev->device_id >> 8) & 0xF];
+        path[idx++] = hex[(dev->device_id >> 4) & 0xF];
+        path[idx++] = hex[dev->device_id & 0xF];
+        path[idx++] = '.'; path[idx++] = 'k'; path[idx++] = 'o';
+        path[idx] = '\0';
+        module_t *mod = module_load(path);
+        if (mod && mod->driver) {
+            driver_t *drv = mod->driver;
+            if (!drv->match || drv->match(dev)) {
+                if (drv->init)
+                    drv->init(dev);
+                rec->driver = drv;
+                rec->module = mod;
+            } else {
+                module_unload(mod);
+            }
         }
-        module_unload(mod);
+    }
+
+    if (rec->driver) {
+        IDevice idev = {
+            .bus = rec->bus,
+            .slot = rec->slot,
+            .func = rec->func,
+            .vendor_id = rec->vendor,
+            .device_id = rec->device,
+            .class_code = rec->class_code,
+            .subclass = rec->subclass,
+        };
+        for (IHotSwapListener *l = listener_list; l; l = l->next) {
+            if (l->device_added)
+                l->device_added(&idev);
+        }
     }
 }
 
@@ -198,3 +252,14 @@ void driver_manager_poll(void)
 {
     pci_scan_changes();
 }
+
+const IDriverManager driver_manager = {
+    .register_driver = driver_manager_register,
+    .unregister_driver = driver_manager_unregister,
+    .init = driver_manager_init,
+    .rescan = driver_manager_rescan,
+    .unload = driver_manager_unload,
+    .poll = driver_manager_poll,
+    .add_hot_swap_listener = driver_manager_add_listener,
+    .remove_hot_swap_listener = driver_manager_remove_listener,
+};

@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS ?= -fPIC -O2 -Wall
+CFLAGS ?= -fPIC -O2 -Wall -I../../include
 LDFLAGS ?= -shared
 
 OBJS = bluetooth.o sim.o
