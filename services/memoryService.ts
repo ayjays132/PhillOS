@@ -58,6 +58,14 @@ class MemoryService {
     this.trim();
     this.persist();
   }
+
+  getLimit(): number {
+    return this.limit;
+  }
+
+  getUsage(): number {
+    return this.messages.length;
+  }
 }
 
 export const memoryService = new MemoryService();
