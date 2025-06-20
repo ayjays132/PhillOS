@@ -53,3 +53,10 @@ With the prerequisites installed, run the top-level build script:
 ```
 
 Bootloader artifacts are placed in `dist/bootloader` and the web UI build is written directly to `dist/`.
+
+### Embedding the boot animation
+
+The bootloader expects `bootanim.svgz` to be compressed and then have the eight-byte
+`PHILSVG` trailer appended. Run `scripts/embed_svg.py` to embed the file in the
+EFI image and ensure the trailer is present before signing. If the loader does
+not detect this marker it will refuse to load the animation.

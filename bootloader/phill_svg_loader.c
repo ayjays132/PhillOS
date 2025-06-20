@@ -58,6 +58,12 @@ EFI_STATUS load_svg_animation(EFI_HANDLE image, VOID **data, UINTN *size) {
         return EFI_LOAD_ERROR;
     }
 
+    if (file_size < 8 ||
+        CompareMem((UINT8 *)buf + file_size - 8, "PHILSVG", 8) != 0) {
+        BS->FreePool(buf);
+        return EFI_LOAD_ERROR;
+    }
+
     *data = buf;
     *size = file_size;
     return EFI_SUCCESS;
