@@ -6,6 +6,9 @@
 void init_ahci(void);
 int ahci_read(uint64_t lba, uint32_t count, void *buffer);
 int ahci_write(uint64_t lba, uint32_t count, const void *buffer);
+unsigned ahci_get_port_count(void);
+int ahci_read_port(unsigned port, uint64_t lba, uint32_t count, void *buffer);
+int ahci_write_port(unsigned port, uint64_t lba, uint32_t count, const void *buffer);
 
 #include "../driver_manager.h"
 extern driver_t ahci_pnp_driver;
