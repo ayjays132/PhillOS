@@ -56,11 +56,33 @@ Bootloader artifacts are placed in `dist/bootloader` and the web UI build is wri
 
 ### Embedding the boot animation
 
-The bootloader expects `bootanim.svgz` to be compressed and then have the eight-byte
-`PHILSVG` trailer appended. Run `scripts/embed_svg.py` to embed the file in the
-EFI image and ensure the trailer is present before signing. If the loader does
-not detect this marker it will refuse to load the animation.
+`scripts/embed_svg.py` compresses a source SVG and appends the special
+`PHILSVG\x00` trailer the loader checks for.  Run it whenever you update the
+animation:
 
-The animation can optionally read the `theme_dark` flag passed via `boot_info_t`
-and switch its gradient colors accordingly. When generating the SVG, define two
-gradients (light and dark) and toggle their visibility based on this flag.
+```bash
+python3 scripts/embed_svg.py bootloader/bootanim.svg dist/bootloader/bootanim.svgz
+```
+
+If Secure Boot is enabled, sign the resulting blob so the firmware will load it:
+
+```bash
+sbsign --key keys/db.key --cert keys/db.crt dist/bootloader/bootanim.svgz
+```
+
+`phill_svg_loader.c` loads this file at boot. When `nomodeset` is present or the
+Graphics Output Protocol is unavailable it falls back to `bootanim_sprite.svgz`:
+
+```c
+load_boot_animation(image, cmdline, &svg_data, &svg_size,
+                   &sprite_data, &sprite_size);  /* from phill_svg_loader.c */
+```
+
+The animation can access metrics updated in `phill_svg_update.c` by calling
+`SVG_BOOT_UPDATE()` from JavaScript.  Metrics such as PCR digest, CPU
+temperature and fan RPM are exposed through this function and updated at key
+points during `main.c`.
+
+When creating the SVG consider the `theme_dark` flag from `boot_info_t` and
+define both light and dark gradients so the loader can toggle them based on the
+`theme.cfg` setting.
