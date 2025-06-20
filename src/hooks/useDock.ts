@@ -10,6 +10,7 @@ const DEFAULT_ITEMS: NavItem[] = [
   { id: 'copilot', label: 'AI CoPilot', path: '/copilot', icon: BotMessageSquare },
   { id: 'agent', label: 'Agent', path: '/agent', icon: BrainCircuit },
   { id: 'files', label: 'Files', path: '/files', icon: Files },
+  { id: 'media', label: 'Media', path: '/media', icon: MonitorPlay },
   { id: 'mail', label: 'Mail', path: '/mail', icon: Mail },
   { id: 'gaming', label: 'Gaming', path: '/gaming', icon: MonitorPlay },
   { id: 'phone', label: 'Phone', path: '/phone', icon: Phone },
