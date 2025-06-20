@@ -137,9 +137,21 @@ Game controllers can navigate these elements with the arrow keys or D‑pad and 
 
 ## Voice Interaction
 
-PhillOS includes optional voice input and output for the AI CoPilot. The widget features a microphone button that toggles speech recognition. By default it uses the browser's Web Speech API, but if unsupported or if the preference `phillos_voice_mode` is set to `whisper`, recorded audio will be transcribed locally using Whisper through `@xenova/transformers`. Spoken phrases are inserted into the chat input and replies are read aloud using speech synthesis.
+PhillOS includes optional voice input and output for the AI CoPilot. The widget features a microphone button that toggles speech recognition. By default it uses the browser's Web Speech API, but if unsupported or if the preference `phillos_voice_mode` is set to `whisper`, recorded audio will be transcribed locally via a Python server running the `openai/whisper-small` model. Spoken phrases are inserted into the chat input and replies are read aloud using speech synthesis.
 
-Whisper mode requires a one-time model download of about 150 MB which is cached for future sessions. Most modern browsers support the required features, though they may need an HTTPS context and user permission. If voice features are unavailable, the microphone button will have no effect.
+Whisper mode requires Python 3 with the `transformers` and `flask` packages:
+
+```bash
+pip install transformers flask torch
+```
+
+Run the server once to download the model (~150 MB):
+
+```bash
+python services/whisper_server.py serve
+```
+
+The `WhisperService` class invokes this script whenever audio is recorded. Most modern browsers support the required features, though they may need an HTTPS context and user permission. If voice features are unavailable, the microphone button will have no effect.
 
 ## Theme Switching
 

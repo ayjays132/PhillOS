@@ -22,16 +22,25 @@ export const AICoPilotWidget: React.FC = () => {
   const [cloudProvider, setCloudProvider] = useState<CloudProvider>('gemini');
   const [apiKey, setApiKey] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [voiceMode, setVoiceMode] = useState<VoiceMode>(() => {
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('phillos_voice_mode') as VoiceMode | null : null;
+    return stored || 'auto';
+  });
   const voiceServiceRef = useRef<VoiceService | null>(null);
   const transcriptRef = useRef('');
-  if (!voiceServiceRef.current) voiceServiceRef.current = new VoiceService();
+  if (!voiceServiceRef.current) voiceServiceRef.current = new VoiceService(voiceMode);
 
-  // Ensure speech recognition stops when the widget unmounts
+  // Ensure speech recognition stops when the widget unmounts and rebuild service when mode changes
   useEffect(() => {
     return () => {
       voiceServiceRef.current?.stop();
     };
   }, []);
+
+  useEffect(() => {
+    voiceServiceRef.current?.stop();
+    voiceServiceRef.current = new VoiceService(voiceMode);
+  }, [voiceMode]);
 
   useEffect(() => {
     let mounted = true;
@@ -228,6 +237,19 @@ export const AICoPilotWidget: React.FC = () => {
               onChange={e => setApiKey(e.target.value)}
               className="flex-grow p-2 bg-white/5 border border-white/10 rounded-lg text-sm placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-cyan-400/80"
             />
+            <select
+              value={voiceMode}
+              onChange={e => {
+                const mode = e.target.value as VoiceMode;
+                setVoiceMode(mode);
+                if (typeof localStorage !== 'undefined') localStorage.setItem('phillos_voice_mode', mode);
+              }}
+              className="bg-white/10 border border-white/20 text-sm text-white p-2 rounded-lg focus:outline-none"
+            >
+              <option value="auto">Auto Voice</option>
+              <option value="web">Web API</option>
+              <option value="whisper">Whisper</option>
+            </select>
           </div>
         </div>
       )}
