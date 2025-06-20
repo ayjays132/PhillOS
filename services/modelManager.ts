@@ -147,3 +147,44 @@ export const createSummaryWorker = (
 
 agentOrchestrator.registerAction('model.summarize', params => summarize(String(params?.text || '')));
 agentOrchestrator.registerAction('model.tag_text', params => tagText(String(params?.text || ''), (params?.labels as string[]) || []));
+
+export interface SystemMetrics {
+  bpm: number;
+  load: number;
+  memory: number;
+  threat: number;
+}
+
+type AnomalyHandler = (msg: string, metrics: SystemMetrics) => void;
+const anomalyHandlers = new Set<AnomalyHandler>();
+const history: SystemMetrics[] = [];
+
+export function onAnomaly(handler: AnomalyHandler) {
+  anomalyHandlers.add(handler);
+}
+
+export function offAnomaly(handler: AnomalyHandler) {
+  anomalyHandlers.delete(handler);
+}
+
+export function processMetrics(m: SystemMetrics) {
+  history.push(m);
+  if (history.length > 30) history.shift();
+  if (history.length < 5) return;
+  const warn: string[] = [];
+  const check = (key: keyof SystemMetrics, label: string) => {
+    const vals = history.map(h => h[key]);
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const sd = Math.sqrt(vals.reduce((a, b) => a + (b - avg) ** 2, 0) / vals.length);
+    if (Math.abs(m[key] - avg) > 2 * sd) warn.push(label);
+  };
+  check('load', 'High load');
+  check('memory', 'Memory spike');
+  check('bpm', 'BPM anomaly');
+  check('threat', 'Threat spike');
+  if (warn.length) {
+    const message = warn.join(', ');
+    anomalyHandlers.forEach(h => h(message, m));
+  }
+}
+
