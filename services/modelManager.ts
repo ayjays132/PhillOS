@@ -4,9 +4,18 @@ import { AIModelPreference, ChatMessage } from '../types';
 import { memoryHubService } from './memoryHubService';
 import { agentOrchestrator } from './agentOrchestrator';
 import { pipeline } from '@xenova/transformers';
+import { loadOnnxRuntime, loadGgmlRuntime, OnnxRuntimeExports, GgmlRuntimeExports } from '@/wasm/wasmLoader';
 
 let summarizer: any = null;
 let classifier: any = null;
+
+export async function loadOnnx() {
+  return loadOnnxRuntime();
+}
+
+export async function loadGgml() {
+  return loadGgmlRuntime();
+}
 
 export interface ModelSession {
   type: AIModelPreference;
@@ -74,3 +83,6 @@ export const tagText = async (
 
 agentOrchestrator.registerAction('model.summarize', params => summarize(String(params?.text || '')));
 agentOrchestrator.registerAction('model.tag_text', params => tagText(String(params?.text || ''), (params?.labels as string[]) || []));
+
+export type { OnnxRuntimeExports, GgmlRuntimeExports };
+export { loadOnnxRuntime, loadGgmlRuntime, loadOnnx, loadGgml };

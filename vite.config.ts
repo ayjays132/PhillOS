@@ -1,6 +1,25 @@
 import path from 'path';
+import fs from 'fs';
 import { defineConfig, loadEnv } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+function copyWasmPlugin() {
+  return {
+    name: 'copy-wasm',
+    apply: 'build',
+    closeBundle() {
+      const srcDir = path.resolve(__dirname, 'src/wasm');
+      const outDir = path.resolve(__dirname, 'dist/wasm');
+      if (!fs.existsSync(srcDir)) return;
+      fs.mkdirSync(outDir, { recursive: true });
+      for (const file of fs.readdirSync(srcDir)) {
+        if (file.endsWith('.wasm')) {
+          fs.copyFileSync(path.join(srcDir, file), path.join(outDir, file));
+        }
+      }
+    }
+  };
+}
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
@@ -41,7 +60,8 @@ export default defineConfig(({ mode }) => {
               }
             ]
           }
-        })
+        }),
+        copyWasmPlugin()
       ],
       resolve: {
         alias: {
