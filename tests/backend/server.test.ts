@@ -67,3 +67,14 @@ describe('backend server theme API', () => {
     expect(res.body).toEqual({ score: 55 });
   });
 });
+
+it('returns article metadata and citations', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => ({
+    text: async () => '<title>Art</title><meta name="author" content="Bob"><meta property="article:published_time" content="2023"><a href="http://c">ref</a>'
+  })) as any);
+  const { default: app } = await import('../../backend/server.js');
+  const res = await request(app).get('/api/weblens/summarize?url=http://x');
+  expect(res.body.meta.title).toBe('Art');
+  expect(res.body.meta.author).toBe('Bob');
+  expect(res.body.citations.length).toBe(1);
+});

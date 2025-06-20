@@ -236,9 +236,29 @@ app.get('/api/weblens/summarize', async (req, res) => {
   try {
     const r = await fetch(String(url));
     const text = await r.text();
-    res.json({ summary: text.slice(0, 200) });
+
+    const title = (text.match(/<title>([^<]+)<\/title>/i) || [null, ''])[1].trim();
+    const author = (
+      text.match(/<meta[^>]*name=['"]author['"][^>]*content=['"]([^'"]+)['"]/i) || [null, '']
+    )[1].trim();
+    const published = (
+      text.match(
+        /<meta[^>]*property=['"]article:published_time['"][^>]*content=['"]([^'"]+)['"]/i,
+      ) || [null, '']
+    )[1].trim();
+    const citations = Array.from(
+      text.matchAll(/<a[^>]*href=['"]([^'"]+)['"][^>]*>(.*?)<\/a>/gi),
+    )
+      .slice(0, 5)
+      .map(m => ({ text: m[2].replace(/<[^>]+>/g, ''), url: m[1] }));
+
+    res.json({
+      summary: text.slice(0, 200),
+      meta: { title, author, published },
+      citations,
+    });
   } catch {
-    res.json({ summary: `Summary of ${url}` });
+    res.json({ summary: `Summary of ${url}`, meta: {}, citations: [] });
   }
 });
 
