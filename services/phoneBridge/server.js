@@ -210,6 +210,10 @@ app.post('/notify', (req, res) => {
 });
 
 const PORT = process.env.PHONE_BRIDGE_PORT || 3002;
-app.listen(PORT, () => {
-  console.log(`Phone bridge server listening on port ${PORT}`);
-});
+if (!process.env.VITEST) {
+  app.listen(PORT, () => {
+    console.log(`Phone bridge server listening on port ${PORT}`);
+  });
+}
+
+export default app;
