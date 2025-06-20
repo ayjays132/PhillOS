@@ -113,7 +113,16 @@ pub struct CalendarEvent {
 }
 
 fn open_conn() -> Result<Connection, rusqlite::Error> {
-    Connection::open("events.db")
+    let base = std::env::var("PHILLOS_STORAGE_DIR").unwrap_or_else(|_| "storage".into());
+    let mut dir = PathBuf::from(base);
+    if dir.is_relative() {
+        if let Ok(cwd) = std::env::current_dir() {
+            dir = cwd.join(dir);
+        }
+    }
+    std::fs::create_dir_all(&dir).map_err(|_| rusqlite::Error::InvalidPath(dir.clone()))?;
+    let db_path = dir.join("events.db");
+    Connection::open(db_path)
 }
 
 fn init_db(conn: &Connection) -> Result<(), rusqlite::Error> {
@@ -277,5 +286,26 @@ mod tests {
 
         prefetch_files(vec!["a.txt".into()]).unwrap();
         assert!(cache.join("a.txt").exists());
+    }
+
+    #[test]
+    fn open_conn_uses_storage_dir() {
+        let dir = tempdir().unwrap();
+        std::env::set_var("PHILLOS_STORAGE_DIR", dir.path());
+        {
+            let _ = open_conn().unwrap();
+        }
+        assert!(dir.path().join("events.db").exists());
+    }
+
+    #[test]
+    fn open_conn_creates_dir_if_missing() {
+        let dir = tempdir().unwrap();
+        let sub = dir.path().join("missing");
+        std::env::set_var("PHILLOS_STORAGE_DIR", &sub);
+        {
+            let _ = open_conn().unwrap();
+        }
+        assert!(sub.join("events.db").exists());
     }
 }
