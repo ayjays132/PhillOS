@@ -20,6 +20,22 @@ class TimeAIService {
     const payload = JSON.stringify({ events });
     return invoke<string>('call_scheduler', { action: 'reschedule', payload });
   }
+
+  async rescheduleConflicts(
+    events: CalendarEvent[]
+  ): Promise<{ id: number; start: string; end: string }[]> {
+    const payload = JSON.stringify({ events });
+    const res = await invoke<string>('call_scheduler', {
+      action: 'reschedule_conflicts',
+      payload,
+    });
+    try {
+      const parsed = JSON.parse(res) as { events: { id: number; start: string; end: string }[] };
+      return parsed.events;
+    } catch {
+      return [];
+    }
+  }
 }
 
 export const timeaiService = new TimeAIService();
