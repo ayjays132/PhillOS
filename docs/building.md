@@ -71,10 +71,13 @@ sbsign --key keys/db.key --cert keys/db.crt dist/bootloader/bootanim.svgz
 ```
 
 `phill_svg_loader.c` loads this file at boot. When `nomodeset` is present or the
-Graphics Output Protocol is unavailable it falls back to `bootanim_sprite.svgz`:
+Graphics Output Protocol is unavailable it falls back to `bootanim_sprite.svgz`.
+If `theme.cfg` contains `light` or `dark` the loader first looks for
+`bootanim_light.svgz` or `bootanim_dark.svgz` respectively:
 
 ```c
-load_boot_animation(image, cmdline, &svg_data, &svg_size,
+load_boot_animation(image, cmdline, boot_info->theme_dark,
+                   &svg_data, &svg_size,
                    &sprite_data, &sprite_size);  /* from phill_svg_loader.c */
 ```
 

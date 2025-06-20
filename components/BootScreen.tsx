@@ -59,8 +59,11 @@ const BootScreen: React.FC = () => {
     }
   }, []);
 
+  const win: any = window as any;
+  const themeDark = win.bootInfo?.themeDark ?? win.boot_info?.theme_dark ?? 1;
+
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950">
+    <div className={`flex items-center justify-center h-screen bg-gradient-to-br ${themeDark ? 'from-gray-950 via-blue-950 to-purple-950' : 'from-white via-gray-200 to-blue-300'}`}>
       {svgUrl && <img src={svgUrl} alt="Boot animation" className="w-60 h-60" />}
       {!svgUrl && spriteUrl && <img src={spriteUrl} alt="Boot sprite" className="w-60 h-60" />}
       {!svgUrl && !spriteUrl && (

@@ -83,6 +83,7 @@ static EFI_STATUS load_svg_animation(EFI_HANDLE image, const CHAR16 *path,
 }
 
 EFI_STATUS load_boot_animation(EFI_HANDLE image, const char *cmdline,
+                               UINT8 theme_dark,
                                VOID **svg_data, UINTN *svg_size,
                                VOID **sprite_data, UINTN *sprite_size) {
     *svg_data = NULL;
@@ -108,10 +109,16 @@ EFI_STATUS load_boot_animation(EFI_HANDLE image, const char *cmdline,
     if (use_sprite) {
         status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim_sprite.svgz", sprite_data, sprite_size);
     } else {
-        status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim.svgz", svg_data, svg_size);
+        if (theme_dark)
+            status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim_dark.svgz", svg_data, svg_size);
+        else
+            status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim_light.svgz", svg_data, svg_size);
+
         if (EFI_ERROR(status)) {
-            /* fallback to sprite if SVG missing */
-            status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim_sprite.svgz", sprite_data, sprite_size);
+            status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim.svgz", svg_data, svg_size);
+            if (EFI_ERROR(status)) {
+                status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim_sprite.svgz", sprite_data, sprite_size);
+            }
         }
     }
     return status;

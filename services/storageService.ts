@@ -4,6 +4,7 @@ const WIDGET_ORDER_KEY = 'phillos_widget_order';
 const DOCK_ITEMS_KEY = 'phillos_dock_items_v1';
 const PHONE_SETTINGS_KEY = 'phillos_phone_settings_v1';
 const MEMORY_WINDOWS_KEY = 'phillos_memory_windows_v1';
+const THEME_KEY = 'phillos-theme';
 
 class StorageService {
   init() {
@@ -84,6 +85,45 @@ class StorageService {
   setMemoryWindows(windows: any[]) {
     try {
       localStorage.setItem(MEMORY_WINDOWS_KEY, JSON.stringify(windows));
+    } catch {
+      // ignore
+    }
+  }
+
+  async getTheme(): Promise<'light' | 'dark' | null> {
+    try {
+      const stored = localStorage.getItem(THEME_KEY);
+      if (stored === 'light' || stored === 'dark') {
+        return stored;
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
+      const res = await fetch('/api/theme');
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data && (data.theme === 'light' || data.theme === 'dark')) {
+        localStorage.setItem(THEME_KEY, data.theme);
+        return data.theme;
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  async setTheme(theme: 'light' | 'dark') {
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {}
+    try {
+      await fetch('/api/theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme }),
+      });
     } catch {
       // ignore
     }
