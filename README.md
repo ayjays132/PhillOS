@@ -137,7 +137,7 @@ Game controllers can navigate these elements with the arrow keys or D‑pad and 
 
 ## Voice Interaction
 
-PhillOS includes optional voice input and output for the AI CoPilot. The widget features a microphone button that toggles speech recognition. By default it uses the browser's Web Speech API, but if unsupported or if the preference `phillos_voice_mode` is set to `whisper`, recorded audio will be transcribed locally via a Python server running the `openai/whisper-small` model. Spoken phrases are inserted into the chat input and replies are read aloud using speech synthesis.
+PhillOS includes optional voice input and output for the AI CoPilot. The widget features a microphone button that toggles speech recognition. By default it uses the browser's Web Speech API, but if unsupported or if the preference `phillos_voice_engine_v1` is set to `whisper`, recorded audio will be transcribed locally via a Python server running the `openai/whisper-small` model. Spoken phrases are inserted into the chat input and replies are read aloud using speech synthesis.
 
 Whisper mode requires Python 3 with the `transformers` and `flask` packages:
 

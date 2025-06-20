@@ -1,10 +1,10 @@
 import { WhisperService } from './whisperService';
+import { storageService } from './storageService';
 
 export type VoiceTranscriptionCallback = (text: string, isFinal: boolean) => void;
 
 export type VoiceMode = 'auto' | 'web' | 'whisper';
 
-const PREF_KEY = 'phillos_voice_mode';
 
 export class VoiceService {
   private recognition: SpeechRecognition | null = null;
@@ -14,9 +14,7 @@ export class VoiceService {
   private whisper: WhisperService | null = null;
 
   constructor(preference: VoiceMode = 'auto') {
-    const stored = (typeof localStorage !== 'undefined'
-      ? (localStorage.getItem(PREF_KEY) as VoiceMode | null)
-      : null) || null;
+    const stored = storageService.getVoiceEngine();
     if (stored) preference = stored;
 
     const SpeechRecognitionImpl =

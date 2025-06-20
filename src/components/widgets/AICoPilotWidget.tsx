@@ -5,6 +5,7 @@ import { ChatMessage } from '../../types';
 import { createModelSession, sendModelMessageStream, ModelSession } from '../../../services/modelManager';
 import { CloudProvider } from '../../../services/cloudAIService';
 import { VoiceService, VoiceMode, speakText } from '../../../services/voiceService';
+import { storageService } from '../../../services/storageService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -23,8 +24,8 @@ export const AICoPilotWidget: React.FC = () => {
   const [apiKey, setApiKey] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [voiceMode, setVoiceMode] = useState<VoiceMode>(() => {
-    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('phillos_voice_mode') as VoiceMode | null : null;
-    return stored || 'auto';
+    const stored = storageService.getVoiceEngine();
+    return (stored as VoiceMode) || 'auto';
   });
   const voiceServiceRef = useRef<VoiceService | null>(null);
   const transcriptRef = useRef('');
@@ -242,7 +243,7 @@ export const AICoPilotWidget: React.FC = () => {
               onChange={e => {
                 const mode = e.target.value as VoiceMode;
                 setVoiceMode(mode);
-                if (typeof localStorage !== 'undefined') localStorage.setItem('phillos_voice_mode', mode);
+                storageService.setVoiceEngine(mode);
               }}
               className="bg-white/10 border border-white/20 text-sm text-white p-2 rounded-lg focus:outline-none"
             >

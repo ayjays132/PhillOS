@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../GlassCard';
 import { storageService } from '../../../services/storageService';
 import { Phone } from 'lucide-react';
+import { VoiceMode } from '../../../services/voiceService';
 
 export const PhoneSettingsView: React.FC = () => {
   const [bluetoothAddress, setBluetoothAddress] = useState('');
@@ -9,6 +10,7 @@ export const PhoneSettingsView: React.FC = () => {
   const [autoConnect, setAutoConnect] = useState(false);
   const [ringtone, setRingtone] = useState('');
   const [vibrate, setVibrate] = useState(false);
+  const [voiceEngine, setVoiceEngine] = useState<VoiceMode>('web');
 
   useEffect(() => {
     const stored = storageService.getPhoneSettings();
@@ -19,6 +21,8 @@ export const PhoneSettingsView: React.FC = () => {
       setRingtone(stored.ringtone || '');
       setVibrate(stored.vibrate ?? false);
     }
+    const ve = storageService.getVoiceEngine();
+    if (ve) setVoiceEngine(ve as VoiceMode);
   }, []);
 
   useEffect(() => {
@@ -29,7 +33,8 @@ export const PhoneSettingsView: React.FC = () => {
       ringtone,
       vibrate,
     });
-  }, [bluetoothAddress, modemDevice, autoConnect, ringtone, vibrate]);
+    storageService.setVoiceEngine(voiceEngine);
+  }, [bluetoothAddress, modemDevice, autoConnect, ringtone, vibrate, voiceEngine]);
 
   return (
     <GlassCard className="!shadow-2xl !shadow-blue-600/30 !border-white/15 h-full flex flex-col gap-4">
@@ -63,6 +68,17 @@ export const PhoneSettingsView: React.FC = () => {
           onChange={e => setRingtone(e.target.value)}
           className="bg-transparent border border-white/20 rounded px-2 py-1"
         />
+      </label>
+      <label className="text-sm flex flex-col gap-1">
+        <span>Voice Engine</span>
+        <select
+          value={voiceEngine}
+          onChange={e => setVoiceEngine(e.target.value as VoiceMode)}
+          className="bg-transparent border border-white/20 rounded px-2 py-1"
+        >
+          <option value="web">Browser Speech API</option>
+          <option value="whisper">Whisper</option>
+        </select>
       </label>
       <label className="inline-flex items-center gap-2 text-sm">
         <input
