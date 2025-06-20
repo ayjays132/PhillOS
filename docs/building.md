@@ -89,3 +89,23 @@ points during `main.c`.
 When creating the SVG consider the `theme_dark` flag from `boot_info_t` and
 define both light and dark gradients so the loader can toggle them based on the
 `theme.cfg` setting.
+
+## Querying Kernel Metrics
+
+After building the bootloader and kernel you can inspect runtime metrics via the
+`phillos-cli` tool. A small helper under `kernel/` issues the signed ioctl
+described in `docs/kernel_cli_api.md`.
+
+Compile the utility:
+
+```bash
+make -C kernel
+```
+
+Query the current heap usage:
+
+```bash
+./dist/phillos-cli kernel query heap
+```
+
+The command prints the number of bytes currently allocated on the kernel heap.

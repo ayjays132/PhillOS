@@ -4,6 +4,7 @@ import { createProtonLauncher, downloadProton } from '../backend/protonLauncher.
 import * as android from '../android/controller.ts';
 import fs from 'fs';
 import path from 'path';
+import { spawn } from 'child_process';
 import { sanitizeArgs } from './utils/validate.ts';
 
 export interface CLIOptions {
@@ -225,6 +226,23 @@ export class PhillosCLI {
         const res = await fetch(url);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
+      });
+
+    const kernel = program.command('kernel').description('Low level kernel utilities');
+
+    kernel
+      .command('query <type>')
+      .description('Query kernel metrics')
+      .action(async (type: string) => {
+        sanitizeArgs([type]);
+        const tool = new URL('../kernel/query_tool', import.meta.url).pathname;
+        await new Promise<void>((resolve, reject) => {
+          const child = spawn(tool, [type], { stdio: 'inherit' });
+          child.on('error', reject);
+          child.on('exit', code => {
+            code === 0 ? resolve() : reject(new Error(`query_tool exited with code ${code}`));
+          });
+        });
       });
 
     await program.parseAsync(argv);
