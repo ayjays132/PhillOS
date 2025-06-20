@@ -1,5 +1,6 @@
 #include "sim.h"
 #include "../../kernel/debug.h"
+#include "../driver_manager.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -16,6 +17,17 @@ static const char *modem_paths[] = {
 
 static int modem_present = 0;
 static char iccid_cache[32] = "";
+
+static int sim_match(const pci_device_t *dev)
+{
+    return dev->class_code == 0x07 && dev->subclass == 0x03; // Communications Modem
+}
+
+static void sim_pnp_init(const pci_device_t *dev)
+{
+    (void)dev;
+    init_sim();
+}
 
 static int open_modem(void)
 {
@@ -134,3 +146,9 @@ int sim_send_sms(const char *to, const char *msg)
     close(fd);
     return 0;
 }
+
+driver_t sim_pnp_driver = {
+    .name = "SIM/Modem",
+    .match = sim_match,
+    .init = sim_pnp_init,
+};

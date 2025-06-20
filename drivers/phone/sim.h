@@ -7,4 +7,7 @@ int sim_modem_present(void);
 const char *sim_get_iccid(void);
 int sim_send_sms(const char *to, const char *msg);
 
+#include "../driver_manager.h"
+extern driver_t sim_pnp_driver;
+
 #endif // PHILLOS_SIM_H
