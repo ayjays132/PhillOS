@@ -4,7 +4,7 @@ import { Send, AlertTriangle, Loader2, Mic, MicOff } from 'lucide-react';
 import { ChatMessage } from '../../types';
 import { createModelSession, sendModelMessageStream, ModelSession } from '../../../services/modelManager';
 import { CloudProvider } from '../../../services/cloudAIService';
-import { VoiceService, speakText } from '../../../services/voiceService';
+import { VoiceService, VoiceMode, speakText } from '../../../services/voiceService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOnboarding } from '../../hooks/useOnboarding';
