@@ -59,6 +59,24 @@ export async function forwardInput(): Promise<void> {
   console.log('Input forwarding active (handled by Waydroid UI)');
 }
 
+/**
+ * Install an APK inside the container using adb.
+ */
+export async function deployApk(apkPath: string): Promise<void> {
+  console.log(`Deploying ${apkPath}...`);
+  await run('adb', ['install', '-r', apkPath]);
+}
+
+/**
+ * Sync files with the Android container via adb.
+ * When `pull` is true the remote path is read and written locally.
+ */
+export async function syncFile(src: string, dest: string, pull = false): Promise<void> {
+  const args = pull ? ['pull', src, dest] : ['push', src, dest];
+  console.log(`${pull ? 'Pulling' : 'Pushing'} ${src} ${pull ? 'to' : 'from'} ${dest}`);
+  await run('adb', args);
+}
+
 if (require.main === module) {
   const command = process.argv[2];
   (async () => {

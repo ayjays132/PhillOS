@@ -1,7 +1,9 @@
 import { Command } from 'commander';
 import { agentService } from '../services/agentService.ts';
-import { createProtonLauncher } from '../backend/protonLauncher.ts';
+import { createProtonLauncher, downloadProton } from '../backend/protonLauncher.ts';
 import * as android from '../android/controller.ts';
+import fs from 'fs';
+import path from 'path';
 import { sanitizeArgs } from './utils/validate.ts';
 
 export interface CLIOptions {
@@ -9,6 +11,20 @@ export interface CLIOptions {
   provider?: 'gemini' | 'openai';
   apiKey?: string;
   phoneBridgeUrl?: string;
+}
+
+const SETTINGS_FILE = path.resolve(__dirname, '../backend/protonSettings.json');
+
+function loadSettings(): Record<string, any> {
+  try {
+    return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+function saveSettings(data: Record<string, any>): void {
+  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
 }
 
 export class PhillosCLI {
@@ -40,8 +56,10 @@ export class PhillosCLI {
         console.log(JSON.stringify(result, null, 2));
       });
 
-    program
-      .command('proton <exe> [args...]')
+    const proton = program.command('proton').description('Manage Proton versions and launch games');
+
+    proton
+      .command('launch <exe> [args...]')
       .description('Launch a Windows executable through Proton')
       .option('--version <ver>', 'Proton version')
       .option('--prefix <path>', 'WINE prefix path')
@@ -49,28 +67,99 @@ export class PhillosCLI {
       .option('--wine <path>', 'fallback Wine binary')
       .action(async (exe: string, args: string[] = [], cmdObj) => {
         sanitizeArgs([exe, ...(args || [])]);
+        const settings = loadSettings();
+        const key = path.resolve(exe);
+        const stored = settings[key] || {};
+        const version = cmdObj.version || stored.version;
+        const prefix = cmdObj.prefix || stored.prefix;
         const launcher = createProtonLauncher({
           protonDir: cmdObj.protonDir,
-          version: cmdObj.version,
-          prefix: cmdObj.prefix,
-          wineBinary: cmdObj.wine,
+          version,
+          prefix,
+          wineBinary: cmdObj.wine || stored.wineBinary,
         });
         await launcher.launch(exe, args);
+        settings[key] = { version, prefix, wineBinary: cmdObj.wine || stored.wineBinary };
+        saveSettings(settings);
       });
 
-    program
-      .command('android <action>')
-      .description('Start or stop the Waydroid container')
-      .action(async (action: string) => {
-        if (action === 'start') {
-          await android.startContainer();
-          await android.forwardDisplay();
-          await android.forwardInput();
-        } else if (action === 'stop') {
-          await android.stopContainer();
+    proton
+      .command('config <exe>')
+      .description('Show or set saved Proton options for a game')
+      .option('--version <ver>', 'Proton version')
+      .option('--prefix <path>', 'WINE prefix path')
+      .option('--wine <path>', 'fallback Wine binary')
+      .action((exe: string, cmdObj) => {
+        sanitizeArgs([exe]);
+        const key = path.resolve(exe);
+        const settings = loadSettings();
+        const cfg = settings[key] || {};
+        if (cmdObj.version || cmdObj.prefix || cmdObj.wine) {
+          if (cmdObj.version) cfg.version = cmdObj.version;
+          if (cmdObj.prefix) cfg.prefix = cmdObj.prefix;
+          if (cmdObj.wine) cfg.wineBinary = cmdObj.wine;
+          settings[key] = cfg;
+          saveSettings(settings);
+          console.log('Settings updated');
         } else {
-          throw new Error('Unknown action: ' + action);
+          console.log(JSON.stringify(cfg, null, 2));
         }
+      });
+
+    proton
+      .command('list')
+      .description('List available Proton versions')
+      .option('--proton-dir <dir>', 'directory containing Proton builds')
+      .action(cmdObj => {
+        const dir = cmdObj.protonDir || path.resolve(__dirname, '../dist/proton');
+        if (!fs.existsSync(dir)) return console.log('No Proton directory');
+        const entries = fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isDirectory());
+        console.log(entries.join('\n'));
+      });
+
+    proton
+      .command('download <version>')
+      .description('Download a Proton version')
+      .option('--proton-dir <dir>', 'directory containing Proton builds')
+      .action(async (version: string, cmdObj) => {
+        const dir = cmdObj.protonDir || path.resolve(__dirname, '../dist/proton');
+        await downloadProton(dir, version);
+        console.log('Downloaded', version);
+      });
+
+    const androidNs = program.command('android').description('Control Android container and adb');
+
+    androidNs
+      .command('start')
+      .description('Start the Waydroid container')
+      .action(async () => {
+        await android.startContainer();
+        await android.forwardDisplay();
+        await android.forwardInput();
+      });
+
+    androidNs
+      .command('stop')
+      .description('Stop the Waydroid container')
+      .action(async () => {
+        await android.stopContainer();
+      });
+
+    androidNs
+      .command('deploy <apk>')
+      .description('Install an APK via adb')
+      .action(async (apk: string) => {
+        sanitizeArgs([apk]);
+        await android.deployApk(apk);
+      });
+
+    androidNs
+      .command('sync <src> <dest>')
+      .description('Sync files with the device')
+      .option('--pull', 'pull from device')
+      .action(async (src: string, dest: string, cmdObj) => {
+        sanitizeArgs([src, dest]);
+        await android.syncFile(src, dest, !!cmdObj.pull);
       });
 
     const phone = program.command('phone').description('Interact with the phone bridge');

@@ -6,6 +6,8 @@ vi.mock('../../android/controller.ts', () => ({
   stopContainer: vi.fn(),
   forwardDisplay: vi.fn(),
   forwardInput: vi.fn(),
+  deployApk: vi.fn(),
+  syncFile: vi.fn(),
 }));
 
 const fetchMock = vi.fn(async () => ({ json: async () => ({ ok: true }) } as any));
@@ -42,7 +44,21 @@ describe('PhillosCLI', () => {
   it('rejects unsafe proton args', async () => {
     const cli = new PhillosCLI();
     await expect(
-      cli.run(['node', 'phillos-cli', 'proton', 'bad;rm'])
+      cli.run(['node', 'phillos-cli', 'proton', 'launch', 'bad;rm'])
     ).rejects.toThrow('Unsafe arguments');
+  });
+
+  it('deploys apk via adb', async () => {
+    const { deployApk } = await import('../../android/controller.ts');
+    const cli = new PhillosCLI();
+    await cli.run(['node', 'phillos-cli', 'android', 'deploy', 'app.apk']);
+    expect(deployApk).toHaveBeenCalledWith('app.apk');
+  });
+
+  it('syncs file to device', async () => {
+    const { syncFile } = await import('../../android/controller.ts');
+    const cli = new PhillosCLI();
+    await cli.run(['node', 'phillos-cli', 'android', 'sync', 'foo', 'bar']);
+    expect(syncFile).toHaveBeenCalledWith('foo', 'bar', false);
   });
 });
