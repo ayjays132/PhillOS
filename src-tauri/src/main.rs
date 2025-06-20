@@ -153,3 +153,31 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn list_dir_returns_entries() {
+        let dir = tempdir().unwrap();
+        std::fs::write(dir.path().join("a.txt"), b"hi").unwrap();
+        std::fs::create_dir(dir.path().join("sub")).unwrap();
+
+        let mut entries = list_dir(dir.path().to_string_lossy().into()).unwrap();
+        entries.sort_by(|a, b| a.name.cmp(&b.name));
+        assert_eq!(entries.len(), 2);
+        assert!(entries.iter().any(|e| e.is_dir));
+    }
+
+    #[test]
+    fn copy_file_works() {
+        let dir = tempdir().unwrap();
+        let src = dir.path().join("src.txt");
+        let dest = dir.path().join("dst.txt");
+        std::fs::write(&src, b"hi").unwrap();
+        copy_file(src.to_string_lossy().into(), dest.to_string_lossy().into()).unwrap();
+        assert!(dest.exists());
+    }
+}

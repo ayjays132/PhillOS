@@ -10,7 +10,7 @@
     "server": "node backend/server.js",
     "phone-bridge": "node services/phoneBridge/server.js",
     "training-pipeline": "node services/trainingPipeline.ts",
-    "test": "vitest run",
+    "test": "vitest run && go test ./... && cargo test --manifest-path src-tauri/Cargo.toml && pytest -q",
     "lint": "eslint \"**/*.ts\" \"**/*.tsx\""
   },
   "dependencies": {
@@ -26,7 +26,7 @@
     "openai": "^4.22.1",
     "react": "^19.1.0",
     "react-beautiful-dnd": "^13.1.1",
-    "@monaco-editor/react": "^4.8.3",
+    "@monaco-editor/react": "^4.7.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.1.0",
@@ -52,6 +52,7 @@
     "typescript": "~5.7.2",
     "vite": "^6.2.0",
     "vite-plugin-pwa": "^1.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "supertest": "^6.3.4"
   }
 }
