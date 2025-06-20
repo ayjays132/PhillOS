@@ -5,6 +5,10 @@ export interface InboxMessage {
   body: string;
 }
 
+export interface ScoredInboxMessage extends InboxMessage {
+  score: number;
+}
+
 class InboxAIService {
   async getMessages(): Promise<InboxMessage[]> {
     try {
@@ -31,9 +35,35 @@ class InboxAIService {
       return '';
     }
   }
+
+  async scoreMessage(message: InboxMessage): Promise<number> {
+    try {
+      const labels = await tagText(`${message.subject}\n${message.body}`, [
+        'important',
+        'normal',
+        'spam',
+      ]);
+      const top = labels[0];
+      if (top === 'important') return 1;
+      if (top === 'spam') return 0;
+      return 0.5;
+    } catch {
+      return 0;
+    }
+  }
+
+  async getScoredMessages(): Promise<ScoredInboxMessage[]> {
+    const messages = await this.getMessages();
+    const scored = await Promise.all(
+      messages.map(async m => ({ ...m, score: await this.scoreMessage(m) }))
+    );
+    scored.sort((a, b) => b.score - a.score);
+    return scored;
+  }
 }
 
 import { agentOrchestrator } from './agentOrchestrator';
+import { tagText } from './modelManager';
 
 export const inboxAIService = new InboxAIService();
 

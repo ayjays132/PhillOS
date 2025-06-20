@@ -162,6 +162,11 @@ app.get('/api/inboxai/messages', async (req, res) => {
   res.json({ messages });
 });
 
+app.get('/api/inboxai/messages-sorted', async (req, res) => {
+  const messages = await query("SELECT id, sender as 'from', subject, body, score FROM emails ORDER BY score DESC");
+  res.json({ messages });
+});
+
 app.post('/api/inboxai/summary', async (req, res) => {
   const { id } = req.body || {};
   const row = (await query(`SELECT body FROM emails WHERE id=${Number(id)}`))[0];
