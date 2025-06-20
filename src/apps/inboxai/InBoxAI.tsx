@@ -1,31 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
-
-interface Message { id: number; from: string; subject: string; body: string; }
+import { inboxAIService, InboxMessage } from '../../services/inboxAIService';
 
 export const InBoxAI: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [selected, setSelected] = useState<Message | null>(null);
+  const [messages, setMessages] = useState<InboxMessage[]>([]);
+  const [selected, setSelected] = useState<InboxMessage | null>(null);
   const [summary, setSummary] = useState('');
+  const [liveSummary, setLiveSummary] = useState(false);
 
   useEffect(() => {
-    fetch('/api/inboxai/messages')
-      .then(r => r.json())
-      .then(d => setMessages(d.messages || []))
-      .catch(() => setMessages([]));
+    inboxAIService.getMessages().then(setMessages);
   }, []);
+
+  useEffect(() => {
+    if (liveSummary && selected) {
+      inboxAIService
+        .summarizeMessage(selected.id)
+        .then(s => setSummary(s));
+    }
+  }, [selected, liveSummary]);
 
   const summarize = async () => {
     if (!selected) return;
     setSummary('');
     try {
-      const res = await fetch('/api/inboxai/summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: selected.id }),
-      });
-      const data = await res.json();
-      setSummary(data.summary);
+      const s = await inboxAIService.summarizeMessage(selected.id);
+      setSummary(s || 'Error generating summary');
     } catch {
       setSummary('Error generating summary');
     }
@@ -50,7 +50,11 @@ export const InBoxAI: React.FC = () => {
             <div className="mb-2 font-bold border-b border-white/10 pb-1">{selected.subject}</div>
             <pre className="flex-grow overflow-auto text-sm whitespace-pre-wrap">{selected.body}</pre>
             {summary && <div className="mt-2 text-sm text-purple-300">{summary}</div>}
-            <button className="mt-2 px-3 py-1 bg-blue-500 text-white rounded self-start" onClick={summarize}>
+            <label className="mt-2 mb-1 inline-flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={liveSummary} onChange={e => setLiveSummary(e.target.checked)} />
+              <span>Live Summary</span>
+            </label>
+            <button className="px-3 py-1 bg-blue-500 text-white rounded self-start" onClick={summarize}>
               AI Summarize
             </button>
           </>
