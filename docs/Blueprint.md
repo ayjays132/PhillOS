@@ -105,10 +105,11 @@ Two small native backends complement the TypeScript UI:
   Proton game launching. It proxies phone bridge requests and spawns the Node
   `protonLauncher.js` helper when needed.
 
-The **Agent Service** (`services/agentService.ts`) orchestrates these pieces. It
-interprets natural language commands, opens the required app, and calls the Rust
-or Go backends to perform native operations. Apps themselves stay focused on
-their UI logic while the Agent routes user intent between them.
+The **Agent Orchestrator** (`services/agentOrchestrator.ts`) sits above the
+lower level `agentService` and coordinates these pieces. It interprets user
+intents, launches applications, passes data between them and monitors
+completion through an internal event bus. Individual apps remain focused on
+their UI logic while the orchestrator routes intent and workflow data.
 
 ### Building the Rust backend
 
@@ -128,4 +129,24 @@ go build -o ../../dist/phillos-server
 ```
 
 Run the produced executable to serve `/api` endpoints alongside the web UI.
+
+### Agent Orchestrator Event Bus
+
+`services/agentOrchestrator.ts` exposes a lightweight event bus so apps can
+participate in multi‑step workflows. Consumers register listeners with
+`agentOrchestrator.on(event, handler)` and receive notifications when the agent
+launches an app, streams intermediate data or marks a task complete.
+
+Supported events:
+
+- **`launch`** – `{ app, params, taskId }` indicates an application should be
+  opened.
+- **`data`** – `{ taskId, data }` passes intermediate information between apps.
+- **`complete`** – `{ taskId, result }` signals a workflow finished
+  successfully.
+- **`fail`** – `{ taskId, error }` notifies listeners of a failure.
+
+`processIntent(text)` returns a task object describing the chosen action and
+emits the initial events. Apps can update the task state by calling
+`markComplete()` or `markFailed()` on the orchestrator.
 

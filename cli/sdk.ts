@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { agentService } from '../services/agentService.ts';
+import { agentOrchestrator } from '../services/agentOrchestrator.ts';
 import { createProtonLauncher, downloadProton } from '../backend/protonLauncher.ts';
 import * as android from '../android/controller.ts';
 import fs from 'fs';
@@ -51,9 +51,8 @@ export class PhillosCLI {
         sanitizeArgs([text]);
         const opts = program.opts();
         const pref = opts.cloud ? 'cloud' : (opts.local ? 'local' : (this.options.defaultModel || 'local'));
-        await agentService.init(pref);
-        const result = await agentService.processCommand(text, pref);
-        console.log(JSON.stringify(result, null, 2));
+        const task = await agentOrchestrator.processIntent(text, pref);
+        console.log(JSON.stringify(task?.action || null, null, 2));
       });
 
     const proton = program.command('proton').description('Manage Proton versions and launch games');
