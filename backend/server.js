@@ -67,27 +67,41 @@ app.use(express.json());
 initDb();
 
 const PHONE_BRIDGE_URL = process.env.PHONE_BRIDGE_URL || 'http://localhost:3002';
+const PROXY_TIMEOUT = Number(process.env.PHONE_BRIDGE_TIMEOUT || 2000);
+const MAX_RETRIES = 2;
 
 app.use('/phonebridge', (req, res) => {
   const target = new URL(req.originalUrl.replace(/^\/phonebridge/, ''), PHONE_BRIDGE_URL);
+  const body = req.body && Object.keys(req.body).length ? JSON.stringify(req.body) : null;
   const opts = {
     method: req.method,
     headers: { ...req.headers, host: target.host },
+    timeout: PROXY_TIMEOUT,
   };
-  const proxyReq = request(target, opts, proxyRes => {
-    res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
-    proxyRes.pipe(res);
-  });
-  proxyReq.on('error', err => {
-    console.error('Phone bridge proxy error:', err.message);
-    if (!res.headersSent) res.status(502).end();
-  });
-  if (req.body && Object.keys(req.body).length) {
-    proxyReq.write(JSON.stringify(req.body));
-    proxyReq.end();
-  } else {
-    req.pipe(proxyReq);
-  }
+
+  const attempt = (n) => {
+    const proxyReq = request(target, opts, proxyRes => {
+      res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
+      proxyRes.pipe(res);
+    });
+    proxyReq.on('timeout', () => proxyReq.destroy(new Error('timeout')));
+    proxyReq.on('error', err => {
+      if (n > 0) {
+        console.warn('Phone bridge proxy retry:', err.message);
+        return attempt(n - 1);
+      }
+      console.error('Phone bridge proxy error:', err.message);
+      if (!res.headersSent) res.status(502).json({ error: 'phone bridge unreachable' });
+    });
+    if (body) {
+      proxyReq.write(body);
+      proxyReq.end();
+    } else {
+      proxyReq.end();
+    }
+  };
+
+  attempt(MAX_RETRIES);
 });
 
 app.post('/api/launch-proton', async (req, res) => {
