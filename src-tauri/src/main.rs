@@ -84,6 +84,31 @@ fn move_file(src: String, dest: String) -> Result<(), String> {
 }
 
 #[command]
+fn delete_file(path: String) -> Result<(), String> {
+    let path = ensure_safe_path(&path)?;
+    if fs::metadata(&path).map_err(|e| e.to_string())?.is_dir() {
+        fs::remove_dir_all(&path).map_err(|e| e.to_string())
+    } else {
+        fs::remove_file(&path).map_err(|e| e.to_string())
+    }
+}
+
+#[command]
+fn archive_file(path: String) -> Result<(), String> {
+    let src = ensure_safe_path(&path)?;
+    let archive_env = std::env::var("PHILLOS_ARCHIVE_DIR").unwrap_or_else(|_| "archive".into());
+    let mut dest_dir = PathBuf::from(archive_env);
+    if dest_dir.is_relative() {
+        dest_dir = std::env::current_dir().map_err(|e| e.to_string())?.join(dest_dir);
+    }
+    dest_dir = normalize_path(dest_dir);
+    fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
+    let name = Path::new(&src).file_name().ok_or("invalid path")?;
+    let dest = dest_dir.join(name);
+    fs::rename(src, dest).map_err(|e| e.to_string())
+}
+
+#[command]
 fn prefetch_files(paths: Vec<String>) -> Result<(), String> {
     let cache_env = std::env::var("PHILLOS_CACHE_DIR").unwrap_or_else(|_| "cache".into());
     let mut cache_dir = PathBuf::from(cache_env);
@@ -216,6 +241,8 @@ fn main() {
             list_dir,
             copy_file,
             move_file,
+            delete_file,
+            archive_file,
             prefetch_files,
             save_event,
             load_events,
@@ -307,5 +334,30 @@ mod tests {
             let _ = open_conn().unwrap();
         }
         assert!(sub.join("events.db").exists());
+    }
+
+    #[test]
+    fn delete_file_removes_file() {
+        let dir = tempdir().unwrap();
+        std::env::set_var("PHILLOS_STORAGE_DIR", dir.path());
+        let file = dir.path().join("a.txt");
+        std::fs::write(&file, b"hi").unwrap();
+        delete_file("a.txt".into()).unwrap();
+        assert!(!file.exists());
+    }
+
+    #[test]
+    fn archive_file_moves_to_archive_dir() {
+        let dir = tempdir().unwrap();
+        let base = dir.path().join("base");
+        let archive = dir.path().join("archive");
+        std::fs::create_dir(&base).unwrap();
+        std::env::set_var("PHILLOS_STORAGE_DIR", &base);
+        std::env::set_var("PHILLOS_ARCHIVE_DIR", &archive);
+        let src = base.join("a.txt");
+        std::fs::write(&src, b"hi").unwrap();
+        archive_file("a.txt".into()).unwrap();
+        assert!(archive.join("a.txt").exists());
+        assert!(!src.exists());
     }
 }
