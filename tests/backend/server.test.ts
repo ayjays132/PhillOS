@@ -4,6 +4,7 @@ import request from 'supertest';
 beforeEach(() => {
   vi.resetModules();
   process.env.VITEST = '1';
+  process.env.PHILLOS_STORAGE_DIR = '/tmp/test-storage';
 });
 
 describe('backend server theme API', () => {
