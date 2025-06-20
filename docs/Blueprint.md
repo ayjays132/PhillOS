@@ -164,3 +164,5 @@ Supported events:
 emits the initial events. Apps can update the task state by calling
 `markComplete()` or `markFailed()` on the orchestrator.
 
+## Chaos Scheduler (HUQCE)
+The kernel integrates a lightweight scheduler implemented in `kernel/scheduler/chaos_sched.c`. Tasks register with `chaos_sched_add()` and each tick `chaos_sched_step()` evolves their complex amplitudes according to the Holland Unified Quantum Chaos Equation. CPU slice percentages are derived via `chaos_sched_slices()`. Parameters `gamma`, `alpha`, `epsilon` and `dt` are passed to `chaos_sched_init()` and control nonlinearity, chaos strength and timestep.

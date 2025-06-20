@@ -22,7 +22,7 @@ LDFLAGS := -nostdlib -znocombreloc -T /usr/lib/elf_x86_64_efi.lds 	-shared -Bsym
 BOOTLOADER := $(OUT_DIR)/BOOTX64.EFI
 KERNEL_ELF := $(OUT_DIR)/kernel.elf
 
-KERNEL_OBJS := $(OUT_DIR)/init.o 	$(OUT_DIR)/string.o 	$(OUT_DIR)/paging.o 	$(OUT_DIR)/alloc.o $(OUT_DIR)/heap.o $(OUT_DIR)/query.o      $(OUT_DIR)/debug.o $(OUT_DIR)/driver_manager.o $(OUT_DIR)/register.o 	$(OUT_DIR)/ahci.o 	$(OUT_DIR)/framebuffer.o $(OUT_DIR)/gpu.o $(OUT_DIR)/nvidia.o $(OUT_DIR)/amd.o $(OUT_DIR)/intel.o $(OUT_DIR)/vkd3d.o $(OUT_DIR)/fat32.o $(OUT_DIR)/elf.o $(OUT_DIR)/uhs.o
+KERNEL_OBJS := $(OUT_DIR)/init.o 	$(OUT_DIR)/string.o 	$(OUT_DIR)/paging.o 	$(OUT_DIR)/alloc.o $(OUT_DIR)/heap.o $(OUT_DIR)/query.o      $(OUT_DIR)/debug.o $(OUT_DIR)/driver_manager.o $(OUT_DIR)/register.o 	$(OUT_DIR)/ahci.o 	$(OUT_DIR)/framebuffer.o $(OUT_DIR)/gpu.o $(OUT_DIR)/nvidia.o $(OUT_DIR)/amd.o $(OUT_DIR)/intel.o $(OUT_DIR)/vkd3d.o $(OUT_DIR)/fat32.o $(OUT_DIR)/elf.o $(OUT_DIR)/uhs.o $(OUT_DIR)/chaos_sched.o
 
 .PHONY: all iso clean
 
@@ -73,6 +73,9 @@ $(OUT_DIR)/elf.o: ../kernel/elf.c | $(OUT_DIR)
 	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 
 $(OUT_DIR)/uhs.o: ../kernel/scheduler/uhs.c | $(OUT_DIR)
+	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
+
+$(OUT_DIR)/chaos_sched.o: ../kernel/scheduler/chaos_sched.c | $(OUT_DIR)
 	$(CC) $(KERNEL_CFLAGS) -c $< -o $@
 
 $(KERNEL_ELF): $(KERNEL_OBJS)

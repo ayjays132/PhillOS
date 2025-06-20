@@ -10,8 +10,10 @@
 #include "../drivers/driver_manager.h"
 #include "../drivers/register.h"
 #include "scheduler/uhs.h"
+#include "scheduler/chaos_sched.h"
 
 static boot_info_t *g_boot_info = NULL;
+static chaos_sched_t g_sched;
 
 int schedule_resources(const float *A, const float *B,
                        const float *R_tot, size_t N, size_t M, size_t R,
@@ -38,9 +40,14 @@ void kernel_main(boot_info_t *boot_info) {
     driver_manager_init();
     init_framebuffer(&boot_info->fb);
     fb_draw_pixel(10, 10, 0x00FF0000); // draw red pixel for debug
+    chaos_sched_init(&g_sched, 0.01f, 0.005f, 0.1f, 0.1f);
+    chaos_sched_add(&g_sched, 0);
     // Kernel is now initialized
     while (1) {
         driver_manager_poll();
+        chaos_sched_step(&g_sched);
+        float slices[CHAOS_MAX_TASKS];
+        chaos_sched_slices(&g_sched, slices, CHAOS_MAX_TASKS);
         __asm__("hlt");
     }
 }
