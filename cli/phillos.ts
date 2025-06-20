@@ -67,6 +67,36 @@ export class PhillosTool {
         }
       });
 
+    program
+      .command('scheduler <action> [payload]')
+      .description('Run a TimeAI scheduler action')
+      .action(async (action: string, payload = '{}') => {
+        sanitizeArgs([action, payload]);
+        await new Promise<void>((resolve, reject) => {
+          const child = spawn('python3', ['services/timeai_scheduler.py', action, payload], {
+            stdio: 'inherit',
+          });
+          child.on('error', reject);
+          child.on('exit', code => {
+            code === 0 ? resolve() : reject(new Error(`scheduler exited with code ${code}`));
+          });
+        });
+      });
+
+    program
+      .command('smarttags <file>')
+      .description('Generate SmartTags for a file')
+      .action(async (file: string) => {
+        sanitizeArgs([file]);
+        await new Promise<void>((resolve, reject) => {
+          const child = spawn('node', ['services/tagger.js', file], { stdio: 'inherit' });
+          child.on('error', reject);
+          child.on('exit', code => {
+            code === 0 ? resolve() : reject(new Error(`tagger exited with code ${code}`));
+          });
+        });
+      });
+
     await program.parseAsync(argv);
   }
 }

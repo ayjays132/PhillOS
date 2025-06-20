@@ -15,6 +15,7 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [Technology Stack](#technology-stack)
 - [Current Prototype Features](#current-prototype-features)
 - [Application Overview](docs/apps.md)
+- [Agent Mode](#agent-mode)
 - [Getting Started](#getting-started)
 - [Building the Bootloader & Kernel](#building-the-bootloader--kernel)
 - [Project Structure](#project-structure)
@@ -159,6 +160,28 @@ The `WhisperService` class invokes this script whenever audio is recorded. Most 
 PhillOS now includes a simple theme system with **light** and **dark** modes. The current theme is saved to `localStorage` so your preference persists across sessions. Components automatically adapt their colors based on this setting.
 
 To toggle the theme, call the `useTheme` hook anywhere in the app or add a small switch component that invokes `toggleTheme()` from the context.
+
+## Agent Mode
+
+Agent mode lets PhillOS orchestrate the apps and services automatically. Start the core agent with:
+
+```bash
+npx phillos agent start
+```
+
+The TimeAI scheduler can be invoked directly:
+
+```bash
+npx phillos scheduler smart_slot '{"tasks":["write docs 30m"]}'
+```
+
+Generate SmartTags for a text file:
+
+```bash
+npx phillos smarttags notes/todo.txt
+```
+
+These commands launch the underlying Python and Node helpers while the agent coordinates results between applications.
 
 ## Getting Started
 
