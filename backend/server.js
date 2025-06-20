@@ -140,21 +140,53 @@ app.get('/api/weblens/summarize', (req, res) => {
 });
 
 // --- MediaSphere ---
+const mediaItems = [
+  { id: 1, title: 'Demo Video' },
+  { id: 2, title: 'Sample Clip' },
+];
+
+let firewallEnabled = true;
+
 app.get('/api/mediasphere/media', (req, res) => {
-  res.json({ items: [] });
+  res.json({ items: mediaItems });
+});
+
+app.post('/api/mediasphere/analyze', (req, res) => {
+  const { id } = req.body || {};
+  const item = mediaItems.find(m => m.id === id);
+  res.json({ result: item ? `Analysis of ${item.title}` : 'Not found' });
 });
 
 // --- SoundScape ---
+const soundTracks = [
+  { id: 1, title: 'First Light', artist: 'Nova' },
+  { id: 2, title: 'Stellar Drift', artist: 'Axiom' },
+];
+
 app.get('/api/soundscape/tracks', (req, res) => {
-  res.json({ tracks: [] });
+  res.json({ tracks: soundTracks });
 });
 
 // --- VisionVault ---
+const demoImages = [
+  'https://placekitten.com/200/200',
+  'https://placekitten.com/200/201',
+];
+
 app.get('/api/visionvault/images', (req, res) => {
-  res.json({ images: [] });
+  res.json({ images: demoImages });
 });
 
 // --- SecureCore ---
+app.get('/api/securecore/status', (req, res) => {
+  res.json({ firewall: firewallEnabled });
+});
+
+app.post('/api/securecore/toggle', (req, res) => {
+  firewallEnabled = !firewallEnabled;
+  res.json({ firewall: firewallEnabled });
+});
+
 app.post('/api/securecore/scan', (req, res) => {
   res.json({ status: 'ok' });
 });
@@ -166,7 +198,7 @@ app.post('/api/appforge/build', (req, res) => {
 
 // --- SpaceManager ---
 app.get('/api/spacemanager/usage', (req, res) => {
-  res.json({ used: 0, total: 0 });
+  res.json({ used: 42, total: 100 });
 });
 
 // --- Pulse Monitor ---

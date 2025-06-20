@@ -1,13 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
+import { soundScapeService } from '../../services/soundScapeService';
 
-export const SoundScape: React.FC = () => (
-  <div className="p-4 h-full">
-    <GlassCard className="h-full flex flex-col items-center justify-center text-center">
-      <h1 className="text-3xl font-bold mb-2">SoundScape</h1>
-      <p className="text-white/70">Under development</p>
-    </GlassCard>
-  </div>
-);
+interface Track {
+  id: number;
+  title: string;
+  artist: string;
+}
+
+export const SoundScape: React.FC = () => {
+  const [tracks, setTracks] = useState<Track[]>([]);
+
+  useEffect(() => {
+    soundScapeService.getTracks().then(setTracks);
+  }, []);
+
+  return (
+    <div className="p-4 h-full">
+      <GlassCard className="h-full flex flex-col">
+        <h1 className="text-3xl font-bold mb-4">SoundScape</h1>
+        <ul className="text-sm space-y-1 overflow-auto">
+          {tracks.map(t => (
+            <li key={t.id}>{t.title} - {t.artist}</li>
+          ))}
+        </ul>
+      </GlassCard>
+    </div>
+  );
+};
 
 export default SoundScape;
