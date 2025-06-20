@@ -1,4 +1,4 @@
-import { transcribe as whisperTranscribe } from './whisperService';
+import { WhisperService } from './whisperService';
 
 export type VoiceTranscriptionCallback = (text: string, isFinal: boolean) => void;
 
@@ -11,6 +11,7 @@ export class VoiceService {
   private recorder: MediaRecorder | null = null;
   private chunks: Blob[] = [];
   private mode: 'web' | 'whisper';
+  private whisper: WhisperService | null = null;
 
   constructor(preference: VoiceMode = 'auto') {
     const stored = (typeof localStorage !== 'undefined'
@@ -21,19 +22,24 @@ export class VoiceService {
     const SpeechRecognitionImpl =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const webAvailable = !!SpeechRecognitionImpl;
+    const whisperAvailable = WhisperService.isAvailable();
 
     if (preference === 'whisper') {
-      this.mode = 'whisper';
+      this.mode = whisperAvailable ? 'whisper' : webAvailable ? 'web' : 'whisper';
     } else if (preference === 'web') {
-      this.mode = webAvailable ? 'web' : 'whisper';
+      this.mode = webAvailable ? 'web' : whisperAvailable ? 'whisper' : 'web';
     } else {
-      this.mode = webAvailable ? 'web' : 'whisper';
+      this.mode = webAvailable ? 'web' : whisperAvailable ? 'whisper' : 'web';
     }
 
     if (this.mode === 'web' && webAvailable) {
       this.recognition = new SpeechRecognitionImpl();
       this.recognition.lang = 'en-US';
       this.recognition.interimResults = true;
+    }
+
+    if (this.mode === 'whisper' && whisperAvailable) {
+      this.whisper = new WhisperService();
     }
   }
 
@@ -60,13 +66,13 @@ export class VoiceService {
         this.recorder.ondataavailable = async e => {
           this.chunks.push(e.data);
           if (this.recorder && this.recorder.state === 'recording') {
-            const text = await whisperTranscribe(e.data);
+            const text = this.whisper ? await this.whisper.transcribe(e.data) : '';
             if (text) onResult(text.trim(), false);
           }
         };
         this.recorder.onstop = async () => {
           const blob = new Blob(this.chunks, { type: 'audio/webm' });
-          const text = await whisperTranscribe(blob);
+          const text = this.whisper ? await this.whisper.transcribe(blob) : '';
           if (text) onResult(text.trim(), true);
           this.chunks = [];
         };
