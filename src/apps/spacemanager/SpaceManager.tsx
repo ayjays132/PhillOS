@@ -1,13 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
+import { spaceManagerService } from '../../services/spaceManagerService';
 
-export const SpaceManager: React.FC = () => (
-  <div className="p-4 h-full">
-    <GlassCard className="h-full flex flex-col items-center justify-center text-center">
-      <h1 className="text-3xl font-bold mb-2">SpaceManager</h1>
-      <p className="text-white/70">Under development</p>
-    </GlassCard>
-  </div>
-);
+export const SpaceManager: React.FC = () => {
+  const [usage, setUsage] = useState({ used: 0, total: 0 });
+
+  useEffect(() => {
+    spaceManagerService.getUsage().then(setUsage);
+  }, []);
+
+  const pct = usage.total ? Math.round((usage.used / usage.total) * 100) : 0;
+
+  return (
+    <div className="p-4 h-full">
+      <GlassCard className="h-full flex flex-col items-center justify-center">
+        <h1 className="text-3xl font-bold mb-2">SpaceManager</h1>
+        <div className="w-full bg-white/10 rounded h-3 mt-2">
+          <div style={{ width: `${pct}%` }} className="h-full bg-blue-500 rounded" />
+        </div>
+        <p className="text-sm mt-2">{usage.used} / {usage.total} GB ({pct}%)</p>
+      </GlassCard>
+    </div>
+  );
+};
 
 export default SpaceManager;

@@ -14,6 +14,7 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [The "Living Glass" Design](#the-living-glass-design)
 - [Technology Stack](#technology-stack)
 - [Current Prototype Features](#current-prototype-features)
+- [Application Overview](docs/apps.md)
 - [Getting Started](#getting-started)
 - [Building the Bootloader & Kernel](#building-the-bootloader--kernel)
 - [Project Structure](#project-structure)

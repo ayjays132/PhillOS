@@ -9,6 +9,20 @@ class MediaSphereService {
       return [];
     }
   }
+
+  async analyzeVideo(id: number) {
+    try {
+      const res = await fetch('/api/mediasphere/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) return { result: '' };
+      return await res.json();
+    } catch {
+      return { result: '' };
+    }
+  }
 }
 
 export const mediaSphereService = new MediaSphereService();
