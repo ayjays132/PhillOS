@@ -4,21 +4,9 @@
 #include "../../kernel/memory/alloc.h"
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
+#include "../driver_manager.h"
 
 /* Basic PCI config space access */
-static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
-                                  uint8_t func, uint8_t offset)
-{
-    uint32_t addr = (uint32_t)(1 << 31) |
-                    ((uint32_t)bus << 16) |
-                    ((uint32_t)slot << 11) |
-                    ((uint32_t)func << 8) |
-                    (offset & 0xfc);
-    __asm__ volatile("outl %0, %1" :: "a"(addr), "d"((uint16_t)0xcf8));
-    uint32_t data;
-    __asm__ volatile("inl %1, %0" : "=a"(data) : "d"((uint16_t)0xcfc));
-    return data;
-}
 
 /* AHCI structures taken from the AHCI specification */
 typedef volatile struct {
@@ -150,6 +138,41 @@ static int port_rw(hba_port_t *port, uint64_t lba, uint32_t count,
     return 0;
 }
 
+static void ahci_init_controller(uint8_t bus, uint8_t slot, uint8_t func,
+                                 uint16_t vendor, uint16_t device)
+{
+    debug_puts("AHCI controller vendor 0x");
+    debug_puthex(vendor);
+    debug_puts(" device 0x");
+    debug_puthex(device);
+    debug_puts("\n");
+
+    uint32_t bar5 = pci_config_read32(bus, slot, func, 0x24);
+    uint64_t abar_phys = bar5 & ~0xF;
+    map_identity_range(abar_phys, sizeof(hba_mem_t));
+    hba_mem_t *abar = (hba_mem_t*)(uintptr_t)abar_phys;
+    uint32_t version = abar->vs;
+    uint32_t pi = abar->pi;
+
+    debug_puts("AHCI version 0x");
+    debug_puthex(version);
+    debug_puts(" ports 0x");
+    debug_puthex(pi);
+    debug_puts("\n");
+
+    for (int i = 0; i < 32; i++) {
+        if (pi & (1 << i)) {
+            hba_port_t *port = &abar->ports[i];
+            port->clb = (uint32_t)(uintptr_t)alloc_page();
+            port->fb  = (uint32_t)(uintptr_t)alloc_page();
+            memset((void*)(uintptr_t)port->clb, 0, 4096);
+            memset((void*)(uintptr_t)port->fb, 0, 4096);
+            boot_port = port;
+            break;
+        }
+    }
+}
+
 /* Detect first AHCI controller and prepare a single port */
 void init_ahci(void)
 {
@@ -157,47 +180,19 @@ void init_ahci(void)
     for (uint8_t bus = 0; bus < 256; bus++) {
         for (uint8_t slot = 0; slot < 32; slot++) {
             for (uint8_t func = 0; func < 8; func++) {
-                uint32_t vendor_dev = pci_read32(bus, slot, func, 0);
+                uint32_t vendor_dev = pci_config_read32(bus, slot, func, 0);
                 uint16_t vendor = vendor_dev & 0xFFFF;
                 if (vendor == 0xFFFF)
                     continue;
 
-                uint32_t classcode = pci_read32(bus, slot, func, 8);
+                uint32_t classcode = pci_config_read32(bus, slot, func, 8);
                 uint8_t subclass = (classcode >> 16) & 0xFF;
                 uint8_t class = (classcode >> 24) & 0xFF;
 
                 if (class == 0x01 && subclass == 0x06) {
                     uint16_t device = (vendor_dev >> 16) & 0xFFFF;
-                    debug_puts("AHCI controller vendor 0x");
-                    debug_puthex(vendor);
-                    debug_puts(" device 0x");
-                    debug_puthex(device);
-                    debug_puts("\n");
-
-                    uint32_t bar5 = pci_read32(bus, slot, func, 0x24);
-                    uint64_t abar_phys = bar5 & ~0xF;
-                    map_identity_range(abar_phys, sizeof(hba_mem_t));
-                    hba_mem_t *abar = (hba_mem_t*)(uintptr_t)abar_phys;
-                    uint32_t version = abar->vs;
-                    uint32_t pi = abar->pi;
-
-                    debug_puts("AHCI version 0x");
-                    debug_puthex(version);
-                    debug_puts(" ports 0x");
-                    debug_puthex(pi);
-                    debug_puts("\n");
-
-                    for (int i = 0; i < 32; i++) {
-                        if (pi & (1 << i)) {
-                            hba_port_t *port = &abar->ports[i];
-                            port->clb = (uint32_t)(uintptr_t)alloc_page();
-                            port->fb  = (uint32_t)(uintptr_t)alloc_page();
-                            memset((void*)(uintptr_t)port->clb, 0, 4096);
-                            memset((void*)(uintptr_t)port->fb, 0, 4096);
-                            boot_port = port;
-                            return;
-                        }
-                    }
+                    ahci_init_controller(bus, slot, func, vendor, device);
+                    return;
                 }
             }
         }
@@ -218,3 +213,20 @@ int ahci_write(uint64_t lba, uint32_t count, const void *buffer)
         return -1;
     return port_rw(boot_port, lba, count, (void *)buffer, 1);
 }
+
+static int ahci_match(const pci_device_t *dev)
+{
+    return dev->class_code == 0x01 && dev->subclass == 0x06;
+}
+
+static void ahci_pnp_init(const pci_device_t *dev)
+{
+    ahci_init_controller(dev->bus, dev->slot, dev->func,
+                         dev->vendor_id, dev->device_id);
+}
+
+driver_t ahci_pnp_driver = {
+    .name = "AHCI Storage",
+    .match = ahci_match,
+    .init = ahci_pnp_init,
+};

@@ -52,6 +52,11 @@ gpu_driver_t *gpu_get_active_driver(void)
     return active_driver;
 }
 
+void gpu_set_active_driver(gpu_driver_t *drv)
+{
+    active_driver = drv;
+}
+
 static int str_eq(const char *a, const char *b)
 {
     while (*a && *b) {
