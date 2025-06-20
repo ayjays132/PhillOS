@@ -26,13 +26,13 @@ void kernel_main(boot_info_t *boot_info) {
     if (boot_info->ai_size)
         init_ai_heap((void *)boot_info->ai_base, boot_info->ai_size);
     drivers_register_all();
-    driver_manager_init();
     fat32_init();
+    driver_manager_init();
     init_framebuffer(&boot_info->fb);
     fb_draw_pixel(10, 10, 0x00FF0000); // draw red pixel for debug
     // Kernel is now initialized
     while (1) {
-        // Halt CPU to prevent exiting
+        driver_manager_poll();
         __asm__("hlt");
     }
 }
