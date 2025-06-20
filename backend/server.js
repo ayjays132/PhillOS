@@ -2,7 +2,8 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { request } from 'http';
+import { request, createServer } from 'http';
+import { WebSocketServer } from 'ws';
 import { URL } from 'url';
 import { spawn } from 'child_process';
 import { createProtonLauncher } from './protonLauncher.js';
@@ -67,6 +68,8 @@ async function saveTheme(theme) {
 
 const app = express();
 app.use(express.json());
+
+const server = createServer(app);
 
 initDb();
 
@@ -343,6 +346,24 @@ app.get('/api/pulsemonitor/status', (req, res) => {
   res.json({ bpm });
 });
 
+const wss = new WebSocketServer({ server, path: '/ws/pulse' });
+
+function collectMetrics() {
+  return {
+    bpm: Math.round(os.loadavg()[0] * 10 + 70),
+    load: os.loadavg()[0],
+    memory: 1 - os.freemem() / os.totalmem(),
+    threat: threatScore,
+  };
+}
+
+setInterval(() => {
+  const msg = JSON.stringify(collectMetrics());
+  wss.clients.forEach(c => {
+    if (c.readyState === 1) c.send(msg);
+  });
+}, 1000);
+
 // --- BrainPad ---
 app.get('/api/brainpad/entries', async (req, res) => {
   const entries = await query('SELECT id, content, created_at FROM notes ORDER BY created_at DESC');
@@ -394,7 +415,7 @@ app.post('/api/tags', async (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 if (!process.env.VITEST) {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Proton launcher server listening on port ${PORT}`);
   });
 }
