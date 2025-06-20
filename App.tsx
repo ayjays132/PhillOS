@@ -7,6 +7,7 @@ import { Dock } from './components/Dock';
 import { MobileBottomNavigationBar } from './components/MobileBottomNavigationBar';
 import { HomeDashboard } from './components/HomeDashboard';
 import { PlaceholderAppView } from './components/PlaceholderAppView';
+import Vault from './src/apps/vault';
 import { ProtonLauncher } from './components/ProtonLauncher';
 import PhoneApp from './components/PhoneApp';
 import { AgentConsole } from './components/AgentConsole';
@@ -71,7 +72,7 @@ const App: React.FC = () => {
           <Route path="/home" element={<HomeDashboard />} />
           <Route path="/copilot" element={<PlaceholderAppView appName="AI CoPilot" icon={BotMessageSquare} message="AI CoPilot integrated into Home Dashboard widgets." />} />
           <Route path="/agent" element={<AgentConsole />} />
-          <Route path="/files" element={<PlaceholderAppView appName="File Explorer" icon={Files} />} />
+          <Route path="/files" element={<Vault />} />
           <Route path="/mail" element={<PlaceholderAppView appName="Mail Client" icon={Mail} />} />
           <Route path="/gaming" element={<ProtonLauncher />} />
           <Route path="/phone" element={<PhoneApp />} />

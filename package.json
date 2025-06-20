@@ -32,7 +32,8 @@
     "react-router-dom": "^7.6.2",
     "ref-napi": "^3.0.0",
     "remark-gfm": "^4.0.1",
-    "serialport": "^13.0.0"
+    "serialport": "^13.0.0",
+    "@tauri-apps/api": "^1.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
