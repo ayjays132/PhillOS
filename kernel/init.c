@@ -27,6 +27,16 @@ boot_info_t *boot_info_get(void)
     return g_boot_info;
 }
 
+size_t sched_task_count(void)
+{
+    return g_sched.count;
+}
+
+float sched_last_residual(void)
+{
+    return uhs_last_residual();
+}
+
 void kernel_main(boot_info_t *boot_info) {
     g_boot_info = boot_info;
     // Placeholder for kernel initialization logic

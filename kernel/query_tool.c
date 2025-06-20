@@ -34,6 +34,10 @@ int main(int argc, char **argv)
     kernel_query_request_t req = {0};
     if (strcmp(argv[1], "heap") == 0) {
         req.query = KERNEL_QUERY_HEAP_USAGE;
+    } else if (strcmp(argv[1], "sched") == 0) {
+        req.query = KERNEL_QUERY_SCHED_STATS;
+    } else if (strcmp(argv[1], "ai_heap") == 0) {
+        req.query = KERNEL_QUERY_AI_HEAP_USAGE;
     } else {
         fprintf(stderr, "Unknown query type\n");
         return 1;
@@ -58,6 +62,14 @@ int main(int argc, char **argv)
     }
 
     close(fd);
-    printf("%llu\n", (unsigned long long)ioc.res.result);
+    if (req.query == KERNEL_QUERY_SCHED_STATS) {
+        uint32_t count = (uint32_t)(ioc.res.result & 0xFFFFFFFF);
+        uint32_t bits = (uint32_t)(ioc.res.result >> 32);
+        union { uint32_t u; float f; } conv;
+        conv.u = bits;
+        printf("tasks:%u residual:%f\n", count, conv.f);
+    } else {
+        printf("%llu\n", (unsigned long long)ioc.res.result);
+    }
     return 0;
 }

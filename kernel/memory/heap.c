@@ -172,3 +172,15 @@ size_t heap_usage(void)
     return used;
 }
 
+size_t agent_heap_usage(void)
+{
+    size_t used = 0;
+    heap_block_t *blk = agent_heap_head;
+    while (blk) {
+        if (!blk->free)
+            used += blk->size;
+        blk = blk->next;
+    }
+    return used;
+}
+

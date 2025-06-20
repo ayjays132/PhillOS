@@ -5,6 +5,8 @@
 
 typedef enum {
     KERNEL_QUERY_HEAP_USAGE = 1,
+    KERNEL_QUERY_SCHED_STATS = 2,
+    KERNEL_QUERY_AI_HEAP_USAGE = 3,
 } kernel_query_t;
 
 typedef struct {
