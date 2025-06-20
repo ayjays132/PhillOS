@@ -1,5 +1,8 @@
 #include "uhs.h"
 #include "../memory/heap.h"
+#include <math.h>
+
+static float g_last_residual = 0.0f;
 
 int uhs_compute(const float *A, const float *B,
                 const float *R_tot, size_t N, size_t M, size_t R,
@@ -44,7 +47,20 @@ int uhs_compute(const float *A, const float *B,
         }
     }
 
+    g_last_residual = 0.0f;
+    for (size_t r = 0; r < R; r++) {
+        float sum_x = 0.0f;
+        for (size_t i = 0; i < N; i++)
+            sum_x += out_x[i * R + r];
+        g_last_residual += fabsf(sum_x - R_tot[r]);
+    }
+
     agent_free(demand);
     agent_free(total);
     return 0;
+}
+
+float uhs_last_residual(void)
+{
+    return g_last_residual;
 }

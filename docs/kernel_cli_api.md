@@ -13,6 +13,8 @@ that validates a signed request and returns the requested data.
 
 typedef enum {
     KERNEL_QUERY_HEAP_USAGE = 1,
+    KERNEL_QUERY_SCHED_STATS = 2,
+    KERNEL_QUERY_AI_HEAP_USAGE = 3,
 } kernel_query_t;
 
 typedef struct {
@@ -48,8 +50,11 @@ Requests with an invalid signature are rejected.
 
 * `KERNEL_QUERY_HEAP_USAGE` – returns the number of bytes currently
   allocated on the kernel heap.
-
-Additional queries will be added in the future.
+* `KERNEL_QUERY_SCHED_STATS` – returns scheduler metrics packed into a
+  64-bit value. The low 32 bits contain the number of active tasks and
+  the high 32 bits encode the last residual from the UHS/HUQCE solver as
+  a floating point value.
+* `KERNEL_QUERY_AI_HEAP_USAGE` – bytes used in the agent heap.
 
 ## Example Flow
 

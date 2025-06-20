@@ -16,5 +16,6 @@ void *agent_alloc(size_t size);
 void agent_free(void *ptr);
 
 size_t heap_usage(void);
+size_t agent_heap_usage(void);
 
 #endif // PHILLOS_HEAP_H
