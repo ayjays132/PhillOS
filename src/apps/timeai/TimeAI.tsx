@@ -70,6 +70,22 @@ export const TimeAI: React.FC = () => {
     }
   };
 
+  const resolveConflicts = async () => {
+    try {
+      const payload = JSON.stringify({ events });
+      const res = await invoke<string>('call_scheduler', { action: 'reschedule_conflicts', payload });
+      const data = JSON.parse(res) as { events: { id: number; start: string; end: string }[] };
+      setEvents(prev =>
+        prev.map(ev => {
+          const upd = data.events.find(u => u.id === ev.id);
+          return upd ? { ...ev, start: upd.start, end: upd.end } : ev;
+        })
+      );
+    } catch (err) {
+      console.error('reschedule_conflicts failed', err);
+    }
+  };
+
   return (
     <AppPanel>
       <div className="flex items-center mb-2">
@@ -107,6 +123,9 @@ export const TimeAI: React.FC = () => {
         </button>
         <button className="px-2 py-1 text-xs rounded bg-purple-500 text-white" onClick={reschedule}>
           Reschedule
+        </button>
+        <button className="px-2 py-1 text-xs rounded bg-orange-500 text-white" onClick={resolveConflicts}>
+          Resolve Conflicts
         </button>
       </div>
     </AppPanel>

@@ -78,6 +78,16 @@ def reschedule(payload: dict) -> dict:
     return {"events": rescheduled}
 
 
+def reschedule_conflicts(payload: dict) -> dict:
+    """Return updated times for events after resolving overlaps."""
+    result = reschedule(payload)
+    updates = [
+        {"id": ev.get("id"), "start": ev["start"], "end": ev["end"]}
+        for ev in result.get("events", [])
+    ]
+    return {"events": updates}
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("{}")
@@ -88,6 +98,8 @@ if __name__ == "__main__":
         result = smart_slot(data)
     elif action == "reschedule":
         result = reschedule(data)
+    elif action == "reschedule_conflicts":
+        result = reschedule_conflicts(data)
     else:
         result = {}
     print(json.dumps(result))

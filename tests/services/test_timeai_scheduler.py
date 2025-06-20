@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 
-from services.timeai_scheduler import smart_slot, reschedule
+from services.timeai_scheduler import smart_slot, reschedule, reschedule_conflicts
 
 
 class TimeAISchedulerTests(unittest.TestCase):
@@ -51,6 +51,29 @@ class TimeAISchedulerTests(unittest.TestCase):
             ev[1]["start"],
             ev[0]["end"],
         )
+        self.assertEqual(ev[2]["start"], ev[1]["end"])
+
+    def test_reschedule_conflicts_returns_updated_times(self):
+        events = [
+            {
+                "id": 1,
+                "start": self.day_start.isoformat(),
+                "end": (self.day_start + timedelta(hours=1)).isoformat(),
+            },
+            {
+                "id": 2,
+                "start": (self.day_start + timedelta(minutes=30)).isoformat(),
+                "end": (self.day_start + timedelta(hours=1, minutes=30)).isoformat(),
+            },
+            {
+                "id": 3,
+                "start": (self.day_start + timedelta(hours=1, minutes=30)).isoformat(),
+                "end": (self.day_start + timedelta(hours=2)).isoformat(),
+            },
+        ]
+        res = reschedule_conflicts({"events": events})
+        ev = res["events"]
+        self.assertEqual(ev[1]["start"], events[0]["end"])
         self.assertEqual(ev[2]["start"], ev[1]["end"])
 
 
