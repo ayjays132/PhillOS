@@ -294,6 +294,8 @@ writes.  Buffers passed to the read/write helpers must reside in identity mapped
 physical memory.  Only simple single-page transfers are currently tested.
 
 See [docs/driver_system.md](docs/driver_system.md) for an overview of the driver framework.
+Development details, including how to build and sign modules, are covered in
+[docs/driver_development.md](docs/driver_development.md).
 
 ## Offline Installation and Usage
 
