@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { agentService, AgentAction } from '../services/agentService';
+import { agentService, AgentAction } from '../../services/agentService';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard } from './GlassCard';
 import { useTheme } from '../contexts/ThemeContext';

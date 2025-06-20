@@ -1,6 +1,6 @@
 import React from 'react';
 import { RefreshCw, Trash2 } from 'lucide-react';
-import { checkForUpdate, clearCaches } from '../../services/cacheService';
+import { checkForUpdate, clearCaches } from '../../../services/cacheService';
 
 export const CacheManagementWidget: React.FC = () => (
   <div className="space-y-2">

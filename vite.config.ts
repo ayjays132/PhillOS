@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
           strategies: 'generateSW',
           workbox: {
             globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
-            additionalManifestEntries: [{ url: '/index.tsx', revision: null }],
+            additionalManifestEntries: [{ url: '/src/index.tsx', revision: null }],
             runtimeCaching: [
               {
                 urlPattern: /\/api\/.*$/,
@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
       ],
       resolve: {
         alias: {
-          '@': path.resolve(__dirname, '.'),
+          '@': path.resolve(__dirname, 'src'),
         }
       },
       build: {

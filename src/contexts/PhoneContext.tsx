@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { usePhoneBridge } from "../hooks/usePhoneBridge";
-import { storageService } from "../services/storageService";
+import { storageService } from "../../services/storageService";
 
 interface PhoneContextValue extends ReturnType<typeof usePhoneBridge> {
   /** Last successfully connected bluetooth address */
