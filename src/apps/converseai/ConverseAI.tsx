@@ -7,6 +7,7 @@ export const ConverseAI: React.FC = () => {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toneMatch, setToneMatch] = useState(false);
 
   const send = async () => {
     if (!input.trim()) return;
@@ -18,7 +19,7 @@ export const ConverseAI: React.FC = () => {
       const res = await fetch('/api/converseai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg.text }),
+        body: JSON.stringify({ message: userMsg.text, toneMatch }),
       });
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'ai', text: data.reply || 'No reply' }]);
@@ -36,6 +37,14 @@ export const ConverseAI: React.FC = () => {
         ))}
       </div>
       <div className="flex gap-2 p-2 border-t border-white/10">
+        <label className="flex items-center gap-1 text-xs text-white/70">
+          <input
+            type="checkbox"
+            checked={toneMatch}
+            onChange={e => setToneMatch(e.target.checked)}
+          />
+          ToneMatch
+        </label>
         <input
           className="flex-grow rounded border border-white/20 bg-transparent text-sm px-2 py-1"
           value={input}
