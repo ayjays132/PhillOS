@@ -23,6 +23,7 @@ vi.mock('crypto', () => ({ randomUUID: () => '123' }));
 
 beforeEach(() => {
   vi.resetModules();
+  delete process.env.WHISPER_PYTHON;
 });
 
 describe('WhisperService', () => {
@@ -37,6 +38,22 @@ describe('WhisperService', () => {
     const svc = new WhisperService();
     const text = await svc.transcribe(new Blob(['test']));
     expect(text).toBe('hello');
-    expect(spawnMock).toHaveBeenCalled();
+    expect(spawnMock.mock.calls[0][0]).toBe('python3');
+  });
+
+  it('uses WHISPER_PYTHON env variable', async () => {
+    process.env.WHISPER_PYTHON = 'custompy';
+    const { WhisperService } = await import('../../services/whisperService');
+    const svc = new WhisperService();
+    await svc.transcribe(new Blob(['test']));
+    expect(spawnMock.mock.calls[0][0]).toBe('custompy');
+  });
+
+  it('constructor overrides env variable', async () => {
+    process.env.WHISPER_PYTHON = 'envpy';
+    const { WhisperService } = await import('../../services/whisperService');
+    const svc = new WhisperService('myPython');
+    await svc.transcribe(new Blob(['test']));
+    expect(spawnMock.mock.calls[0][0]).toBe('myPython');
   });
 });

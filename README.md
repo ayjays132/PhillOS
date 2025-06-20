@@ -155,6 +155,8 @@ python services/whisper_server.py serve
 
 The `WhisperService` class invokes this script whenever audio is recorded. Most modern browsers support the required features, though they may need an HTTPS context and user permission. If voice features are unavailable, the microphone button will have no effect.
 
+The service uses `python3` by default. Set the `WHISPER_PYTHON` environment variable to specify a custom interpreter.
+
 ## Theme Switching
 
 PhillOS now includes a simple theme system with **light** and **dark** modes. The current theme is saved to `localStorage` so your preference persists across sessions. Components automatically adapt their colors based on this setting.
