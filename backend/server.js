@@ -214,6 +214,12 @@ app.post('/api/inboxai/summary', async (req, res) => {
   res.json({ summary });
 });
 
+app.post('/api/inboxai/score', async (req, res) => {
+  const { id, score } = req.body || {};
+  await execute('UPDATE emails SET score=? WHERE id=?', [Number(score), Number(id)]);
+  res.json({ success: true });
+});
+
 app.post('/api/inboxai/reply', async (req, res) => {
   const { id, body } = req.body || {};
   const text = String(body || '');
