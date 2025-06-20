@@ -569,6 +569,16 @@ npx ts-node cli/phillos.ts launch /games/Game.exe
 npx ts-node cli/phillos.ts agent start --cloud
 ```
 
+### Database Setup
+
+Some widgets store data in a small SQLite database. Initialize it once before running the backend:
+
+```bash
+npm run setup-db
+```
+
+This creates `storage/phillos.db` with tables for emails, notes, tasks, tags and preferences.
+
 ### Built-In Apps
 
 Start the backend with `npm run server` and open any of these paths in the UI:

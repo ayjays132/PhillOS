@@ -1,9 +1,11 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { request } from 'http';
 import { URL } from 'url';
 import { createProtonLauncher } from './protonLauncher.js';
+import { initDb, query, execute } from './db.js';
 
 const SETTINGS_FILE = path.resolve(__dirname, 'protonSettings.json');
 const STORAGE_DIR = process.env.PHILLOS_STORAGE_DIR || path.resolve(__dirname, '../storage');
@@ -23,6 +25,10 @@ function saveSettings(data) {
 
 function loadTheme() {
   try {
+    const row = query("SELECT value FROM preferences WHERE key='theme'")[0];
+    if (row && (row.value === 'light' || row.value === 'dark')) return row.value;
+  } catch {}
+  try {
     return fs.readFileSync(THEME_FILE, 'utf8').trim();
   } catch {
     return 'dark';
@@ -30,6 +36,9 @@ function loadTheme() {
 }
 
 function saveTheme(theme) {
+  try {
+    execute(`INSERT INTO preferences(key,value) VALUES('theme','${theme}') ON CONFLICT(key) DO UPDATE SET value='${theme}'`);
+  } catch {}
   try {
     fs.mkdirSync(STORAGE_DIR, { recursive: true });
     fs.writeFileSync(THEME_FILE, theme);
@@ -40,6 +49,8 @@ function saveTheme(theme) {
 
 const app = express();
 app.use(express.json());
+
+initDb();
 
 const PHONE_BRIDGE_URL = process.env.PHONE_BRIDGE_URL || 'http://localhost:3002';
 
@@ -112,59 +123,75 @@ app.post('/api/converseai', (req, res) => {
 });
 
 // --- InBoxAI ---
-const demoMessages = [
-  { id: 1, from: 'alice@example.com', subject: 'Welcome to PhillOS', body: 'Thanks for trying PhillOS. Let us know what you think!' },
-  { id: 2, from: 'bob@example.com', subject: 'Meeting Tomorrow', body: 'Reminder about our meeting at 10am.' },
-];
-
 app.get('/api/inboxai/messages', (req, res) => {
-  res.json({ messages: demoMessages });
+  const messages = query("SELECT id, sender as 'from', subject, body FROM emails");
+  res.json({ messages });
 });
 
 app.post('/api/inboxai/summary', (req, res) => {
   const { id } = req.body || {};
-  const msg = demoMessages.find(m => m.id === id);
-  const summary = msg ? `${msg.body.slice(0, 50)}...` : 'Not found';
+  const row = query(`SELECT body FROM emails WHERE id=${Number(id)}`)[0];
+  const summary = row ? `${row.body.slice(0, 50)}...` : 'Not found';
   res.json({ summary });
 });
 
 app.post('/api/inboxai/reply', (req, res) => {
-  const { id } = req.body || {};
-  res.json({ success: true, reply: `Auto reply to message ${id}` });
+  const { id, body } = req.body || {};
+  const text = String(body || '').replace(/'/g, "''");
+  execute(`INSERT INTO emails(sender,subject,body) VALUES('me@example.com','Re:${id}','${text}')`);
+  res.json({ success: true });
 });
 
 // --- WebLens ---
-app.get('/api/weblens/summarize', (req, res) => {
+app.get('/api/weblens/summarize', async (req, res) => {
   const url = req.query.url || '';
-  res.json({ summary: `Summary of ${url}` });
+  try {
+    const r = await fetch(String(url));
+    const text = await r.text();
+    res.json({ summary: text.slice(0, 200) });
+  } catch {
+    res.json({ summary: `Summary of ${url}` });
+  }
 });
 
 // --- MediaSphere ---
-const mediaItems = [
-  { id: 1, title: 'Demo Video' },
-  { id: 2, title: 'Sample Clip' },
-];
-
 let firewallEnabled = true;
 
 app.get('/api/mediasphere/media', (req, res) => {
-  res.json({ items: mediaItems });
+  const dir = path.join(STORAGE_DIR, 'media');
+  let items = [];
+  try {
+    items = fs.readdirSync(dir)
+      .filter(f => !fs.statSync(path.join(dir, f)).isDirectory())
+      .map((f, i) => ({ id: i + 1, title: f }));
+  } catch {}
+  res.json({ items });
 });
 
 app.post('/api/mediasphere/analyze', (req, res) => {
   const { id } = req.body || {};
-  const item = mediaItems.find(m => m.id === id);
-  res.json({ result: item ? `Analysis of ${item.title}` : 'Not found' });
+  const dir = path.join(STORAGE_DIR, 'media');
+  try {
+    const files = fs.readdirSync(dir).filter(f => !fs.statSync(path.join(dir, f)).isDirectory());
+    const file = files[id - 1];
+    if (file) {
+      const size = fs.statSync(path.join(dir, file)).size;
+      return res.json({ result: `Size ${size} bytes` });
+    }
+  } catch {}
+  res.json({ result: 'Not found' });
 });
 
 // --- SoundScape ---
-const soundTracks = [
-  { id: 1, title: 'First Light', artist: 'Nova' },
-  { id: 2, title: 'Stellar Drift', artist: 'Axiom' },
-];
-
 app.get('/api/soundscape/tracks', (req, res) => {
-  res.json({ tracks: soundTracks });
+  const dir = path.join(STORAGE_DIR, 'music');
+  let tracks = [];
+  try {
+    tracks = fs.readdirSync(dir)
+      .filter(f => f.endsWith('.mp3'))
+      .map((f, i) => ({ id: i + 1, title: path.parse(f).name, artist: 'Unknown' }));
+  } catch {}
+  res.json({ tracks });
 });
 
 // --- VisionVault ---
@@ -174,7 +201,15 @@ const demoImages = [
 ];
 
 app.get('/api/visionvault/images', (req, res) => {
-  res.json({ images: demoImages });
+  const dir = path.join(STORAGE_DIR, 'images');
+  let images = [];
+  try {
+    images = fs.readdirSync(dir)
+      .filter(f => /\.(png|jpg|jpeg|gif)$/i.test(f))
+      .map(f => path.join('/images', f));
+  } catch {}
+  if (images.length === 0) images = demoImages;
+  res.json({ images });
 });
 
 // --- SecureCore ---
@@ -188,7 +223,8 @@ app.post('/api/securecore/toggle', (req, res) => {
 });
 
 app.post('/api/securecore/scan', (req, res) => {
-  res.json({ status: 'ok' });
+  const usedMem = os.totalmem() - os.freemem();
+  res.json({ status: 'ok', usedMemory: usedMem });
 });
 
 // --- AppForge ---
@@ -203,12 +239,54 @@ app.get('/api/spacemanager/usage', (req, res) => {
 
 // --- Pulse Monitor ---
 app.get('/api/pulsemonitor/status', (req, res) => {
-  res.json({ bpm: 72 });
+  const bpm = Math.round(os.loadavg()[0] * 10 + 70);
+  res.json({ bpm });
 });
 
 // --- BrainPad ---
 app.get('/api/brainpad/entries', (req, res) => {
-  res.json({ entries: [] });
+  const entries = query('SELECT id, content, created_at FROM notes ORDER BY created_at DESC');
+  res.json({ entries });
+});
+
+app.post('/api/brainpad/entries', (req, res) => {
+  const { content } = req.body || {};
+  if (!content) return res.status(400).json({ error: 'content required' });
+  const text = String(content).replace(/'/g, "''");
+  execute(`INSERT INTO notes(content, created_at) VALUES('${text}', ${Date.now()})`);
+  res.json({ success: true });
+});
+
+app.get('/api/tasks', (req, res) => {
+  const tasks = query('SELECT id, title, completed FROM tasks');
+  res.json({ tasks });
+});
+
+app.post('/api/tasks', (req, res) => {
+  const { title } = req.body || {};
+  if (!title) return res.status(400).json({ error: 'title required' });
+  const text = String(title).replace(/'/g, "''");
+  execute(`INSERT INTO tasks(title, completed) VALUES('${text}', 0)`);
+  res.json({ success: true });
+});
+
+app.post('/api/tasks/:id/toggle', (req, res) => {
+  const id = Number(req.params.id);
+  execute(`UPDATE tasks SET completed=CASE completed WHEN 0 THEN 1 ELSE 0 END WHERE id=${id}`);
+  res.json({ success: true });
+});
+
+app.get('/api/tags', (req, res) => {
+  const tags = query('SELECT id, name FROM tags');
+  res.json({ tags });
+});
+
+app.post('/api/tags', (req, res) => {
+  const { name } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'name required' });
+  const text = String(name).replace(/'/g, "''");
+  execute(`INSERT OR IGNORE INTO tags(name) VALUES('${text}')`);
+  res.json({ success: true });
 });
 
 const PORT = process.env.PORT || 3001;
