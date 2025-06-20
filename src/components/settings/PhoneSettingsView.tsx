@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../GlassCard';
-import { storageService } from '../../services/storageService';
+import { storageService } from '../../../services/storageService';
 import { Phone } from 'lucide-react';
 
 export const PhoneSettingsView: React.FC = () => {

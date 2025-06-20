@@ -160,7 +160,7 @@ To toggle the theme, call the `useTheme` hook anywhere in the app or add a small
     # git clone <repository-url>
     # cd <repository-name>
     ```
-    For the current setup, ensure all provided files (`index.html`, `index.tsx`, `App.tsx`, `types.ts`, `metadata.json`, and the `components/`, `hooks/`, `services/` directories) are in the same project folder.
+    For the current setup, ensure all provided files (`index.html`, `src/index.tsx`, `src/App.tsx`, `src/types.ts`, `metadata.json`, and the `src/components/`, `src/hooks/`, `services/` directories) are in the same project folder.
 
 3.  **Run the Application**:
     *   **Option A (Simple Static Server):**
@@ -347,11 +347,17 @@ The service worker also caches responses from the `/phonebridge/*` endpoint usin
 │   └── useResponsive.ts    # Handles responsive layout changes
 ├── services/
 │   └── cloudAIService.ts   # Gemini or ChatGPT integration logic
-├── App.tsx                 # Main application component, routing
+├── src/
+│   ├── App.tsx             # Main application component, routing
+│   ├── index.tsx           # React entry point
+│   ├── index.css           # Global styles
+│   ├── components/         # UI components
+│   ├── hooks/              # React hooks
+│   ├── contexts/           # React contexts
+│   ├── apps/               # Mini apps (e.g., Vault)
+│   └── types.ts            # TypeScript type definitions
 ├── index.html              # Root HTML file
-├── index.tsx               # React entry point
 ├── metadata.json           # Project metadata
-├── types.ts                # TypeScript type definitions
 └── README.md               # This file
 ```
 

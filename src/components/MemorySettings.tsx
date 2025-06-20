@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from './GlassCard';
-import { memoryService } from '../services/memoryService';
+import { memoryService } from '../../services/memoryService';
 import { BrainCircuit, Trash2 } from 'lucide-react';
 
 export const MemorySettings: React.FC = () => {

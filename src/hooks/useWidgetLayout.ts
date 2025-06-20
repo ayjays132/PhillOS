@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { StratumConfig, WidgetOrder } from '../types';
-import { storageService } from '../services/storageService';
+import { storageService } from '../../services/storageService';
 
 function buildDefaultOrder(strata: StratumConfig[]): WidgetOrder {
   const order: WidgetOrder = {};

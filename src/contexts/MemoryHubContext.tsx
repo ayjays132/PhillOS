@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { memoryHubService, MemoryWindow } from '../services/memoryHubService';
+import { memoryHubService, MemoryWindow } from '../../services/memoryHubService';
 
 interface MemoryHubContextValue {
   windows: MemoryWindow[];

@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { GlassCard } from "./GlassCard";
-import { phoneService } from "../services/phoneService";
+import { phoneService } from "../../services/phoneService";
 import { usePhone } from "../contexts/PhoneContext";
-import { createQwenChatSession } from "../services/qwenService";
+import { createQwenChatSession } from "../../services/qwenService";
 import {
   createCloudChatSession,
   sendMessageStream,
   CloudProvider,
-} from "../services/cloudAIService";
+} from "../../services/cloudAIService";
 import { useOnboarding } from "../hooks/useOnboarding";
 import { useTheme } from "../contexts/ThemeContext";
 
