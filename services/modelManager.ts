@@ -51,17 +51,23 @@ export const createModelSession = async (
 
 export async function* sendModelMessageStream(
   session: ModelSession,
-  message: string
+  message: string,
+  options: { toneMatch?: boolean } = {}
 ): AsyncGenerator<string> {
   memoryHubService.addEntry(`[user] ${message}`);
+  let finalMsg = message;
+  if (options.toneMatch) {
+    const style = memoryHubService.getStyleProfile();
+    if (style) finalMsg = `${style}\n${message}`;
+  }
   let full = '';
   if (session.type === 'cloud' && session.cloudSession) {
-    for await (const chunk of sendCloudStream(session.cloudSession, message)) {
+    for await (const chunk of sendCloudStream(session.cloudSession, finalMsg)) {
       full += chunk;
       yield chunk;
     }
   } else if (session.type === 'local' && session.localSession) {
-    for await (const chunk of session.localSession.sendMessageStream(message)) {
+    for await (const chunk of session.localSession.sendMessageStream(finalMsg)) {
       full += chunk;
       yield chunk;
     }
