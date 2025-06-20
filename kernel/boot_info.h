@@ -27,6 +27,8 @@ typedef struct {
     framebuffer_info_t fb;
     uint64_t ai_base;
     uint64_t ai_size;
+    uint64_t svg_base;
+    uint64_t svg_size;
     char cmdline[128];
 } boot_info_t;
 
