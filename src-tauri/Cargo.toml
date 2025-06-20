@@ -8,3 +8,6 @@ tauri = { version = "1", features = ["fs", "path-all"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 rusqlite = { version = "0.31", features = ["bundled"] }
+
+[dev-dependencies]
+tempfile = "3"
