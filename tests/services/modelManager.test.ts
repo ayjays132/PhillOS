@@ -23,4 +23,14 @@ describe('modelManager wasm models', () => {
     const tags = await tagText('hello', ['a','b']);
     expect(tags).toEqual(['x','y','z'].slice(0,3));
   });
+
+  it('summary worker emits bullets', async () => {
+    const { createSummaryWorker } = await import('../../services/modelManager');
+    const bullets: string[][] = [];
+    const worker = createSummaryWorker(b => bullets.push(b), 0);
+    worker.update('hello world');
+    await new Promise(r => setTimeout(r, 0));
+    expect(bullets[0][0]).toMatch(/^• /);
+    worker.stop();
+  });
 });

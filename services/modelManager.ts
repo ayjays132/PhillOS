@@ -96,5 +96,48 @@ export const tagText = async (
   return (result.labels as string[]).slice(0, 3);
 };
 
+export type SummaryWorker = {
+  update: (text: string) => void;
+  stop: () => void;
+};
+
+export const createSummaryWorker = (
+  onSummary: (bullets: string[]) => void,
+  delay = 500
+): SummaryWorker => {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let latest = '';
+  let stopped = false;
+
+  const run = async () => {
+    const text = latest.trim();
+    if (!text || stopped) {
+      onSummary([]);
+      return;
+    }
+    const summary = await summarize(text);
+    const bullets = summary
+      .split(/\n+/)
+      .flatMap(line => line.split(/[.]/))
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(s => `• ${s}`);
+    if (!stopped) onSummary(bullets);
+  };
+
+  const update = (text: string) => {
+    latest = text;
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(run, delay);
+  };
+
+  const stop = () => {
+    stopped = true;
+    if (timer) clearTimeout(timer);
+  };
+
+  return { update, stop };
+};
+
 agentOrchestrator.registerAction('model.summarize', params => summarize(String(params?.text || '')));
 agentOrchestrator.registerAction('model.tag_text', params => tagText(String(params?.text || ''), (params?.labels as string[]) || []));
