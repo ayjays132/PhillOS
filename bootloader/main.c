@@ -221,10 +221,18 @@ static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
 
     VOID *svg_data = NULL;
     UINTN svg_size = 0;
-    status = load_svg_animation(image, &svg_data, &svg_size);
+    VOID *sprite_data = NULL;
+    UINTN sprite_size = 0;
+    status = load_boot_animation(image, cmdline_buf, &svg_data, &svg_size,
+                                 &sprite_data, &sprite_size);
     if (!EFI_ERROR(status)) {
-        info->svg_base = (uint64_t)svg_data;
-        info->svg_size = svg_size;
+        if (svg_data) {
+            info->svg_base = (uint64_t)svg_data;
+            info->svg_size = svg_size;
+        } else if (sprite_data) {
+            info->sprite_base = (uint64_t)sprite_data;
+            info->sprite_size = sprite_size;
+        }
     }
 
     UINTN map_size = 0, map_key, desc_size;

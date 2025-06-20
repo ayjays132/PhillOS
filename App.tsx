@@ -37,8 +37,12 @@ const App: React.FC = () => {
 
   React.useEffect(() => {
     const win = window as any;
-    if (win.SVG_BOOT_UPDATE && win.boot_info?.svg_base) {
-      win.SVG_BOOT_UPDATE();
+    if (win.boot_info) {
+      if (win.SVG_BOOT_UPDATE && win.boot_info.svg_base) {
+        win.SVG_BOOT_UPDATE();
+      } else if (win.SPRITE_BOOT_PLAY && !win.boot_info.svg_base && win.boot_info.sprite_base) {
+        win.SPRITE_BOOT_PLAY();
+      }
     }
   }, []);
 
