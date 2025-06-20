@@ -2,6 +2,7 @@ import React from 'react';
 import { Download, Trash2, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useMemoryHub } from '../../contexts/MemoryHubContext';
+import { WidgetCard } from '../layout/WidgetCard';
 
 export const MemoryHubWidget: React.FC = () => {
   const { windows, clear } = useMemoryHub();
@@ -17,7 +18,7 @@ export const MemoryHubWidget: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-2">
+    <WidgetCard className="flex-col space-y-2">
       <div className="flex items-center justify-between text-sm text-white/80">
         <span>{windows.length} windows</span>
         <div className="space-x-2">
@@ -62,7 +63,7 @@ export const MemoryHubWidget: React.FC = () => {
       >
         Open Hub
       </Link>
-    </div>
+    </WidgetCard>
   );
 };
 

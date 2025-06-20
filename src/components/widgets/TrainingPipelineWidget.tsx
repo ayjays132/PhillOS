@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { WidgetCard } from '../layout/WidgetCard';
 
 export const TrainingPipelineWidget: React.FC = () => {
   const [running, setRunning] = useState(false);
@@ -43,7 +44,7 @@ export const TrainingPipelineWidget: React.FC = () => {
   };
 
   return (
-    <div className="space-y-2">
+    <WidgetCard className="space-y-2">
       <button
         onClick={running ? stop : start}
         disabled={loading}
@@ -51,6 +52,6 @@ export const TrainingPipelineWidget: React.FC = () => {
       >
         {running ? 'Stop Training' : 'Start Training'}
       </button>
-    </div>
+    </WidgetCard>
   );
 };

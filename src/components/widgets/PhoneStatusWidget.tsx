@@ -3,6 +3,7 @@ import { Phone, Bluetooth } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePhone } from "../../contexts/PhoneContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { WidgetCard } from '../layout/WidgetCard';
 
 export const PhoneStatusWidget: React.FC = () => {
   const { status, connect, disconnect, lastAddress } = usePhone();
@@ -19,12 +20,10 @@ export const PhoneStatusWidget: React.FC = () => {
   };
 
   return (
-    <div
-      className={`flex items-center justify-between p-3 rounded-lg ${isDark ? 'bg-white/10' : 'bg-black/10'}`}
-    >
+    <WidgetCard className="flex-row items-center justify-between">
       <div className="flex items-center gap-2">
         <Phone size={20} className="text-green-400" />
-        <span className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-800/80'}`}> 
+        <span className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-800/80'}`}>
           {status.connected ? "Connected" : "Disconnected"}
         </span>
       </div>
@@ -50,6 +49,6 @@ export const PhoneStatusWidget: React.FC = () => {
           <Bluetooth size={20} className="inline" />
         </Link>
       </div>
-    </div>
+    </WidgetCard>
   );
 };

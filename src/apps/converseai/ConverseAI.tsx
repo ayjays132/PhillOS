@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 
 interface Msg { role: 'user' | 'ai'; text: string; }
 
@@ -29,7 +29,7 @@ export const ConverseAI: React.FC = () => {
   };
 
   return (
-    <GlassCard className="flex flex-col h-full">
+    <AppPanel>
       <div className="flex-grow overflow-auto space-y-2 mb-2 p-2">
         {messages.map((m, i) => (
           <div key={i} className={`text-sm ${m.role === 'user' ? 'text-right text-blue-300' : 'text-left text-purple-300'}`}>{m.text}</div>
@@ -46,7 +46,7 @@ export const ConverseAI: React.FC = () => {
           {loading ? '...' : 'Send'}
         </button>
       </div>
-    </GlassCard>
+    </AppPanel>
   );
 };
 

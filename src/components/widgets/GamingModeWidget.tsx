@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
 import { Gamepad2, Zap, ShieldCheck } from 'lucide-react';
+import { WidgetCard } from '../layout/WidgetCard';
 
 export const GamingModeWidget: React.FC = () => {
   const [isGamingMode, setIsGamingMode] = useState(false);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-2">
+    <WidgetCard className="items-center justify-center p-2">
       <Gamepad2 size={36} className={`mb-3 transition-colors ${isGamingMode ? 'text-pink-400 animate-pulse-slow' : 'text-white/60'}`} />
       <p className={`text-lg font-semibold mb-1 ${isGamingMode ? 'text-pink-300' : 'text-white/80'}`}>
         Gaming Mode
@@ -30,6 +31,6 @@ export const GamingModeWidget: React.FC = () => {
           <div className="flex items-center"><ShieldCheck size={14} className="mr-1.5 text-green-400"/> Distraction Free: Enabled</div>
         </div>
       )}
-    </div>
+    </WidgetCard>
   );
 };

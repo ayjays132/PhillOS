@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, Bell, Settings } from 'lucide-react';
 import { useOnboarding } from '../../hooks/useOnboarding'; // Import useOnboarding
+import { WidgetCard } from '../layout/WidgetCard';
 
 export const UserProfileWidget: React.FC = () => {
   const { userProfile } = useOnboarding(); // Get userProfile from the hook
@@ -13,9 +14,9 @@ export const UserProfileWidget: React.FC = () => {
 
 
   return (
-    <div className="flex flex-col items-center text-center p-2">
-      <img 
-        src={avatarUrl} 
+    <WidgetCard className="items-center text-center p-2">
+      <img
+        src={avatarUrl}
         alt={`${username}'s Avatar`}
         className="w-20 h-20 rounded-full mb-3 border-2 border-purple-400/50 shadow-lg object-cover"
       />
@@ -35,6 +36,6 @@ export const UserProfileWidget: React.FC = () => {
       <button className="w-full p-2.5 text-sm bg-purple-600/70 hover:bg-purple-500/70 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-purple-300">
         View Full Profile
       </button>
-    </div>
+    </WidgetCard>
   );
 };

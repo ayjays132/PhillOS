@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Newspaper, Zap, Brain } from 'lucide-react';
+import { WidgetCard } from '../layout/WidgetCard';
 
 const mockNewsItems = [
   { id: 1, title: "AI Breakthrough: New Model Achieves Human-Level Understanding", source: "Tech Chronicle", time: "1h ago", category: "AI", icon: Brain, iconColor: "text-purple-300" },
@@ -10,7 +11,7 @@ const mockNewsItems = [
 
 export const PersonalizedNewsWidget: React.FC = () => {
   return (
-    <div className="space-y-2.5 h-full overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+    <WidgetCard className="space-y-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
       {mockNewsItems.map(item => (
         <div key={item.id} className="p-2.5 bg-black/10 rounded-lg hover:bg-black/20 transition-colors cursor-pointer">
           <div className="flex items-center mb-1">
@@ -24,6 +25,6 @@ export const PersonalizedNewsWidget: React.FC = () => {
           </div>
         </div>
       ))}
-    </div>
+    </WidgetCard>
   );
 };

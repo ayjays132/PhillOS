@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/tauri';
 import { readTextFile } from '@tauri-apps/api/fs';
 import { fileTagService } from '../../services/fileTagService';
-import { GlassCard } from '../../components/GlassCard';
+import { AppPanel } from '../../components/layout/AppPanel';
 
 interface FsEntry {
   name: string;
@@ -90,7 +90,8 @@ export const Vault: React.FC = () => {
   if (!root) return <div>Loading...</div>;
 
   return (
-    <div className="grid grid-cols-2 gap-4 h-full">
+    <AppPanel className="!p-0">
+      <div className="grid grid-cols-2 gap-4 h-full">
       <GlassCard className="overflow-auto">
         <FileTree nodes={root.children || []} onSelect={handleSelect} />
       </GlassCard>
@@ -133,7 +134,8 @@ export const Vault: React.FC = () => {
           <div className="mt-2 text-xs">Tags: {tags.join(', ')}</div>
         )}
       </GlassCard>
-    </div>
+      </div>
+    </AppPanel>
   );
 };
 
