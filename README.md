@@ -79,7 +79,7 @@ This prototype implements the following features from the PhillOS vision:
     -   Multi-step guided setup: Welcome, AI Model Choice (Local-First vs. Cloud-Enhanced), Privacy Overview, User Profile creation (username, avatar selection), AI Preferences & Data Import simulation, and a PhillOS Core Concepts Tour.
     -   Persistence of onboarding choices in `localStorage`.
 -   **Conversational Settings Interface**: A chat-like UI for settings, currently with mocked AI responses to demonstrate the interaction pattern.
--   **Placeholder App Views**: For conceptual applications like Files, Mail, and Gaming, indicating future development areas.
+-   **Placeholder App Views**: For conceptual applications like Files, Mail, Gaming, ConverseAI, InBoxAI and WebLens, indicating future development areas.
 -   **API Key Handling**: Users provide their own API keys for Gemini or ChatGPT directly in the UI.
 
 ## Using Cloud AI Providers
@@ -354,7 +354,7 @@ The service worker also caches responses from the `/phonebridge/*` endpoint usin
 │   ├── components/         # UI components
 │   ├── hooks/              # React hooks
 │   ├── contexts/           # React contexts
-│   ├── apps/               # Mini apps (e.g., Vault)
+│   ├── apps/               # Mini apps (e.g., Vault, ConverseAI, InBoxAI, WebLens)
 │   └── types.ts            # TypeScript type definitions
 ├── index.html              # Root HTML file
 ├── metadata.json           # Project metadata
@@ -529,6 +529,14 @@ npx ts-node cli/phillos.ts build
 npx ts-node cli/phillos.ts launch /games/Game.exe
 npx ts-node cli/phillos.ts agent start --cloud
 ```
+
+### Built-In Apps
+
+Start the backend with `npm run server` and open any of these paths in the UI:
+
+- `/converseai` – simple chat interface.
+- `/inboxai` – demo email viewer with AI summary.
+- `/weblens` – fetches a summary for a given URL.
 
 ### Running Tests and Lint
 

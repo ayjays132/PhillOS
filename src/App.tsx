@@ -10,6 +10,9 @@ import { PlaceholderAppView } from './components/PlaceholderAppView';
 import Vault from './src/apps/vault';
 import TimeAI from './src/apps/timeai';
 import GenLab from './src/apps/genlab';
+import ConverseAI from './src/apps/converseai';
+import InBoxAI from './src/apps/inboxai';
+import WebLens from './src/apps/weblens';
 import { ProtonLauncher } from './components/ProtonLauncher';
 import PhoneApp from './components/PhoneApp';
 import { AgentConsole } from './components/AgentConsole';
@@ -79,6 +82,9 @@ const App: React.FC = () => {
           <Route path="/gaming" element={<ProtonLauncher />} />
           <Route path="/timeai" element={<TimeAI />} />
           <Route path="/genlab" element={<GenLab />} />
+          <Route path="/converseai" element={<ConverseAI />} />
+          <Route path="/inboxai" element={<InBoxAI />} />
+          <Route path="/weblens" element={<WebLens />} />
           <Route path="/phone" element={<PhoneApp />} />
           <Route path="/settings" element={<ConversationalSettingsView />} />
           <Route path="/settings/phone" element={<PhoneSettingsView />} />
