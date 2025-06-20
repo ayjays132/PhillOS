@@ -174,7 +174,10 @@ To toggle the theme, call the `useTheme` hook anywhere in the app or add a small
     ```
     For the current setup, ensure all provided files (`index.html`, `src/index.tsx`, `src/App.tsx`, `src/types.ts`, `metadata.json`, and the `src/components/`, `src/hooks/`, `services/` directories) are in the same project folder.
 
-3.  **Run the Application**:
+3.  **Set up Environment Variables**:
+    Copy `.env.example` to `.env` and adjust the values as needed for your environment.
+
+4.  **Run the Application**:
     *   **Option A (Simple Static Server):**
         You can use any simple HTTP server. If you have Node.js:
         1.  Open your terminal in the project's root directory.
