@@ -3,6 +3,7 @@ import { LocalStorage } from 'node-localstorage';
 import ollama from 'ollama';
 import { memoryService } from './memoryService';
 import { memoryHubService } from './memoryHubService';
+import { agentOrchestrator } from './agentOrchestrator';
 
 const STORAGE_PATH = process.env.PHILLOS_STORAGE_DIR || './storage';
 (globalThis as any).localStorage = new LocalStorage(STORAGE_PATH) as any;
@@ -84,6 +85,8 @@ class TrainingPipeline {
 }
 
 export const trainingPipeline = new TrainingPipeline();
+
+agentOrchestrator.registerAction('training.status', () => trainingPipeline.status());
 
 const app = express();
 app.use(express.json());

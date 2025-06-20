@@ -50,9 +50,12 @@ export interface OrchestratorTask {
   status: 'pending' | 'running' | 'completed' | 'failed';
 }
 
+type ActionHandler = (params: Record<string, unknown> | undefined, taskId: string) => Promise<unknown> | unknown;
+
 class AgentOrchestrator {
   private bus = new EventBus();
   private tasks = new Map<string, OrchestratorTask>();
+  private actions: Record<string, { handler: ActionHandler; description?: string }> = {};
 
   on<K extends EventKeys>(event: K, handler: EventHandler<K>): void {
     this.bus.on(event, handler);
@@ -66,8 +69,26 @@ class AgentOrchestrator {
     return this.tasks.get(id);
   }
 
+  registerAction(name: string, handler: ActionHandler, description?: string) {
+    this.actions[name] = { handler, description };
+  }
+
+  registerActions(prefix: string, actions: Record<string, ActionHandler>) {
+    for (const [name, handler] of Object.entries(actions)) {
+      this.registerAction(`${prefix}.${name}`, handler);
+    }
+  }
+
+  listActions(): string[] {
+    return Object.keys(this.actions);
+  }
+
+  getActionInfo() {
+    return Object.entries(this.actions).map(([name, { description }]) => ({ name, description }));
+  }
+
   async processIntent(text: string, pref: AIModelPreference = 'local'): Promise<OrchestratorTask | null> {
-    const action = await agentService.processCommand(text, pref);
+    const action = await agentService.processCommand(text, pref, this.listActions());
     if (!action) return null;
     const taskId = Date.now().toString();
     const task: OrchestratorTask = { id: taskId, action, status: 'pending' };
@@ -78,6 +99,14 @@ class AgentOrchestrator {
     if (action.action === 'open_app' && typeof action.parameters?.app === 'string') {
       this.bus.emit('launch', { app: action.parameters.app, params: action.parameters, taskId });
       task.status = 'running';
+    } else if (this.actions[action.action]) {
+      task.status = 'running';
+      try {
+        const result = await this.actions[action.action].handler(action.parameters, taskId);
+        this.markComplete(taskId, result);
+      } catch (err) {
+        this.markFailed(taskId, err);
+      }
     }
 
     return task;

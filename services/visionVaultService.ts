@@ -1,3 +1,5 @@
+import { agentOrchestrator } from './agentOrchestrator';
+
 class VisionVaultService {
   async getImages() {
     try {
@@ -12,3 +14,5 @@ class VisionVaultService {
 }
 
 export const visionVaultService = new VisionVaultService();
+
+agentOrchestrator.registerAction('visionvault.get_images', () => visionVaultService.getImages());

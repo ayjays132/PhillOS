@@ -1,6 +1,7 @@
 // MemoryHub service manages a rolling window of time stamped memory entries
 // and persists them via storageService so sessions survive reloads.
 import { storageService } from './storageService';
+import { agentOrchestrator } from './agentOrchestrator';
 
 export interface MemoryWindow {
   timestamp: number;
@@ -73,3 +74,7 @@ class MemoryHubService {
 }
 
 export const memoryHubService = new MemoryHubService();
+
+agentOrchestrator.registerAction('memoryhub.add_entry', params => memoryHubService.addEntry(String(params?.content || '')));
+agentOrchestrator.registerAction('memoryhub.get_windows', () => memoryHubService.getWindows());
+agentOrchestrator.registerAction('memoryhub.clear', () => memoryHubService.clear());

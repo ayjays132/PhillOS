@@ -25,4 +25,9 @@ class MediaSphereService {
   }
 }
 
+import { agentOrchestrator } from './agentOrchestrator';
+
 export const mediaSphereService = new MediaSphereService();
+
+agentOrchestrator.registerAction('mediasphere.analyze', params => mediaSphereService.analyzeVideo(Number(params?.id)));
+agentOrchestrator.registerAction('mediasphere.get_media', () => mediaSphereService.getMedia());

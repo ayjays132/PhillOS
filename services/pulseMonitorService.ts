@@ -1,3 +1,5 @@
+import { agentOrchestrator } from './agentOrchestrator';
+
 class PulseMonitorService {
   async getStatus() {
     try {
@@ -11,3 +13,5 @@ class PulseMonitorService {
 }
 
 export const pulseMonitorService = new PulseMonitorService();
+
+agentOrchestrator.registerAction('pulse.get_status', () => pulseMonitorService.getStatus());

@@ -2,6 +2,7 @@ import { createCloudChatSession, sendMessageStream as sendCloudStream, CloudProv
 import { createQwenChatSession, QwenChatSession } from './qwenService';
 import { AIModelPreference, ChatMessage } from '../types';
 import { memoryHubService } from './memoryHubService';
+import { agentOrchestrator } from './agentOrchestrator';
 import { pipeline } from '@xenova/transformers';
 
 let summarizer: any = null;
@@ -70,3 +71,6 @@ export const tagText = async (
   const result = await classifier(text, { candidate_labels: labels });
   return (result.labels as string[]).slice(0, 3);
 };
+
+agentOrchestrator.registerAction('model.summarize', params => summarize(String(params?.text || '')));
+agentOrchestrator.registerAction('model.tag_text', params => tagText(String(params?.text || ''), (params?.labels as string[]) || []));

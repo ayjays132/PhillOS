@@ -1,4 +1,5 @@
 import { ChatMessage } from '../types';
+import { agentOrchestrator } from './agentOrchestrator';
 
 const STORAGE_KEY = 'phillos_message_history_v1';
 
@@ -69,3 +70,10 @@ class MemoryService {
 }
 
 export const memoryService = new MemoryService();
+
+agentOrchestrator.registerAction('memory.add_message', params => {
+  const msg = params as ChatMessage;
+  memoryService.addMessage({ ...msg, timestamp: new Date(msg.timestamp as any ?? Date.now()) });
+});
+agentOrchestrator.registerAction('memory.get_messages', () => memoryService.getMessages());
+agentOrchestrator.registerAction('memory.clear', () => memoryService.clearMessages());

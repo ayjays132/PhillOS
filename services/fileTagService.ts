@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
+import { agentOrchestrator } from './agentOrchestrator';
 
 class FileTagService {
   async tagFile(path: string): Promise<string[]> {
@@ -12,3 +13,7 @@ class FileTagService {
 }
 
 export const fileTagService = new FileTagService();
+
+agentOrchestrator.registerAction('filetag.tag', params => {
+  return fileTagService.tagFile(String(params?.path || ''));
+});

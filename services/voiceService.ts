@@ -1,5 +1,6 @@
 import { WhisperService } from './whisperService';
 import { storageService } from './storageService';
+import { agentOrchestrator } from './agentOrchestrator';
 
 export type VoiceTranscriptionCallback = (text: string, isFinal: boolean) => void;
 
@@ -92,3 +93,5 @@ export const speakText = (text: string) => {
   const utterance = new SpeechSynthesisUtterance(text);
   window.speechSynthesis.speak(utterance);
 };
+
+agentOrchestrator.registerAction('voice.speak', params => speakText(String(params?.text || '')));
