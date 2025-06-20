@@ -134,6 +134,12 @@ export const AICoPilotWidget: React.FC = () => {
           const text = await whisper.transcribe(blob);
           if (text) {
             setInput(prev => (prev ? prev + ' ' : '') + text);
+            memoryService.addMessage({
+              id: Date.now().toString(),
+              role: 'user',
+              text,
+              timestamp: new Date(),
+            });
           }
           chunksRef.current = [];
           transcriptRef.current = '';
