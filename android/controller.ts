@@ -1,14 +1,12 @@
 import { spawn } from 'child_process';
+import { sanitizeArgs } from '../cli/utils/validate.ts';
 
 /**
  * Run a command and stream stdio. Resolves when the process exits
  * successfully, rejects otherwise.
  */
 function run(cmd: string, args: string[] = []): Promise<void> {
-  const unsafe = /[;&|`$><]/;
-  if (unsafe.test(cmd) || args.some(a => unsafe.test(a))) {
-    return Promise.reject(new Error('Unsafe command or arguments'));
-  }
+  sanitizeArgs([cmd, ...args]);
 
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: 'inherit' });

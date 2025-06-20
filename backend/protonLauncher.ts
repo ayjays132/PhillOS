@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import os from 'os';
+import { sanitizeArgs } from '../cli/utils/validate.ts';
 
 export interface ProtonOptions {
   protonDir?: string;       // Directory containing Proton installations
@@ -71,10 +72,7 @@ export class ProtonLauncher {
       throw new Error(`Executable not found: ${executable}`);
     }
 
-    const unsafe = /[;&|`$><]/;
-    if (args.some(a => unsafe.test(a))) {
-      throw new Error('Unsafe arguments detected');
-    }
+    sanitizeArgs([executable, ...args]);
 
     let runner = await this.resolveProtonPath();
     if (!runner) {
@@ -124,8 +122,9 @@ if (require.main === module) {
     process.exit(1);
   }
 
-  const unsafe = /[;&|`$><]/;
-  if (extraArgs.some(a => unsafe.test(a))) {
+  try {
+    sanitizeArgs([exe, ...extraArgs]);
+  } catch {
     console.error('Unsafe arguments detected');
     process.exit(1);
   }

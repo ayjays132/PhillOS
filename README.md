@@ -494,6 +494,8 @@ Open the **Phone** app from the dock to send SMS messages or initiate calls. The
 
 The `cli` directory provides a TypeScript command line interface. Run `npx ts-node cli/phillos-cli.ts` with the subcommands below or embed the `PhillosCLI` class in your own tools. Global flags `--cloud`, `--provider <name>`, and `--api-key <key>` control cloud AI usage.
 
+All CLI commands sanitize their arguments before spawning any child processes. Inputs containing shell metacharacters like `;`, `|`, or `&` will be rejected to prevent command injection.
+
 Example commands:
 ```bash
 npx ts-node cli/phillos-cli.ts agent "open files"

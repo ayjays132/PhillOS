@@ -2,14 +2,7 @@ import { Command } from 'commander';
 import { agentService } from '../services/agentService.ts';
 import { createProtonLauncher } from '../backend/protonLauncher.ts';
 import * as android from '../android/controller.ts';
-
-const unsafeRe = /[;&|`$><]/;
-
-function sanitize(values: string[]) {
-  if (values.some(v => unsafeRe.test(v))) {
-    throw new Error('Unsafe arguments detected');
-  }
-}
+import { sanitizeArgs } from './utils/validate.ts';
 
 export interface CLIOptions {
   defaultModel?: 'local' | 'cloud';
@@ -39,7 +32,7 @@ export class PhillosCLI {
       .command('agent <text>')
       .description('Send a command to the PhillOS agent')
       .action(async (text, cmd) => {
-        sanitize([text]);
+        sanitizeArgs([text]);
         const opts = program.opts();
         const pref = opts.cloud ? 'cloud' : (opts.local ? 'local' : (this.options.defaultModel || 'local'));
         await agentService.init(pref);
@@ -55,7 +48,7 @@ export class PhillosCLI {
       .option('--proton-dir <dir>', 'directory containing Proton builds')
       .option('--wine <path>', 'fallback Wine binary')
       .action(async (exe: string, args: string[] = [], cmdObj) => {
-        sanitize([exe, ...(args || [])]);
+        sanitizeArgs([exe, ...(args || [])]);
         const launcher = createProtonLauncher({
           protonDir: cmdObj.protonDir,
           version: cmdObj.version,
@@ -110,7 +103,7 @@ export class PhillosCLI {
       .command('sms <to> <body>')
       .description('Send an SMS via the bridge')
       .action(async (to: string, body: string) => {
-        sanitize([to, body]);
+        sanitizeArgs([to, body]);
         const url = new URL('/sms', program.opts().phoneUrl);
         const res = await fetch(url, {
           method: 'POST',
@@ -125,7 +118,7 @@ export class PhillosCLI {
       .command('call <number>')
       .description('Make a call via the bridge')
       .action(async (number: string) => {
-        sanitize([number]);
+        sanitizeArgs([number]);
         const url = new URL('/call', program.opts().phoneUrl);
         const res = await fetch(url, {
           method: 'POST',

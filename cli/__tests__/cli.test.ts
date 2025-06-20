@@ -30,4 +30,19 @@ describe('PhillosCLI', () => {
     const url = new URL((fetchMock.mock.calls[0] as any)[0]);
     expect(url.pathname).toBe('/sms');
   });
+
+  it('rejects unsafe phone input', async () => {
+    const cli = new PhillosCLI({ phoneBridgeUrl: 'http://test' });
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(
+      cli.run(['node', 'phillos-cli', 'phone', 'sms', '123', 'evil;rm'])
+    ).rejects.toThrow('Unsafe arguments');
+  });
+
+  it('rejects unsafe proton args', async () => {
+    const cli = new PhillosCLI();
+    await expect(
+      cli.run(['node', 'phillos-cli', 'proton', 'bad;rm'])
+    ).rejects.toThrow('Unsafe arguments');
+  });
 });
