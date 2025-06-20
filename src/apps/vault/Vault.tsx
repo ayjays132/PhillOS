@@ -4,6 +4,8 @@ import { readTextFile } from '@tauri-apps/api/fs';
 import { fileTagService } from '../../services/fileTagService';
 import { predictSyncService } from '../../services/predictSyncService';
 import { AppPanel } from '../../components/layout/AppPanel';
+import { GlassCard } from '../../components/GlassCard';
+import { autoCleanService } from '../../services/autoCleanService';
 
 interface FsEntry {
   name: string;
@@ -44,6 +46,7 @@ export const Vault: React.FC = () => {
   const [selected, setSelected] = useState<FileNode | null>(null);
   const [preview, setPreview] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     fetchDir('.').then(children => setRoot({ name: '.', path: '.', isDir: true, children }));
@@ -95,6 +98,21 @@ export const Vault: React.FC = () => {
     }
   };
 
+  const handleAutoClean = async () => {
+    const files = await autoCleanService.getSuggestions();
+    setSuggestions(files);
+  };
+
+  const archiveFile = async (p: string) => {
+    await autoCleanService.archive(p);
+    setSuggestions(s => s.filter(f => f !== p));
+  };
+
+  const deleteFile = async (p: string) => {
+    await autoCleanService.delete(p);
+    setSuggestions(s => s.filter(f => f !== p));
+  };
+
   if (!root) return <div>Loading...</div>;
 
   return (
@@ -136,6 +154,40 @@ export const Vault: React.FC = () => {
                 SmartTags
               </button>
             )}
+          </div>
+        )}
+        <div className="mt-2 space-x-2">
+          <button
+            className="px-3 py-1 bg-orange-500 text-white rounded"
+            onClick={handleAutoClean}
+          >
+            AutoClean
+          </button>
+        </div>
+        {suggestions.length > 0 && (
+          <div className="mt-4 text-xs space-y-1">
+            <div className="font-bold">Stale files:</div>
+            <ul>
+              {suggestions.map(p => (
+                <li key={p} className="flex justify-between items-center gap-2">
+                  <span className="truncate">{p}</span>
+                  <span className="space-x-1">
+                    <button
+                      className="px-2 py-0.5 bg-yellow-600 text-white rounded text-xs"
+                      onClick={() => archiveFile(p)}
+                    >
+                      Archive
+                    </button>
+                    <button
+                      className="px-2 py-0.5 bg-red-600 text-white rounded text-xs"
+                      onClick={() => deleteFile(p)}
+                    >
+                      Delete
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
         {tags.length > 0 && (
