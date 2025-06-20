@@ -18,6 +18,11 @@ if [ -f drivers/phone/Makefile ]; then
     cp drivers/phone/libphone.so .
 fi
 
+# Generate boot animation asset if source exists
+if [ -f bootloader/bootanim.svg ]; then
+    python3 scripts/embed_svg.py bootloader/bootanim.svg dist/bootloader/bootanim.svgz
+fi
+
 # Build bootloader and kernel
 make -C bootloader OUT_DIR=../dist/bootloader
 
