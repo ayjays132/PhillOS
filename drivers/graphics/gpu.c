@@ -47,6 +47,11 @@ gpu_vendor_t detect_gpu_vendor(void)
 
 static gpu_driver_t *active_driver = NULL;
 
+void gpu_set_active_driver(gpu_driver_t *drv)
+{
+    active_driver = drv;
+}
+
 gpu_driver_t *gpu_get_active_driver(void)
 {
     return active_driver;
@@ -125,9 +130,10 @@ void init_gpu_driver(void)
     debug_puts(name);
     debug_putc('\n');
 
-    if (drv && drv->init) {
+    if (drv && (!drv->base.probe || drv->base.probe())) {
         active_driver = drv;
-        drv->init();
+        if (drv->base.init)
+            drv->base.init();
     }
 
     if (init_vkd3d(vendor))

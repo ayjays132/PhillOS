@@ -4,6 +4,7 @@
 #include "../../kernel/memory/alloc.h"
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
+#include "../driver.h"
 
 /* Basic PCI config space access */
 static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
@@ -151,7 +152,7 @@ static int port_rw(hba_port_t *port, uint64_t lba, uint32_t count,
 }
 
 /* Detect first AHCI controller and prepare a single port */
-void init_ahci(void)
+int init_ahci(void)
 {
     debug_puts("Scanning for AHCI controller\n");
     for (uint8_t bus = 0; bus < 256; bus++) {
@@ -195,7 +196,7 @@ void init_ahci(void)
                             memset((void*)(uintptr_t)port->clb, 0, 4096);
                             memset((void*)(uintptr_t)port->fb, 0, 4096);
                             boot_port = port;
-                            return;
+                            return 1;
                         }
                     }
                 }
@@ -203,6 +204,7 @@ void init_ahci(void)
         }
     }
     debug_puts("No AHCI controller found\n");
+    return 0;
 }
 
 int ahci_read(uint64_t lba, uint32_t count, void *buffer)
@@ -218,3 +220,8 @@ int ahci_write(uint64_t lba, uint32_t count, const void *buffer)
         return -1;
     return port_rw(boot_port, lba, count, (void *)buffer, 1);
 }
+
+driver_t ahci_driver = {
+    .probe = init_ahci,
+    .init = NULL,
+};

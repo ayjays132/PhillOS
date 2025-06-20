@@ -43,6 +43,15 @@ the debug channel—for example printing heap statistics or toggling log levels.
 
 PhillOS envisions a single **AI‑native kernel** that integrates machine‑learning models for dynamic resource allocation, intelligent process scheduling, and self‑healing. Memory management and task prioritization adapt to predicted user needs. A responsive UI layer sits above this kernel, scaling across phones, desktops, and other devices.
 
+### Driver Model
+
+Hardware support is organized around a lightweight plug‑and‑play system. Each
+driver registers a `probe()` routine and optional `init()` function with the
+kernel’s driver manager. During early boot `driver_init_all()` walks the
+registry and activates any driver whose `probe()` succeeds. This allows new
+drivers to be added without touching core initialization code and provides a
+foundation for hot‑plug awareness in future revisions.
+
 ## Agent Mode
 
 The blueprint describes an orchestration layer of **PhillOS Agents**:

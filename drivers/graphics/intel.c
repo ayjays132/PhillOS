@@ -3,6 +3,7 @@
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
 #include "../../kernel/init.h"
+#include <stdint.h>
 
 static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
                                   uint8_t func, uint8_t offset)
@@ -44,6 +45,7 @@ static void intel_init_stub(void)
             debug_puthex64(fb);
             debug_putc('\n');
 
+            gpu_set_active_driver(&intel_driver);
             init_framebuffer(&boot_info_get()->fb);
             return;
         }
@@ -51,7 +53,23 @@ static void intel_init_stub(void)
     debug_puts("No Intel GPU found\n");
 }
 
+static int intel_probe(void)
+{
+    for (uint8_t bus = 0; bus < 256; bus++) {
+        for (uint8_t slot = 0; slot < 32; slot++) {
+            uint32_t venddev = pci_read32(bus, slot, 0, 0);
+            if ((venddev & 0xFFFF) == 0x8086)
+                return 1;
+        }
+    }
+    return 0;
+}
+
 gpu_driver_t intel_driver = {
+    .base = {
+        .probe = intel_probe,
+        .init = intel_init_stub,
+        .next = NULL,
+    },
     .vendor = GPU_VENDOR_INTEL,
-    .init = intel_init_stub,
 };

@@ -293,6 +293,15 @@ initializes the first detected SATA port and supports basic DMA reads and
 writes.  Buffers passed to the read/write helpers must reside in identity mapped
 physical memory.  Only simple single-page transfers are currently tested.
 
+### Plug-and-Play Driver Manager
+
+PhillOS now includes a minimal driver manager located under `drivers/`. Drivers
+register themselves using `driver_register()` and are probed at boot by
+`driver_init_all()`. Each driver supplies a `probe()` callback to detect
+compatible hardware and an optional `init()` routine. This architecture allows
+new drivers to be dropped in without modifying the kernel's main
+initialization logic.
+
 ## Offline Installation and Usage
 
 PhillOS can run without an internet connection once the UI files are cached by the service worker.

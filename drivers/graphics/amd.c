@@ -3,6 +3,7 @@
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
 #include "../../kernel/init.h"
+#include <stdint.h>
 
 static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
                                   uint8_t func, uint8_t offset)
@@ -44,6 +45,7 @@ static void amd_init_stub(void)
             debug_puthex64(fb);
             debug_putc('\n');
 
+            gpu_set_active_driver(&amd_driver);
             init_framebuffer(&boot_info_get()->fb);
             return;
         }
@@ -51,7 +53,23 @@ static void amd_init_stub(void)
     debug_puts("No AMD GPU found\n");
 }
 
+static int amd_probe(void)
+{
+    for (uint8_t bus = 0; bus < 256; bus++) {
+        for (uint8_t slot = 0; slot < 32; slot++) {
+            uint32_t venddev = pci_read32(bus, slot, 0, 0);
+            if ((venddev & 0xFFFF) == 0x1002)
+                return 1;
+        }
+    }
+    return 0;
+}
+
 gpu_driver_t amd_driver = {
+    .base = {
+        .probe = amd_probe,
+        .init = amd_init_stub,
+        .next = NULL,
+    },
     .vendor = GPU_VENDOR_AMD,
-    .init = amd_init_stub,
 };

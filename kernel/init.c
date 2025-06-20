@@ -3,10 +3,11 @@
 #include "memory/paging.h"
 #include "memory/alloc.h"
 #include "memory/heap.h"
-#include "../drivers/storage/ahci.h"
 #include "fs/fat32.h"
 #include "../drivers/graphics/framebuffer.h"
 #include "../drivers/graphics/gpu.h"
+#include "../drivers/driver.h"
+#include "../drivers/builtin.h"
 
 static boot_info_t *g_boot_info = NULL;
 
@@ -23,10 +24,11 @@ void kernel_main(boot_info_t *boot_info) {
     init_heap();
     if (boot_info->ai_size)
         init_ai_heap((void *)boot_info->ai_base, boot_info->ai_size);
-    init_ahci();
+    register_builtin_drivers();
+    driver_init_all();
     fat32_init();
-    init_gpu_driver();
-    init_framebuffer(&boot_info->fb);
+    if (!gpu_get_active_driver())
+        init_framebuffer(&boot_info->fb);
     fb_draw_pixel(10, 10, 0x00FF0000); // draw red pixel for debug
     // Kernel is now initialized
     while (1) {
