@@ -8,6 +8,7 @@ import { MobileBottomNavigationBar } from './components/MobileBottomNavigationBa
 import { HomeDashboard } from './components/HomeDashboard';
 import { PlaceholderAppView } from './components/PlaceholderAppView';
 import Vault from './src/apps/vault';
+import GenLab from './src/apps/genlab';
 import { ProtonLauncher } from './components/ProtonLauncher';
 import PhoneApp from './components/PhoneApp';
 import { AgentConsole } from './components/AgentConsole';
@@ -75,6 +76,7 @@ const App: React.FC = () => {
           <Route path="/files" element={<Vault />} />
           <Route path="/mail" element={<PlaceholderAppView appName="Mail Client" icon={Mail} />} />
           <Route path="/gaming" element={<ProtonLauncher />} />
+          <Route path="/genlab" element={<GenLab />} />
           <Route path="/phone" element={<PhoneApp />} />
           <Route path="/settings" element={<ConversationalSettingsView />} />
           <Route path="/settings/phone" element={<PhoneSettingsView />} />
