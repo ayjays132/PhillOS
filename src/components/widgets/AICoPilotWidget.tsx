@@ -4,15 +4,15 @@ import { Send, AlertTriangle, Loader2, Mic, MicOff } from 'lucide-react';
 import { ChatMessage } from '../../types';
 import { createModelSession, sendModelMessageStream, ModelSession } from '../../../services/modelManager';
 import { CloudProvider } from '../../../services/cloudAIService';
-import { VoiceService, VoiceMode, speakText } from '../../../services/voiceService';
-import { storageService } from '../../../services/storageService';
+import { VoiceService, speakText } from '../../../services/voiceService';
+import { WhisperService } from '../../../services/whisperService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { memoryService } from '../../../services/memoryService';
 
 export const AICoPilotWidget: React.FC = () => {
-  const { modelPreference } = useOnboarding();
+  const { modelPreference, voiceModelPreference } = useOnboarding();
   const [chatSession, setChatSession] = useState<ModelSession | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -23,25 +23,34 @@ export const AICoPilotWidget: React.FC = () => {
   const [cloudProvider, setCloudProvider] = useState<CloudProvider>('gemini');
   const [apiKey, setApiKey] = useState('');
   const [isListening, setIsListening] = useState(false);
-  const [voiceMode, setVoiceMode] = useState<VoiceMode>(() => {
-    const stored = storageService.getVoiceEngine();
-    return (stored as VoiceMode) || 'auto';
-  });
   const voiceServiceRef = useRef<VoiceService | null>(null);
+  const whisperServiceRef = useRef<WhisperService | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const transcriptRef = useRef('');
-  if (!voiceServiceRef.current) voiceServiceRef.current = new VoiceService(voiceMode);
+  if (!voiceServiceRef.current && voiceModelPreference === 'browser') {
+    voiceServiceRef.current = new VoiceService('web');
+  }
 
-  // Ensure speech recognition stops when the widget unmounts and rebuild service when mode changes
+  // Ensure speech recognition stops when the widget unmounts
   useEffect(() => {
     return () => {
       voiceServiceRef.current?.stop();
+      recorderRef.current?.stop();
     };
   }, []);
 
   useEffect(() => {
     voiceServiceRef.current?.stop();
-    voiceServiceRef.current = new VoiceService(voiceMode);
-  }, [voiceMode]);
+    recorderRef.current?.stop();
+    voiceServiceRef.current = null;
+    whisperServiceRef.current = null;
+    if (voiceModelPreference === 'browser') {
+      voiceServiceRef.current = new VoiceService('web');
+    } else {
+      whisperServiceRef.current = new WhisperService();
+    }
+  }, [voiceModelPreference]);
 
   useEffect(() => {
     let mounted = true;
@@ -91,22 +100,56 @@ export const AICoPilotWidget: React.FC = () => {
   }, [messages]);
 
   const startListening = () => {
-    const service = voiceServiceRef.current;
-    if (!service || isListening) return;
-    service.start((text, isFinal) => {
-      if (isFinal) {
-        setInput(prev => (prev ? prev + ' ' : '') + text);
-        transcriptRef.current = '';
-      } else {
-        setInput(prev => prev.replace(transcriptRef.current, '') + text);
-        transcriptRef.current = text;
-      }
-    });
+    if (isListening) return;
+    if (voiceModelPreference === 'browser') {
+      const service = voiceServiceRef.current;
+      if (!service) return;
+      service.start((text, isFinal) => {
+        if (isFinal) {
+          setInput(prev => (prev ? prev + ' ' : '') + text);
+          transcriptRef.current = '';
+        } else {
+          setInput(prev => prev.replace(transcriptRef.current, '') + text);
+          transcriptRef.current = text;
+        }
+      });
+    } else {
+      const whisper = whisperServiceRef.current;
+      if (!whisper) return;
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        recorderRef.current = new MediaRecorder(stream);
+        chunksRef.current = [];
+        recorderRef.current.ondataavailable = async e => {
+          chunksRef.current.push(e.data);
+          if (recorderRef.current && recorderRef.current.state === 'recording') {
+            const text = await whisper.transcribe(e.data);
+            if (text) {
+              setInput(prev => prev.replace(transcriptRef.current, '') + text);
+              transcriptRef.current = text;
+            }
+          }
+        };
+        recorderRef.current.onstop = async () => {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          const text = await whisper.transcribe(blob);
+          if (text) {
+            setInput(prev => (prev ? prev + ' ' : '') + text);
+          }
+          chunksRef.current = [];
+          transcriptRef.current = '';
+        };
+        recorderRef.current.start(2000);
+      }).catch(() => {});
+    }
     setIsListening(true);
   };
 
   const stopListening = () => {
-    voiceServiceRef.current?.stop();
+    if (voiceModelPreference === 'browser') {
+      voiceServiceRef.current?.stop();
+    } else {
+      recorderRef.current?.stop();
+    }
     setIsListening(false);
   };
 
@@ -238,19 +281,6 @@ export const AICoPilotWidget: React.FC = () => {
               onChange={e => setApiKey(e.target.value)}
               className="flex-grow p-2 bg-white/5 border border-white/10 rounded-lg text-sm placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-cyan-400/80"
             />
-            <select
-              value={voiceMode}
-              onChange={e => {
-                const mode = e.target.value as VoiceMode;
-                setVoiceMode(mode);
-                storageService.setVoiceEngine(mode);
-              }}
-              className="bg-white/10 border border-white/20 text-sm text-white p-2 rounded-lg focus:outline-none"
-            >
-              <option value="auto">Auto Voice</option>
-              <option value="web">Web API</option>
-              <option value="whisper">Whisper</option>
-            </select>
           </div>
         </div>
       )}

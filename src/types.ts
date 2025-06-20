@@ -68,6 +68,8 @@ export interface GenerateContentResponseWithGrounding {
 
 export type AIModelPreference = 'local' | 'cloud';
 
+export type VoiceModelPreference = 'browser' | 'whisper';
+
 export interface UserProfile {
   username: string;
   avatarSeed: string; // e.g., a simple string like "avatar1", "phillosuser", "userseedX"
@@ -81,6 +83,7 @@ export interface OnboardingState {
   currentStep: number;
   isComplete: boolean;
   modelPreference: AIModelPreference;
+  voiceModelPreference: VoiceModelPreference;
   userProfile: UserProfile | null;
   userInterests: UserInterest[];
   connectedServices: ConnectedService[];
