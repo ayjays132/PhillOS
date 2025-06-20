@@ -2,6 +2,7 @@
 #include <efilib.h>
 #include "init.h"
 #include "../kernel/boot_info.h"
+#include "phill_svg_loader.h"
 
 static UINTN parse_ai_pages(const char *cmd)
 {
@@ -215,6 +216,14 @@ static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
         info->fb.width = gop->Mode->Info->HorizontalResolution;
         info->fb.height = gop->Mode->Info->VerticalResolution;
         info->fb.pitch = gop->Mode->Info->PixelsPerScanLine;
+    }
+
+    VOID *svg_data = NULL;
+    UINTN svg_size = 0;
+    status = load_svg_animation(image, &svg_data, &svg_size);
+    if (!EFI_ERROR(status)) {
+        info->svg_base = (uint64_t)svg_data;
+        info->svg_size = svg_size;
     }
 
     UINTN map_size = 0, map_key, desc_size;
