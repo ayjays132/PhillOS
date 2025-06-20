@@ -490,6 +490,19 @@ Enter your phone's Bluetooth MAC address in the **Phone Status** widget and pres
 
 Open the **Phone** app from the dock to send SMS messages or initiate calls. The app uses the phone bridge behind the scenes and can generate short SMS drafts with the local AI model. Phone settings will be configurable in a future update.
 
+## CLI SDK
+
+The `cli` directory provides a TypeScript command line interface. Run `npx ts-node cli/phillos-cli.ts` with the subcommands below or embed the `PhillosCLI` class in your own tools. Global flags `--cloud`, `--provider <name>`, and `--api-key <key>` control cloud AI usage.
+
+Example commands:
+```bash
+npx ts-node cli/phillos-cli.ts agent "open files"
+npx ts-node cli/phillos-cli.ts proton /path/to/Game.exe --version Proton-8.0
+npx ts-node cli/phillos-cli.ts android start
+npx ts-node cli/phillos-cli.ts phone sms +12345550123 "Hello"
+```
+
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
