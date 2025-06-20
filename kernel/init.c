@@ -9,8 +9,16 @@
 #include "../drivers/graphics/gpu.h"
 #include "../drivers/driver_manager.h"
 #include "../drivers/register.h"
+#include "scheduler/uhs.h"
 
 static boot_info_t *g_boot_info = NULL;
+
+int schedule_resources(const float *A, const float *B,
+                       const float *R_tot, size_t N, size_t M, size_t R,
+                       float *out_x)
+{
+    return uhs_compute(A, B, R_tot, N, M, R, out_x);
+}
 
 boot_info_t *boot_info_get(void)
 {

@@ -43,6 +43,10 @@ the debug channel—for example printing heap statistics or toggling log levels.
 
 PhillOS envisions a single **AI‑native kernel** that integrates machine‑learning models for dynamic resource allocation, intelligent process scheduling, and self‑healing. Memory management and task prioritization adapt to predicted user needs. A responsive UI layer sits above this kernel, scaling across phones, desktops, and other devices.
 
+### Universal Harmony Solver
+
+Drivers and kernel services can request optimized allocations through the **Universal Harmony Solver (UHS)**. The solver exposes `int uhs_compute(const float *A, const float *B, const float *R_tot, size_t N, size_t M, size_t R, float *out_x)` which distributes resources proportionally to demand. The kernel initializes this component so modules may call `schedule_resources()` to compute assignments using reserved agent memory.
+
 ## Agent Mode
 
 The blueprint describes an orchestration layer of **PhillOS Agents**:
