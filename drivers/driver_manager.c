@@ -9,6 +9,19 @@ void driver_manager_register(driver_t *drv)
     driver_list = drv;
 }
 
+void driver_manager_unregister(driver_t *drv)
+{
+    driver_t **indirect = &driver_list;
+    while (*indirect) {
+        if (*indirect == drv) {
+            *indirect = drv->next;
+            drv->next = NULL;
+            return;
+        }
+        indirect = &(*indirect)->next;
+    }
+}
+
 uint32_t pci_config_read32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
 {
     uint32_t addr = (uint32_t)(1 << 31) |
@@ -57,6 +70,11 @@ static void pci_scan(void)
 }
 
 void driver_manager_init(void)
+{
+    pci_scan();
+}
+
+void driver_manager_rescan(void)
 {
     pci_scan();
 }
