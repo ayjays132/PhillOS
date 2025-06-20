@@ -7,6 +7,8 @@
 #include "fs/fat32.h"
 #include "../drivers/graphics/framebuffer.h"
 #include "../drivers/graphics/gpu.h"
+#include "../drivers/driver_manager.h"
+#include "../drivers/register.h"
 
 static boot_info_t *g_boot_info = NULL;
 
@@ -23,9 +25,9 @@ void kernel_main(boot_info_t *boot_info) {
     init_heap();
     if (boot_info->ai_size)
         init_ai_heap((void *)boot_info->ai_base, boot_info->ai_size);
-    init_ahci();
+    drivers_register_all();
+    driver_manager_init();
     fat32_init();
-    init_gpu_driver();
     init_framebuffer(&boot_info->fb);
     fb_draw_pixel(10, 10, 0x00FF0000); // draw red pixel for debug
     // Kernel is now initialized

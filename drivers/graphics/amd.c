@@ -3,55 +3,35 @@
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
 #include "../../kernel/init.h"
+#include "../driver_manager.h"
 
-static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
-                                  uint8_t func, uint8_t offset)
+static int amd_match(const pci_device_t *dev)
 {
-    uint32_t addr = (uint32_t)(1 << 31) |
-                    ((uint32_t)bus << 16) |
-                    ((uint32_t)slot << 11) |
-                    ((uint32_t)func << 8) |
-                    (offset & 0xfc);
-    __asm__ volatile("outl %0, %1" :: "a"(addr), "d"((uint16_t)0xcf8));
-    uint32_t data;
-    __asm__ volatile("inl %1, %0" : "=a"(data) : "d"((uint16_t)0xcfc));
-    return data;
+    return dev->vendor_id == 0x1002 && dev->class_code == 0x03;
 }
 
-static void amd_init_stub(void)
+static void amd_init(const pci_device_t *dev)
 {
     debug_puts("Initializing AMD GPU\n");
-    for (uint8_t bus = 0; bus < 256; bus++) {
-        for (uint8_t slot = 0; slot < 32; slot++) {
-            uint32_t venddev = pci_read32(bus, slot, 0, 0);
-            uint16_t vendor = venddev & 0xFFFF;
-            if (vendor != 0x1002)
-                continue;
 
-            uint16_t device = venddev >> 16;
-            debug_puts("Found AMD device 0x");
-            debug_puthex(device);
-            debug_puts(" at ");
-            debug_puthex(bus);
-            debug_putc(':');
-            debug_puthex(slot);
-            debug_putc('\n');
+    uint32_t bar2 = pci_config_read32(dev->bus, dev->slot, dev->func, 0x18);
+    uint64_t fb = (uint64_t)(bar2 & ~0xFULL);
+    map_identity_range(fb, 16 * 1024 * 1024ULL);
+    debug_puts("BAR2 mapped at 0x");
+    debug_puthex64(fb);
+    debug_putc('\n');
 
-            uint32_t bar2 = pci_read32(bus, slot, 0, 0x18);
-            uint64_t fb = (uint64_t)(bar2 & ~0xFULL);
-            map_identity_range(fb, 16 * 1024 * 1024ULL);
-            debug_puts("BAR2 mapped at 0x");
-            debug_puthex64(fb);
-            debug_putc('\n');
-
-            init_framebuffer(&boot_info_get()->fb);
-            return;
-        }
-    }
-    debug_puts("No AMD GPU found\n");
+    init_framebuffer(&boot_info_get()->fb);
+    gpu_set_active_driver(&amd_driver);
 }
 
 gpu_driver_t amd_driver = {
     .vendor = GPU_VENDOR_AMD,
-    .init = amd_init_stub,
+    .init = NULL,
+};
+
+driver_t amd_pnp_driver = {
+    .name = "AMD GPU",
+    .match = amd_match,
+    .init = amd_init,
 };
