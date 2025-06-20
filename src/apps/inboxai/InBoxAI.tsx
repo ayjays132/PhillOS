@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { GlassCard } from '../../components/GlassCard';
 import { inboxAIService, ScoredInboxMessage } from '../../services/inboxAIService';
+import { inboxPriorityService } from '../../services/inboxPriorityService';
 
 export const InBoxAI: React.FC = () => {
   const [messages, setMessages] = useState<ScoredInboxMessage[]>([]);
@@ -10,7 +11,11 @@ export const InBoxAI: React.FC = () => {
   const [liveSummary, setLiveSummary] = useState(false);
 
   useEffect(() => {
-    inboxAIService.getScoredMessages().then(setMessages);
+    (async () => {
+      await inboxPriorityService.scoreInbox();
+      const list = await inboxPriorityService.getPriorityList();
+      setMessages(list);
+    })();
   }, []);
 
   useEffect(() => {
@@ -36,10 +41,19 @@ export const InBoxAI: React.FC = () => {
     setSelected(msg);
     setSummary('');
     try {
-      const s = await inboxAIService.summarizeMessage(msg.id);
+      const s = await inboxAIService.chainShrink(msg.id);
       setSummary(s || 'Error generating summary');
     } catch {
       setSummary('Error generating summary');
+    }
+  };
+
+  const importMeeting = async (msg: ScoredInboxMessage) => {
+    const ev = await inboxAIService.extractMeeting(msg.id);
+    if (ev) {
+      alert('Meeting saved to calendar');
+    } else {
+      alert('No meeting invite found');
     }
   };
 
@@ -48,17 +62,30 @@ export const InBoxAI: React.FC = () => {
       <div className="grid grid-cols-2 gap-4 h-full">
       <GlassCard className="overflow-auto">
         <ul>
-          {messages.map(m => (
-            <li key={m.id} className="mb-2">
-              <button className="text-left hover:underline" onClick={() => { setSelected(m); setSummary(''); }}>
-                {m.subject} <span className="opacity-50">({m.score.toFixed(2)})</span>
-              </button>
-              <div className="text-xs text-gray-400">{m.body.slice(0, 60)}...</div>
-              <button className="text-xs text-blue-400" onClick={() => chainShrink(m)}>
-                ChainShrink
-              </button>
-            </li>
-          ))}
+          {messages.map(m => {
+            const badge = m.score > 0.7
+              ? { text: 'High', color: 'bg-red-600/80' }
+              : m.score > 0.4
+              ? { text: 'Med', color: 'bg-yellow-600/80' }
+              : { text: 'Low', color: 'bg-gray-600/50' };
+            return (
+              <li key={m.id} className="mb-2">
+                <button className="text-left hover:underline" onClick={() => { setSelected(m); setSummary(''); }}>
+                  {m.subject}
+                  <span className={`ml-2 px-1.5 py-0.5 text-xs rounded-full text-white ${badge.color}`}>{badge.text}</span>
+                </button>
+                <div className="text-xs text-gray-400">{m.body.slice(0, 60)}...</div>
+                <div className="space-x-2 mt-1">
+                  <button className="text-xs text-blue-400" onClick={() => chainShrink(m)}>
+                    ChainShrink
+                  </button>
+                  <button className="text-xs text-green-400" onClick={() => importMeeting(m)}>
+                    Import Meeting
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </GlassCard>
       <GlassCard className="flex flex-col">
