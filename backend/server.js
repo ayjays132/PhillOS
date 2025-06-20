@@ -37,9 +37,9 @@ function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
 }
 
-function loadTheme() {
+async function loadTheme() {
   try {
-    const row = query("SELECT value FROM preferences WHERE key='theme'")[0];
+    const row = (await query("SELECT value FROM preferences WHERE key='theme'"))[0];
     if (row && (row.value === 'light' || row.value === 'dark')) return row.value;
   } catch {}
   try {
@@ -49,9 +49,9 @@ function loadTheme() {
   }
 }
 
-function saveTheme(theme) {
+async function saveTheme(theme) {
   try {
-    execute(`INSERT INTO preferences(key,value) VALUES('theme','${theme}') ON CONFLICT(key) DO UPDATE SET value='${theme}'`);
+    await execute(`INSERT INTO preferences(key,value) VALUES('theme','${theme}') ON CONFLICT(key) DO UPDATE SET value='${theme}'`);
   } catch {}
   try {
     fs.mkdirSync(STORAGE_DIR, { recursive: true });
@@ -137,16 +137,16 @@ app.post('/api/launch-proton', async (req, res) => {
   }
 });
 
-app.get('/api/theme', (req, res) => {
-  res.json({ theme: loadTheme() });
+app.get('/api/theme', async (req, res) => {
+  res.json({ theme: await loadTheme() });
 });
 
-app.post('/api/theme', (req, res) => {
+app.post('/api/theme', async (req, res) => {
   const { theme } = req.body || {};
   if (theme !== 'light' && theme !== 'dark') {
     return res.status(400).json({ error: 'invalid theme' });
   }
-  saveTheme(theme);
+  await saveTheme(theme);
   res.json({ success: true });
 });
 
@@ -157,22 +157,22 @@ app.post('/api/converseai', (req, res) => {
 });
 
 // --- InBoxAI ---
-app.get('/api/inboxai/messages', (req, res) => {
-  const messages = query("SELECT id, sender as 'from', subject, body FROM emails");
+app.get('/api/inboxai/messages', async (req, res) => {
+  const messages = await query("SELECT id, sender as 'from', subject, body FROM emails");
   res.json({ messages });
 });
 
-app.post('/api/inboxai/summary', (req, res) => {
+app.post('/api/inboxai/summary', async (req, res) => {
   const { id } = req.body || {};
-  const row = query(`SELECT body FROM emails WHERE id=${Number(id)}`)[0];
+  const row = (await query(`SELECT body FROM emails WHERE id=${Number(id)}`))[0];
   const summary = row ? `${row.body.slice(0, 50)}...` : 'Not found';
   res.json({ summary });
 });
 
-app.post('/api/inboxai/reply', (req, res) => {
+app.post('/api/inboxai/reply', async (req, res) => {
   const { id, body } = req.body || {};
   const text = String(body || '').replace(/'/g, "''");
-  execute(`INSERT INTO emails(sender,subject,body) VALUES('me@example.com','Re:${id}','${text}')`);
+  await execute(`INSERT INTO emails(sender,subject,body) VALUES('me@example.com','Re:${id}','${text}')`);
   res.json({ success: true });
 });
 
@@ -278,48 +278,48 @@ app.get('/api/pulsemonitor/status', (req, res) => {
 });
 
 // --- BrainPad ---
-app.get('/api/brainpad/entries', (req, res) => {
-  const entries = query('SELECT id, content, created_at FROM notes ORDER BY created_at DESC');
+app.get('/api/brainpad/entries', async (req, res) => {
+  const entries = await query('SELECT id, content, created_at FROM notes ORDER BY created_at DESC');
   res.json({ entries });
 });
 
-app.post('/api/brainpad/entries', (req, res) => {
+app.post('/api/brainpad/entries', async (req, res) => {
   const { content } = req.body || {};
   if (!content) return res.status(400).json({ error: 'content required' });
   const text = String(content).replace(/'/g, "''");
-  execute(`INSERT INTO notes(content, created_at) VALUES('${text}', ${Date.now()})`);
+  await execute(`INSERT INTO notes(content, created_at) VALUES('${text}', ${Date.now()})`);
   res.json({ success: true });
 });
 
-app.get('/api/tasks', (req, res) => {
-  const tasks = query('SELECT id, title, completed FROM tasks');
+app.get('/api/tasks', async (req, res) => {
+  const tasks = await query('SELECT id, title, completed FROM tasks');
   res.json({ tasks });
 });
 
-app.post('/api/tasks', (req, res) => {
+app.post('/api/tasks', async (req, res) => {
   const { title } = req.body || {};
   if (!title) return res.status(400).json({ error: 'title required' });
   const text = String(title).replace(/'/g, "''");
-  execute(`INSERT INTO tasks(title, completed) VALUES('${text}', 0)`);
+  await execute(`INSERT INTO tasks(title, completed) VALUES('${text}', 0)`);
   res.json({ success: true });
 });
 
-app.post('/api/tasks/:id/toggle', (req, res) => {
+app.post('/api/tasks/:id/toggle', async (req, res) => {
   const id = Number(req.params.id);
-  execute(`UPDATE tasks SET completed=CASE completed WHEN 0 THEN 1 ELSE 0 END WHERE id=${id}`);
+  await execute(`UPDATE tasks SET completed=CASE completed WHEN 0 THEN 1 ELSE 0 END WHERE id=${id}`);
   res.json({ success: true });
 });
 
-app.get('/api/tags', (req, res) => {
-  const tags = query('SELECT id, name FROM tags');
+app.get('/api/tags', async (req, res) => {
+  const tags = await query('SELECT id, name FROM tags');
   res.json({ tags });
 });
 
-app.post('/api/tags', (req, res) => {
+app.post('/api/tags', async (req, res) => {
   const { name } = req.body || {};
   if (!name) return res.status(400).json({ error: 'name required' });
   const text = String(name).replace(/'/g, "''");
-  execute(`INSERT OR IGNORE INTO tags(name) VALUES('${text}')`);
+  await execute(`INSERT OR IGNORE INTO tags(name) VALUES('${text}')`);
   res.json({ success: true });
 });
 
