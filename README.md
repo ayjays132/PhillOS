@@ -264,6 +264,15 @@ x86_64-elf-gcc --version
 
 ### Build Steps
 
+Optional WebAssembly models can be built with:
+
+```bash
+npm run build-wasm
+```
+
+Run this once before the main build to produce `summarizer.onnx.wasm` and
+`classifier.ggml.wasm` under `src/wasm/`.
+
 Use the top‑level build script to compile the bootloader/kernel and the web
 interface in one step. Artifacts are written to the common `dist/` directory:
 
