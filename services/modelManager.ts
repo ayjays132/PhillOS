@@ -2,6 +2,10 @@ import { createCloudChatSession, sendMessageStream as sendCloudStream, CloudProv
 import { createQwenChatSession, QwenChatSession } from './qwenService';
 import { AIModelPreference, ChatMessage } from '../types';
 import { memoryHubService } from './memoryHubService';
+import { pipeline } from '@xenova/transformers';
+
+let summarizer: any = null;
+let classifier: any = null;
 
 export interface ModelSession {
   type: AIModelPreference;
@@ -47,3 +51,22 @@ export async function* sendModelMessageStream(
     memoryHubService.addEntry(`[model] ${full}`);
   }
 }
+
+export const summarize = async (text: string): Promise<string> => {
+  if (!summarizer) {
+    summarizer = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6');
+  }
+  const result = await summarizer(text);
+  return Array.isArray(result) ? result[0].summary_text : result.summary_text;
+};
+
+export const tagText = async (
+  text: string,
+  labels: string[]
+): Promise<string[]> => {
+  if (!classifier) {
+    classifier = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
+  }
+  const result = await classifier(text, { candidate_labels: labels });
+  return (result.labels as string[]).slice(0, 3);
+};
