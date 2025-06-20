@@ -13,6 +13,14 @@ import GenLab from './src/apps/genlab';
 import ConverseAI from './src/apps/converseai';
 import InBoxAI from './src/apps/inboxai';
 import WebLens from './src/apps/weblens';
+import MediaSphere from './src/apps/mediasphere';
+import SoundScape from './src/apps/soundscape';
+import VisionVault from './src/apps/visionvault';
+import SecureCore from './src/apps/securecore';
+import AppForge from './src/apps/appforge';
+import SpaceManager from './src/apps/spacemanager';
+import PulseMonitor from './src/apps/pulsemonitor';
+import BrainPadApp from './src/apps/brainpad';
 import { ProtonLauncher } from './components/ProtonLauncher';
 import PhoneApp from './components/PhoneApp';
 import { AgentConsole } from './components/AgentConsole';
@@ -82,6 +90,14 @@ const App: React.FC = () => {
           <Route path="/gaming" element={<ProtonLauncher />} />
           <Route path="/timeai" element={<TimeAI />} />
           <Route path="/genlab" element={<GenLab />} />
+          <Route path="/mediasphere" element={<MediaSphere />} />
+          <Route path="/soundscape" element={<SoundScape />} />
+          <Route path="/visionvault" element={<VisionVault />} />
+          <Route path="/securecore" element={<SecureCore />} />
+          <Route path="/appforge" element={<AppForge />} />
+          <Route path="/spacemanager" element={<SpaceManager />} />
+          <Route path="/pulsemonitor" element={<PulseMonitor />} />
+          <Route path="/brainpad" element={<BrainPadApp />} />
           <Route path="/converseai" element={<ConverseAI />} />
           <Route path="/inboxai" element={<InBoxAI />} />
           <Route path="/weblens" element={<WebLens />} />

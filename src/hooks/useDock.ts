@@ -1,7 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import { NavItem } from '../types';
 import { storageService } from '../../services/storageService';
-import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail, BrainCircuit, Phone, FlaskConical, CalendarDays } from 'lucide-react';
+import {
+  Settings,
+  Files,
+  BotMessageSquare,
+  LayoutGrid,
+  MonitorPlay,
+  Mail,
+  BrainCircuit,
+  Phone,
+  FlaskConical,
+  CalendarDays,
+  Image,
+  Music,
+  Eye,
+  Shield,
+  Hammer,
+  HardDrive,
+  Activity,
+  Brain,
+} from 'lucide-react';
 
 export const EXTERNAL_ITEM_TYPE = 'NEW_DOCK_ITEM';
 
@@ -14,6 +33,14 @@ const DEFAULT_ITEMS: NavItem[] = [
   { id: 'gaming', label: 'Gaming', path: '/gaming', icon: MonitorPlay },
   { id: 'timeai', label: 'TimeAI', path: '/timeai', icon: CalendarDays },
   { id: 'genlab', label: 'GenLab', path: '/genlab', icon: FlaskConical },
+  { id: 'mediasphere', label: 'MediaSphere', path: '/mediasphere', icon: Image },
+  { id: 'soundscape', label: 'SoundScape', path: '/soundscape', icon: Music },
+  { id: 'visionvault', label: 'VisionVault', path: '/visionvault', icon: Eye },
+  { id: 'securecore', label: 'SecureCore', path: '/securecore', icon: Shield },
+  { id: 'appforge', label: 'AppForge', path: '/appforge', icon: Hammer },
+  { id: 'spacemanager', label: 'SpaceManager', path: '/spacemanager', icon: HardDrive },
+  { id: 'pulsemonitor', label: 'Pulse Monitor', path: '/pulsemonitor', icon: Activity },
+  { id: 'brainpad', label: 'BrainPad', path: '/brainpad', icon: Brain },
   { id: 'phone', label: 'Phone', path: '/phone', icon: Phone },
   { id: 'settings', label: 'Settings', path: '/settings', icon: Settings },
 ];
