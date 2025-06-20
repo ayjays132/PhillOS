@@ -35,6 +35,13 @@ const App: React.FC = () => {
   const trainingFreq = parseInt(import.meta.env.VITE_TRAINING_FREQUENCY_MS || '3600000', 10);
   useTrainingScheduler(trainingEnabled, trainingFreq);
 
+  React.useEffect(() => {
+    const win = window as any;
+    if (win.SVG_BOOT_UPDATE && win.boot_info?.svg_base) {
+      win.SVG_BOOT_UPDATE();
+    }
+  }, []);
+
 
   if (!isOnboardingComplete && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;

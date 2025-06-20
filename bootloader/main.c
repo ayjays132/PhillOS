@@ -3,6 +3,7 @@
 #include "init.h"
 #include "../kernel/boot_info.h"
 #include "phill_svg_loader.h"
+#include "phill_svg_update.h"
 
 static UINTN parse_ai_pages(const char *cmd)
 {
@@ -266,6 +267,7 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
         Print(L"Failed to load kernel: %r\n", status);
         return status;
     }
+    phill_svg_update();
 
     UINT64 stack_top = 0;
     status = setup_kernel_stack(&stack_top);
@@ -273,6 +275,7 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
         Print(L"Failed to allocate kernel stack: %r\n", status);
         return status;
     }
+    phill_svg_update();
 
     boot_info_t *boot_info = NULL;
     status = prepare_boot_info(ImageHandle, &boot_info);
@@ -280,12 +283,14 @@ EFI_STATUS EFIAPI efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTabl
         Print(L"Failed to prepare boot info: %r\n", status);
         return status;
     }
+    phill_svg_update();
 
     status = exit_boot(ImageHandle, boot_info);
     if (EFI_ERROR(status)) {
         Print(L"Failed to exit boot services: %r\n", status);
         return status;
     }
+    phill_svg_update();
 
     void (*kernel_entry)(boot_info_t *) = entry;
     __asm__ volatile(

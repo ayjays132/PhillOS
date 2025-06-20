@@ -69,9 +69,12 @@ $(KERNEL_ELF): $(KERNEL_OBJS)
 $(OUT_DIR)/main.o: main.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 $(OUT_DIR)/phill_svg_loader.o: phill_svg_loader.c | $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+        $(CC) $(CFLAGS) -c $< -o $@
 
-$(BOOTLOADER): $(OUT_DIR)/main.o $(OUT_DIR)/phill_svg_loader.o | $(OUT_DIR)
+$(OUT_DIR)/phill_svg_update.o: phill_svg_update.c | $(OUT_DIR)
+        $(CC) $(CFLAGS) -c $< -o $@
+
+$(BOOTLOADER): $(OUT_DIR)/main.o $(OUT_DIR)/phill_svg_loader.o $(OUT_DIR)/phill_svg_update.o | $(OUT_DIR)
 	$(LD) $(LDFLAGS) -o $(OUT_DIR)/bootloader.so /usr/lib/crt0-efi-x86_64.o $^
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym 		-j .rel -j .rela -j .reloc -j .eh_frame 		--target=efi-app-x86_64 $(OUT_DIR)/bootloader.so $@
 
