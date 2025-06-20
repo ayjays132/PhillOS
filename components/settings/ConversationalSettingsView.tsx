@@ -73,6 +73,11 @@ export const ConversationalSettingsView: React.FC = () => {
                 Phone Settings
               </Link>
             </p>
+            <p className="mt-1">
+              <Link to="/settings/memory" className="text-cyan-300 hover:underline">
+                Memory Settings
+              </Link>
+            </p>
           </div>
         )}
         {messages.map((msg) => (
