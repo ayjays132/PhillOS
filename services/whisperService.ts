@@ -5,7 +5,7 @@ import { join } from 'path';
 import * as fs from 'fs';
 
 export class WhisperService {
-  constructor(private python: string = 'python3') {}
+  constructor(private python: string = process.env.WHISPER_PYTHON || 'python3') {}
 
   static isAvailable(): boolean {
     try {
