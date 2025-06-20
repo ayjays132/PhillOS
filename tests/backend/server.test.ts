@@ -59,4 +59,11 @@ describe('backend server theme API', () => {
       .send({ path: 'bad\0.exe' });
     expect(res.status).toBe(400);
   });
+
+  it('returns current threat score', async () => {
+    const { default: app, setThreatScore } = await import('../../backend/server.js');
+    setThreatScore(55);
+    const res = await request(app).get('/api/securecore/threat');
+    expect(res.body).toEqual({ score: 55 });
+  });
 });

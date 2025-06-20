@@ -5,9 +5,15 @@ import { secureCoreService } from '../../services/secureCoreService';
 export const SecureCore: React.FC = () => {
   const [firewall, setFirewall] = useState(false);
   const [lastScan, setLastScan] = useState<string | null>(null);
+  const [threat, setThreat] = useState(0);
+  const THRESHOLD = 70;
 
   useEffect(() => {
     secureCoreService.getStatus().then(s => setFirewall(s.firewall));
+    const load = () => secureCoreService.getThreatScore().then(s => setThreat(s.score));
+    load();
+    const id = setInterval(load, 5000);
+    return () => clearInterval(id);
   }, []);
 
   const toggle = async () => {
@@ -23,6 +29,9 @@ export const SecureCore: React.FC = () => {
   return (
     <AppPanel>
         <h1 className="text-3xl font-bold mb-4">SecureCore</h1>
+        {threat >= THRESHOLD && (
+          <p className="text-sm text-red-400 mb-2">High threat detected! Score {threat}</p>
+        )}
         <label className="inline-flex items-center gap-2 mb-4 text-sm">
           <input type="checkbox" checked={firewall} onChange={toggle} />
           <span>Firewall {firewall ? 'On' : 'Off'}</span>

@@ -202,6 +202,7 @@ app.get('/api/weblens/summarize', async (req, res) => {
 
 // --- MediaSphere ---
 let firewallEnabled = true;
+let threatScore = 0;
 
 app.get('/api/mediasphere/media', (req, res) => {
   const dir = path.join(STORAGE_DIR, 'media');
@@ -322,6 +323,10 @@ app.post('/api/securecore/scan', (req, res) => {
   res.json({ status: 'ok', usedMemory: usedMem });
 });
 
+app.get('/api/securecore/threat', (req, res) => {
+  res.json({ score: threatScore });
+});
+
 // --- AppForge ---
 app.post('/api/appforge/build', (req, res) => {
   res.json({ success: true });
@@ -395,4 +400,5 @@ if (!process.env.VITEST) {
 }
 
 export default app;
+export function setThreatScore(score) { threatScore = score; }
 export { sanitizeUserPath, sanitizeStoragePath, STORAGE_DIR };

@@ -29,6 +29,16 @@ class SecureCoreService {
       return false;
     }
   }
+
+  async getThreatScore() {
+    try {
+      const res = await fetch('/api/securecore/threat');
+      if (!res.ok) return { score: 0 };
+      return await res.json();
+    } catch {
+      return { score: 0 };
+    }
+  }
 }
 
 export const secureCoreService = new SecureCoreService();
@@ -36,3 +46,4 @@ export const secureCoreService = new SecureCoreService();
 agentOrchestrator.registerAction('secure.get_status', () => secureCoreService.getStatus());
 agentOrchestrator.registerAction('secure.toggle_firewall', () => secureCoreService.toggleFirewall());
 agentOrchestrator.registerAction('secure.scan', () => secureCoreService.scan());
+agentOrchestrator.registerAction('secure.get_threat', () => secureCoreService.getThreatScore());
