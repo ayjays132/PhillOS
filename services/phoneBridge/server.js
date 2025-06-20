@@ -19,8 +19,11 @@ try {
   native = ffi.Library('./libphone', {
     init_sim: ['void', []],
     sim_read_iccid: ['int', ['char *', 'int']],
+    sim_modem_present: ['int', []],
+    sim_send_sms: ['int', ['string', 'string']],
     init_bluetooth: ['void', []],
     bluetooth_start_pairing: ['int', ['string']],
+    bluetooth_is_up: ['int', []],
   });
   native.init_sim();
   native.init_bluetooth();
@@ -148,6 +151,8 @@ app.get('/status', (_req, res) => {
     device: connectedDevice,
     smsStatus,
     callStatus,
+    modemPresent: native ? native.sim_modem_present() === 1 : false,
+    bluetoothUp: native ? native.bluetooth_is_up() === 1 : false,
   });
 });
 
@@ -156,12 +161,12 @@ app.post('/sms', async (req, res) => {
   if (!to || !body) return res.status(400).json({ error: 'to and body required' });
   smsStatus = 'sending';
   try {
-    await sendAT('AT');
-    await sendAT('AT+CMGF=1');
-    await sendAT(`AT+CMGS="${to}"`, />/);
-    await sendAT(body + String.fromCharCode(26));
-    smsStatus = 'sent';
-    res.json({ success: true });
+    if (native && native.sim_send_sms(to, body) === 0) {
+      smsStatus = 'sent';
+      res.json({ success: true });
+    } else {
+      throw new Error('native fail');
+    }
   } catch (err) {
     console.error('SMS failed', err.message);
     smsStatus = 'error';
