@@ -33,4 +33,9 @@ class InboxAIService {
   }
 }
 
+import { agentOrchestrator } from './agentOrchestrator';
+
 export const inboxAIService = new InboxAIService();
+
+agentOrchestrator.registerAction('inbox.get_messages', () => inboxAIService.getMessages());
+agentOrchestrator.registerAction('inbox.summarize', params => inboxAIService.summarizeMessage(Number(params?.id)));

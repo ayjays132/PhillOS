@@ -43,7 +43,7 @@ describe('agentService', () => {
     })());
 
     const { agentService } = await import('../../services/agentService');
-    const result = await agentService.processCommand('open files');
+    const result = await agentService.processCommand('open files', 'local', ['open_app']);
 
     expect(sendModelMessageStream).toHaveBeenCalled();
     expect(result).toEqual({ action: 'open_app', parameters: { app: 'files' } });

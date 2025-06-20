@@ -1,4 +1,5 @@
 import { NavItem, WidgetOrder, PhoneSettings } from '../types';
+import { agentOrchestrator } from './agentOrchestrator';
 
 const WIDGET_ORDER_KEY = 'phillos_widget_order';
 const DOCK_ITEMS_KEY = 'phillos_dock_items_v1';
@@ -151,3 +152,6 @@ class StorageService {
 }
 
 export const storageService = new StorageService();
+
+agentOrchestrator.registerAction('storage.get_theme', () => storageService.getTheme());
+agentOrchestrator.registerAction('storage.set_theme', params => storageService.setTheme(params?.theme as 'light' | 'dark'));

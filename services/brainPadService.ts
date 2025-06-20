@@ -43,4 +43,18 @@ class BrainPadService {
   }
 }
 
+import { agentOrchestrator } from './agentOrchestrator';
+
 export const brainPadService = new BrainPadService();
+
+agentOrchestrator.registerAction('brainpad.add_entry', params => {
+  return brainPadService.addEntry(String(params?.content || ''));
+});
+
+agentOrchestrator.registerAction('brainpad.get_entries', () => {
+  return brainPadService.getEntries();
+});
+
+agentOrchestrator.registerAction('brainpad.clear', () => {
+  brainPadService.clear();
+});

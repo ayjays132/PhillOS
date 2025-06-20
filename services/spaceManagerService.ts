@@ -1,3 +1,5 @@
+import { agentOrchestrator } from './agentOrchestrator';
+
 class SpaceManagerService {
   async getUsage() {
     try {
@@ -11,3 +13,5 @@ class SpaceManagerService {
 }
 
 export const spaceManagerService = new SpaceManagerService();
+
+agentOrchestrator.registerAction('space.get_usage', () => spaceManagerService.getUsage());

@@ -8,3 +8,8 @@ export const clearCaches = async () => {
   await Promise.all(names.map(n => caches.delete(n)));
   location.reload();
 };
+
+import { agentOrchestrator } from './agentOrchestrator';
+
+agentOrchestrator.registerAction('cache.check_update', () => checkForUpdate());
+agentOrchestrator.registerAction('cache.clear', () => clearCaches());

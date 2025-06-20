@@ -10,4 +10,10 @@ class AppForgeService {
   }
 }
 
+import { agentOrchestrator } from './agentOrchestrator';
+
 export const appForgeService = new AppForgeService();
+
+agentOrchestrator.registerAction('appforge.build', async () => {
+  return appForgeService.build();
+});

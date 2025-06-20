@@ -1,5 +1,6 @@
 import ollama from 'ollama/browser';
 import { ChatMessage } from '../types';
+import { agentOrchestrator } from './agentOrchestrator';
 
 // Allow overriding the local model via Vite env variable.
 // Default to the Qwen3-1.7B model as recommended in the design docs.
@@ -45,3 +46,5 @@ export const createQwenChatSession = async (history?: ChatMessage[]) => {
   await verifyOllamaAvailable();
   return new QwenChatSession(history);
 };
+
+agentOrchestrator.registerAction('qwen.verify', () => verifyOllamaAvailable());

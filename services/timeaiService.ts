@@ -1,5 +1,6 @@
 import { CalendarEvent } from '../src/types';
 import { invoke } from '@tauri-apps/api/tauri';
+import { agentOrchestrator } from './agentOrchestrator';
 
 class TimeAIService {
   async getEvents(): Promise<CalendarEvent[]> {
@@ -22,3 +23,6 @@ class TimeAIService {
 }
 
 export const timeaiService = new TimeAIService();
+
+agentOrchestrator.registerAction('timeai.add_event', params => timeaiService.saveEvent(params as CalendarEvent));
+agentOrchestrator.registerAction('timeai.get_events', () => timeaiService.getEvents());

@@ -1,3 +1,5 @@
+import { agentOrchestrator } from './agentOrchestrator';
+
 class SoundScapeService {
   async getTracks() {
     try {
@@ -12,3 +14,5 @@ class SoundScapeService {
 }
 
 export const soundScapeService = new SoundScapeService();
+
+agentOrchestrator.registerAction('soundscape.get_tracks', () => soundScapeService.getTracks());

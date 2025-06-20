@@ -3,6 +3,8 @@ export interface SmsMessage {
   body: string;
 }
 
+import { agentOrchestrator } from './agentOrchestrator';
+
 class PhoneService {
   async sendSms(message: SmsMessage): Promise<boolean> {
     try {
@@ -46,3 +48,6 @@ class PhoneService {
 }
 
 export const phoneService = new PhoneService();
+
+agentOrchestrator.registerAction('phone.send_sms', params => phoneService.sendSms(params as SmsMessage));
+agentOrchestrator.registerAction('phone.make_call', params => phoneService.makeCall(String(params?.number || '')));

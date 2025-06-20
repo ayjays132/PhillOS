@@ -1,3 +1,5 @@
+import { agentOrchestrator } from './agentOrchestrator';
+
 class SecureCoreService {
   async getStatus() {
     try {
@@ -30,3 +32,7 @@ class SecureCoreService {
 }
 
 export const secureCoreService = new SecureCoreService();
+
+agentOrchestrator.registerAction('secure.get_status', () => secureCoreService.getStatus());
+agentOrchestrator.registerAction('secure.toggle_firewall', () => secureCoreService.toggleFirewall());
+agentOrchestrator.registerAction('secure.scan', () => secureCoreService.scan());

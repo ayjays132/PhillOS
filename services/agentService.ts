@@ -32,7 +32,11 @@ export class AgentService {
     return this.running;
   }
 
-  async processCommand(command: string, preference: AIModelPreference = this.preference): Promise<AgentAction | null> {
+  async processCommand(
+    command: string,
+    preference: AIModelPreference = this.preference,
+    actions: string[] = []
+  ): Promise<AgentAction | null> {
     if (!this.session || preference !== this.preference) {
       await this.init(preference);
     }
@@ -44,7 +48,8 @@ export class AgentService {
     };
     memoryService.addMessage(userMsg);
 
-    const prompt = `You are the PhillOS Agent. Interpret the user's request and respond ONLY with a JSON object describing the action to take. Example format: {"action": "open_app", "parameters": {"app": "files"}}. If the request is a search query, use action 'search' with a 'query' parameter. Request: ${command}`;
+    const available = actions.join(', ');
+    const prompt = `You are the PhillOS Agent. Available actions: ${available}. Interpret the user's request and respond ONLY with a JSON object describing the action to take. Example format: {"action": "open_app", "parameters": {"app": "files"}}. If the request is a search query, use action 'search' with a 'query' parameter. Request: ${command}`;
     const stream = sendModelMessageStream(this.session!, prompt);
     let response = '';
     for await (const chunk of stream) {

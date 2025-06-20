@@ -389,7 +389,7 @@ The service worker also caches responses from the `/phonebridge/*` endpoint usin
 
 ## Future Vision (Conceptual)
 
-This prototype serves as a visual and interactive demonstration of the PhillOS concept. See [docs/Blueprint.md](docs/Blueprint.md) for the broader roadmap and [docs/building.md](docs/building.md) for toolchain setup. More docs will appear in the `docs/` directory.
+This prototype serves as a visual and interactive demonstration of the PhillOS concept. See [docs/Blueprint.md](docs/Blueprint.md) for the broader roadmap and [docs/building.md](docs/building.md) for toolchain setup. More docs will appear in the `docs/` directory. The file [docs/agent_commands.md](docs/agent_commands.md) lists sample natural‑language phrases and their resulting actions.
 
 -   An **AI-Native Kernel** for dynamic resource allocation, intelligent process scheduling, and proactive self-healing.
 -   **Deep OS-level AI integration** across all applications and system functions, enabling true ambient intelligence.

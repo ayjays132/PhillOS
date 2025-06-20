@@ -73,3 +73,13 @@ export async function* sendMessageStream(session: CloudChatSession, message: str
     }
   }
 }
+
+import { agentOrchestrator } from './agentOrchestrator';
+
+agentOrchestrator.registerAction('cloudai.create_session', params => {
+  return createCloudChatSession(
+    (params?.provider as CloudProvider) || 'gemini',
+    String(params?.apiKey || ''),
+    params?.history as ChatMessage[] | undefined
+  );
+});
