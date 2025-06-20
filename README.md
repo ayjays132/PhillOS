@@ -597,6 +597,22 @@ Start the backend with `npm run server` and open any of these paths in the UI:
 - `/converseai` – simple chat interface.
 - `/inboxai` – demo email viewer with AI summary.
 - `/weblens` – fetches a summary for a given URL.
+### Preparing the Test Environment
+
+Before running tests, install project dependencies and language toolchains:
+
+```bash
+npm install
+# for Go tests
+go mod download
+# for Rust tests
+cargo fetch
+# for Python tests
+pip install -r requirements.txt
+```
+
+The test suite expects Go, Cargo, and Python 3 with pytest to be installed.
+
 
 ### Running Tests and Lint
 
