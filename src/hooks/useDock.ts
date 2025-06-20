@@ -12,6 +12,7 @@ const DEFAULT_ITEMS: NavItem[] = [
   { id: 'files', label: 'Files', path: '/files', icon: Files },
   { id: 'mail', label: 'Mail', path: '/mail', icon: Mail },
   { id: 'gaming', label: 'Gaming', path: '/gaming', icon: MonitorPlay },
+  { id: 'timeai', label: 'TimeAI', path: '/timeai', icon: CalendarDays },
   { id: 'genlab', label: 'GenLab', path: '/genlab', icon: FlaskConical },
   { id: 'phone', label: 'Phone', path: '/phone', icon: Phone },
   { id: 'settings', label: 'Settings', path: '/settings', icon: Settings },

@@ -93,3 +93,11 @@ export interface PhoneSettings {
   ringtone: string;
   vibrate: boolean;
 }
+
+export interface CalendarEvent {
+  id: number;
+  title: string;
+  start: string;
+  end: string;
+  tasks?: string;
+}
