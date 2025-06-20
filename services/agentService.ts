@@ -10,11 +10,26 @@ export interface AgentAction {
 export class AgentService {
   private session: ModelSession | null = null;
   private preference: AIModelPreference = 'local';
+  private running = false;
 
   async init(preference: AIModelPreference = 'local') {
     this.preference = preference;
     const history = memoryService.getMessages();
     this.session = await createModelSession(preference, { history });
+  }
+
+  async start(preference: AIModelPreference = 'local') {
+    await this.init(preference);
+    this.running = true;
+  }
+
+  stop() {
+    this.session = null;
+    this.running = false;
+  }
+
+  isRunning() {
+    return this.running;
   }
 
   async processCommand(command: string, preference: AIModelPreference = this.preference): Promise<AgentAction | null> {
