@@ -2,6 +2,7 @@
 #include "../fs/fat32.h"
 #include "../memory/heap.h"
 #include "../debug.h"
+#include "../security/signature.h"
 #include <string.h>
 
 static module_t *module_list = NULL;
@@ -19,8 +20,25 @@ module_t *module_load(const char *path)
         return NULL;
     }
 
+    if (size < MODULE_SIG_LEN) {
+        debug_puts("module_load: no signature in ");
+        debug_puts(path);
+        debug_putc('\n');
+        kfree(data);
+        return NULL;
+    }
+    uint32_t code_size = size - MODULE_SIG_LEN;
+    const uint8_t *sig = (const uint8_t *)data + code_size;
+    if (!verify_module_signature(data, code_size, sig)) {
+        debug_puts("module_load: bad signature in ");
+        debug_puts(path);
+        debug_putc('\n');
+        kfree(data);
+        return NULL;
+    }
+
     elf_image_t img;
-    if (elf_load_image(data, size, &img)) {
+    if (elf_load_image(data, code_size, &img)) {
         debug_puts("module_load: bad ELF ");
         debug_puts(path);
         debug_putc('\n');
@@ -47,7 +65,7 @@ module_t *module_load(const char *path)
     memset(mod, 0, sizeof(module_t));
     strncpy(mod->path, path, sizeof(mod->path)-1);
     mod->file_data = data;
-    mod->file_size = size;
+    mod->file_size = code_size;
     mod->image = img;
     mod->driver = drv;
 
