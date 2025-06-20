@@ -160,3 +160,15 @@ void agent_free(void *ptr)
     heap_free(&agent_heap_head, ptr);
 }
 
+size_t heap_usage(void)
+{
+    size_t used = 0;
+    heap_block_t *blk = heap_head;
+    while (blk) {
+        if (!blk->free)
+            used += blk->size;
+        blk = blk->next;
+    }
+    return used;
+}
+

@@ -15,4 +15,6 @@ void ai_free(void *ptr);
 void *agent_alloc(size_t size);
 void agent_free(void *ptr);
 
+size_t heap_usage(void);
+
 #endif // PHILLOS_HEAP_H
