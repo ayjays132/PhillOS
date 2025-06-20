@@ -1,15 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { BrainPadTray } from '../../components/BrainPadTray';
 import { brainPadService } from '../../services/brainPadService';
 import { GlassCard } from '../../components/GlassCard';
+import { promptCoachService } from '../../services/promptCoachService';
 
 export const GenLab: React.FC = () => {
   const [prompt, setPrompt] = useState('');
+  const [tips, setTips] = useState<string[]>([]);
   const [outA, setOutA] = useState('');
   const [outB, setOutB] = useState('');
   const [running, setRunning] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const text = prompt.trim();
+      if (!text) {
+        setTips([]);
+        return;
+      }
+      const t = await promptCoachService.getTips(text);
+      if (!cancelled) setTips(t);
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [prompt]);
 
   const run = async () => {
     setRunning(true);
@@ -38,13 +57,20 @@ export const GenLab: React.FC = () => {
     <AppPanel className="!p-0">
       <div className="grid grid-cols-2 gap-4 h-full">
         <GlassCard className="flex flex-col">
-          <Editor
+        <Editor
           height="100%"
           defaultLanguage="markdown"
           theme="vs-dark"
           value={prompt}
           onChange={(v) => setPrompt(v || '')}
         />
+        {tips.length > 0 && (
+          <ul className="mt-2 text-xs list-disc pl-4 space-y-1">
+            {tips.map((t, i) => (
+              <li key={i}>{t}</li>
+            ))}
+          </ul>
+        )}
         <button
           className="mt-2 px-3 py-1 bg-blue-500 text-white rounded self-start"
           onClick={run}
