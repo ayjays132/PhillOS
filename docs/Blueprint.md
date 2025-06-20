@@ -53,6 +53,16 @@ The blueprint describes an orchestration layer of **PhillOS Agents**:
 
 This architecture aims to turn the OS into a proactive digital partner that manages workflows on the user's behalf.
 
+Example CLI commands:
+
+```bash
+npx phillos agent start            # launch the orchestrator
+npx phillos scheduler smart_slot '{"tasks":["email team 15m"]}'
+npx phillos smarttags notes/todo.txt
+```
+
+The agent receives natural language intents, spawns the required apps (TimeAI, Vault, etc.) and streams data between them through its event bus.
+
 
 ## Roadmap: DX12 Compatibility
 
