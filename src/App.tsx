@@ -8,6 +8,7 @@ import { MobileBottomNavigationBar } from './components/MobileBottomNavigationBa
 import { HomeDashboard } from './components/HomeDashboard';
 import { PlaceholderAppView } from './components/PlaceholderAppView';
 import Vault from './src/apps/vault';
+import AppForge from './src/apps/appforge';
 import { ProtonLauncher } from './components/ProtonLauncher';
 import PhoneApp from './components/PhoneApp';
 import { AgentConsole } from './components/AgentConsole';
@@ -73,6 +74,7 @@ const App: React.FC = () => {
           <Route path="/copilot" element={<PlaceholderAppView appName="AI CoPilot" icon={BotMessageSquare} message="AI CoPilot integrated into Home Dashboard widgets." />} />
           <Route path="/agent" element={<AgentConsole />} />
           <Route path="/files" element={<Vault />} />
+          <Route path="/appforge" element={<AppForge />} />
           <Route path="/mail" element={<PlaceholderAppView appName="Mail Client" icon={Mail} />} />
           <Route path="/gaming" element={<ProtonLauncher />} />
           <Route path="/phone" element={<PhoneApp />} />

@@ -42,6 +42,7 @@ const app = express();
 app.use(express.json());
 
 const PHONE_BRIDGE_URL = process.env.PHONE_BRIDGE_URL || 'http://localhost:3002';
+const APPFORGE_URL = process.env.APPFORGE_URL || 'http://localhost:3201';
 
 app.use('/phonebridge', (req, res) => {
   const target = new URL(req.originalUrl.replace(/^\/phonebridge/, ''), PHONE_BRIDGE_URL);
@@ -55,6 +56,28 @@ app.use('/phonebridge', (req, res) => {
   });
   proxyReq.on('error', err => {
     console.error('Phone bridge proxy error:', err.message);
+    if (!res.headersSent) res.status(502).end();
+  });
+  if (req.body && Object.keys(req.body).length) {
+    proxyReq.write(JSON.stringify(req.body));
+    proxyReq.end();
+  } else {
+    req.pipe(proxyReq);
+  }
+});
+
+app.use('/appforge', (req, res) => {
+  const target = new URL(req.originalUrl.replace(/^\/appforge/, ''), APPFORGE_URL);
+  const opts = {
+    method: req.method,
+    headers: { ...req.headers, host: target.host },
+  };
+  const proxyReq = request(target, opts, proxyRes => {
+    res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
+    proxyRes.pipe(res);
+  });
+  proxyReq.on('error', err => {
+    console.error('Appforge proxy error:', err.message);
     if (!res.headersSent) res.status(502).end();
   });
   if (req.body && Object.keys(req.body).length) {
