@@ -83,6 +83,25 @@ fn move_file(src: String, dest: String) -> Result<(), String> {
     fs::rename(src, dest).map_err(|e| e.to_string())
 }
 
+#[command]
+fn prefetch_files(paths: Vec<String>) -> Result<(), String> {
+    let cache_env = std::env::var("PHILLOS_CACHE_DIR").unwrap_or_else(|_| "cache".into());
+    let mut cache_dir = PathBuf::from(cache_env);
+    if cache_dir.is_relative() {
+        cache_dir = std::env::current_dir().map_err(|e| e.to_string())?.join(cache_dir);
+    }
+    cache_dir = normalize_path(cache_dir);
+    fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
+    for p in paths {
+        let src = ensure_safe_path(&p)?;
+        if let Some(name) = Path::new(&src).file_name() {
+            let dest = cache_dir.join(name);
+            let _ = fs::copy(src, dest);
+        }
+    }
+    Ok(())
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEvent {
@@ -188,6 +207,7 @@ fn main() {
             list_dir,
             copy_file,
             move_file,
+            prefetch_files,
             save_event,
             load_events,
             call_scheduler,
@@ -241,5 +261,21 @@ mod tests {
         assert!(copy_file(outside_dir.join("a.txt").to_string_lossy().into(), "b.txt".into()).is_err());
         assert!(move_file("b.txt".into(), outside_dir.join("c.txt").to_string_lossy().into()).is_err());
         assert!(smart_tags(outside_dir.join("a.txt").to_string_lossy().into()).is_err());
+    }
+
+    #[test]
+    fn prefetch_files_copies_to_cache() {
+        let dir = tempdir().unwrap();
+        let base = dir.path().join("base");
+        let cache = dir.path().join("cache");
+        std::fs::create_dir(&base).unwrap();
+        std::env::set_var("PHILLOS_STORAGE_DIR", &base);
+        std::env::set_var("PHILLOS_CACHE_DIR", &cache);
+
+        let src = base.join("a.txt");
+        std::fs::write(&src, b"hi").unwrap();
+
+        prefetch_files(vec!["a.txt".into()]).unwrap();
+        assert!(cache.join("a.txt").exists());
     }
 }
