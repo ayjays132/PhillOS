@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/tauri';
 import { readTextFile } from '@tauri-apps/api/fs';
 import { fileTagService } from '../../services/fileTagService';
+import { predictSyncService } from '../../services/predictSyncService';
 import { AppPanel } from '../../components/layout/AppPanel';
 
 interface FsEntry {
@@ -46,6 +47,12 @@ export const Vault: React.FC = () => {
 
   useEffect(() => {
     fetchDir('.').then(children => setRoot({ name: '.', path: '.', isDir: true, children }));
+    const preload = async () => {
+      await predictSyncService.prefetchRecent();
+    };
+    preload();
+    const id = setInterval(preload, 60000);
+    return () => clearInterval(id);
   }, []);
 
   const handleSelect = async (node: FileNode) => {
@@ -58,6 +65,7 @@ export const Vault: React.FC = () => {
         setRoot(r => (r ? { ...r } : r));
       }
     } else {
+      await predictSyncService.recordAccess(node.path);
       try {
         const text = await readTextFile(node.path);
         setPreview(text.slice(0, 200));

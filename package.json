@@ -42,7 +42,8 @@
     "remark-gfm": "^4.0.1",
     "serialport": "^13.0.0",
     "@tauri-apps/api": "^1.6.0",
-    "better-sqlite3": "^9.0.0"
+    "better-sqlite3": "^9.0.0",
+    "idb": "^7.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
@@ -57,6 +58,7 @@
     "vite-plugin-pwa": "^1.0.0",
     "vitest": "^3.2.4",
     "supertest": "^6.3.4",
-    "vite-plugin-static-copy": "^1.5.0"
+    "vite-plugin-static-copy": "^1.5.0",
+    "fake-indexeddb": "^4.0.2"
   }
 }
