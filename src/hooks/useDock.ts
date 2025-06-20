@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { NavItem } from '../types';
 import { storageService } from '../../services/storageService';
-import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail, BrainCircuit, Phone, CalendarDays } from 'lucide-react';
+import { Settings, Files, BotMessageSquare, LayoutGrid, MonitorPlay, Mail, BrainCircuit, Phone, FlaskConical } from 'lucide-react';
 
 export const EXTERNAL_ITEM_TYPE = 'NEW_DOCK_ITEM';
 
@@ -13,6 +13,7 @@ const DEFAULT_ITEMS: NavItem[] = [
   { id: 'mail', label: 'Mail', path: '/mail', icon: Mail },
   { id: 'gaming', label: 'Gaming', path: '/gaming', icon: MonitorPlay },
   { id: 'timeai', label: 'TimeAI', path: '/timeai', icon: CalendarDays },
+  { id: 'genlab', label: 'GenLab', path: '/genlab', icon: FlaskConical },
   { id: 'phone', label: 'Phone', path: '/phone', icon: Phone },
   { id: 'settings', label: 'Settings', path: '/settings', icon: Settings },
 ];

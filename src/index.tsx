@@ -9,6 +9,7 @@ import { CloudSyncProvider } from './contexts/CloudSyncContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { PhoneProvider } from './contexts/PhoneContext';
 import { MemoryHubProvider } from './contexts/MemoryHubContext';
+import { BrainPadProvider } from './contexts/BrainPadContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -27,7 +28,9 @@ const renderApp = () => (
           <ThemeProvider>
             <PhoneProvider>
               <MemoryHubProvider>
-                <App />
+                <BrainPadProvider>
+                  <App />
+                </BrainPadProvider>
               </MemoryHubProvider>
             </PhoneProvider>
           </ThemeProvider>
