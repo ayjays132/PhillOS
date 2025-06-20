@@ -6,6 +6,8 @@ import { URL } from 'url';
 import { createProtonLauncher } from './protonLauncher.js';
 
 const SETTINGS_FILE = path.resolve(__dirname, 'protonSettings.json');
+const STORAGE_DIR = process.env.PHILLOS_STORAGE_DIR || path.resolve(__dirname, '../storage');
+const THEME_FILE = path.join(STORAGE_DIR, 'theme.cfg');
 
 function loadSettings() {
   try {
@@ -17,6 +19,23 @@ function loadSettings() {
 
 function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
+}
+
+function loadTheme() {
+  try {
+    return fs.readFileSync(THEME_FILE, 'utf8').trim();
+  } catch {
+    return 'dark';
+  }
+}
+
+function saveTheme(theme) {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    fs.writeFileSync(THEME_FILE, theme);
+  } catch {
+    // ignore
+  }
 }
 
 const app = express();
@@ -71,6 +90,19 @@ app.post('/api/launch-proton', async (req, res) => {
     const message = err instanceof Error ? err.message : 'Failed to launch';
     res.status(500).json({ error: message });
   }
+});
+
+app.get('/api/theme', (req, res) => {
+  res.json({ theme: loadTheme() });
+});
+
+app.post('/api/theme', (req, res) => {
+  const { theme } = req.body || {};
+  if (theme !== 'light' && theme !== 'dark') {
+    return res.status(400).json({ error: 'invalid theme' });
+  }
+  saveTheme(theme);
+  res.json({ success: true });
 });
 
 const PORT = process.env.PORT || 3001;
