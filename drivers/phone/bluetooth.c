@@ -1,5 +1,6 @@
 #include "bluetooth.h"
 #include "../../kernel/debug.h"
+#include "../driver_manager.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -10,6 +11,17 @@
 #include <bluetooth/hci_lib.h>
 
 static int bt_up = 0;
+
+static int bluetooth_match(const pci_device_t *dev)
+{
+    return dev->class_code == 0x0D && dev->subclass == 0x10; // Wireless Bluetooth
+}
+
+static void bluetooth_pnp_init(const pci_device_t *dev)
+{
+    (void)dev;
+    init_bluetooth();
+}
 
 void init_bluetooth(void)
 {
@@ -58,3 +70,9 @@ int bluetooth_start_pairing(const char *name)
     close(sock);
     return 0;
 }
+
+driver_t bluetooth_pnp_driver = {
+    .name = "Bluetooth",
+    .match = bluetooth_match,
+    .init = bluetooth_pnp_init,
+};

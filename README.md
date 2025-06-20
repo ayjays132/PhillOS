@@ -468,16 +468,22 @@ Basic phone integration requires the following hardware:
 - SIM card slot connected to a compatible modem
 - Bluetooth 4.0 or newer controller
 
-Before running the phone bridge you must build the native helper library:
+Before running the phone bridge you must build the native helper library which
+contains the Bluetooth and modem drivers. Install `libbluetooth-dev` before
+building:
 
 ```bash
 make -C drivers/phone
 cp drivers/phone/libphone.so .
 ```
 
-The service expects `libphone.so` next to `package.json`.
+Copy the resulting `libphone.so` next to `package.json` so the service can load
+it at startup.
 
-The drivers under `drivers/phone/` are only stubs. Building the OS with these files included will not enable real phone functionality yet, but a Node service in `services/phoneBridge/` can relay calls, SMS and notifications from a paired phone. Start it with:
+The phone drivers now talk to real hardware and also register with the kernel's
+driver manager when the OS boots. Outside of the OS you can use the companion
+Node service in `services/phoneBridge/` to relay calls, SMS and notifications
+over Bluetooth. Start it with:
 
 ```bash
 npm run phone-bridge
