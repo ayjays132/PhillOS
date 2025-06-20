@@ -24,6 +24,21 @@ the agent subsystem. `AGENT_MEMORY_PAGES` defines how many 4&nbsp;KiB pages are
 set aside and these can be accessed through `agent_alloc()` and
 `agent_free()`.
 
+## CLI Integration with Boot Components
+
+The TypeScript-based `phillos-cli` utility can tweak boot parameters and read
+debug output from the kernel. When the OS is launched in QEMU, the CLI may
+append options like `ai_mem=256` to the EFI command line. The bootloader parses
+this value in `parse_ai_pages()` and reserves additional pages for the agent
+heap before transferring control to the kernel. The resulting memory address and
+the raw command line are stored in `boot_info_t` for `kernel_main()` to consume.
+
+Kernel debug strings are written to I/O port `0xE9` by helpers in
+`kernel/debug.c`. Running QEMU with `-debugcon stdio` allows the CLI to capture
+this stream and issue diagnostics. Developers can implement a lightweight hook
+such as `void cli_command(const char *line)` that reacts to messages received on
+the debug channel—for example printing heap statistics or toggling log levels.
+
 ## Kernel Architecture
 
 PhillOS envisions a single **AI‑native kernel** that integrates machine‑learning models for dynamic resource allocation, intelligent process scheduling, and self‑healing. Memory management and task prioritization adapt to predicted user needs. A responsive UI layer sits above this kernel, scaling across phones, desktops, and other devices.
