@@ -5,6 +5,24 @@ import { memoryHubService } from './memoryHubService';
 import { agentOrchestrator } from './agentOrchestrator';
 import { pipeline } from '@xenova/transformers';
 
+async function loadWasmSummarizer() {
+  try {
+    const mod = await import('@/wasm/summarizer');
+    return await mod.loadSummarizer();
+  } catch {
+    return null;
+  }
+}
+
+async function loadWasmClassifier() {
+  try {
+    const mod = await import('@/wasm/classifier');
+    return await mod.loadClassifier();
+  } catch {
+    return null;
+  }
+}
+
 let summarizer: any = null;
 let classifier: any = null;
 
@@ -55,7 +73,10 @@ export async function* sendModelMessageStream(
 
 export const summarize = async (text: string): Promise<string> => {
   if (!summarizer) {
-    summarizer = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6');
+    summarizer = await loadWasmSummarizer();
+    if (!summarizer) {
+      summarizer = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6');
+    }
   }
   const result = await summarizer(text);
   return Array.isArray(result) ? result[0].summary_text : result.summary_text;
@@ -66,7 +87,10 @@ export const tagText = async (
   labels: string[]
 ): Promise<string[]> => {
   if (!classifier) {
-    classifier = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
+    classifier = await loadWasmClassifier();
+    if (!classifier) {
+      classifier = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
+    }
   }
   const result = await classifier(text, { candidate_labels: labels });
   return (result.labels as string[]).slice(0, 3);
