@@ -1,8 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+let tagText: any;
+
+vi.mock('../../services/modelManager', () => {
+  tagText = vi.fn();
+  return { tagText };
+});
+
 describe('inboxAIService', () => {
   beforeEach(() => {
     vi.resetModules();
+    tagText.mockResolvedValue(['important']);
   });
 
   it('getMessages fetches list', async () => {
@@ -29,5 +37,13 @@ describe('inboxAIService', () => {
       body: JSON.stringify({ id: 2 })
     });
     expect(res).toBe('hi');
+  });
+
+  it('scores messages with tagText', async () => {
+    const { inboxAIService } = await import('../../services/inboxAIService');
+    const msg = { id: 1, from: 'a', subject: 's', body: 'b' };
+    const score = await inboxAIService.scoreMessage(msg);
+    expect(tagText).toHaveBeenCalled();
+    expect(score).toBe(1);
   });
 });

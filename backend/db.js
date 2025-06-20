@@ -16,7 +16,7 @@ export function initDb() {
   db = new Database(DB_FILE);
   db.pragma('journal_mode = WAL');
   db.exec(`
-CREATE TABLE IF NOT EXISTS emails(id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, subject TEXT, body TEXT);
+CREATE TABLE IF NOT EXISTS emails(id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, subject TEXT, body TEXT, score REAL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS notes(id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT, created_at INTEGER);
 CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, completed INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS tags(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE);
@@ -24,9 +24,9 @@ CREATE TABLE IF NOT EXISTS preferences(key TEXT PRIMARY KEY, value TEXT);
 `);
   const count = db.prepare('SELECT COUNT(*) as c FROM emails').get().c || 0;
   if (count === 0) {
-    const stmt = db.prepare('INSERT INTO emails(sender,subject,body) VALUES (?,?,?)');
-    stmt.run('alice@example.com','Welcome to PhillOS','Thanks for trying PhillOS. Let us know what you think!');
-    stmt.run('bob@example.com','Meeting Tomorrow','Reminder about our meeting at 10am.');
+    const stmt = db.prepare('INSERT INTO emails(sender,subject,body,score) VALUES (?,?,?,?)');
+    stmt.run('alice@example.com','Welcome to PhillOS','Thanks for trying PhillOS. Let us know what you think!', 0);
+    stmt.run('bob@example.com','Meeting Tomorrow','Reminder about our meeting at 10am.', 0);
   }
   return db;
 }
