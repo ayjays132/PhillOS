@@ -109,3 +109,15 @@ Query the current heap usage:
 ```
 
 The command prints the number of bytes currently allocated on the kernel heap.
+
+### Testing the Memory Allocator
+
+A small test under `tests/kernel_memory/` links against `heap.c` and `alloc.c`
+to verify allocation and free logic. Build and run it with:
+
+```bash
+make -C tests/kernel_memory
+./tests/kernel_memory/heap_test
+```
+
+If the output is `kernel memory tests passed` the allocator behaved as expected.
