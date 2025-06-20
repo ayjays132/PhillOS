@@ -5,6 +5,7 @@ const DOCK_ITEMS_KEY = 'phillos_dock_items_v1';
 const PHONE_SETTINGS_KEY = 'phillos_phone_settings_v1';
 const MEMORY_WINDOWS_KEY = 'phillos_memory_windows_v1';
 const THEME_KEY = 'phillos-theme';
+const VOICE_ENGINE_KEY = 'phillos_voice_engine_v1';
 
 class StorageService {
   init() {
@@ -12,6 +13,7 @@ class StorageService {
     this.getWidgetOrder();
     this.getDockItems();
     this.getPhoneSettings();
+    this.getVoiceEngine();
   }
 
   getWidgetOrder(): WidgetOrder | null {
@@ -85,6 +87,24 @@ class StorageService {
   setMemoryWindows(windows: any[]) {
     try {
       localStorage.setItem(MEMORY_WINDOWS_KEY, JSON.stringify(windows));
+    } catch {
+      // ignore
+    }
+  }
+
+  getVoiceEngine(): 'web' | 'whisper' | 'auto' | null {
+    try {
+      const mode = localStorage.getItem(VOICE_ENGINE_KEY);
+      if (mode === 'web' || mode === 'whisper' || mode === 'auto') return mode as 'web' | 'whisper' | 'auto';
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  setVoiceEngine(engine: 'web' | 'whisper' | 'auto') {
+    try {
+      localStorage.setItem(VOICE_ENGINE_KEY, engine);
     } catch {
       // ignore
     }
