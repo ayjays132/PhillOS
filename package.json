@@ -10,6 +10,7 @@
     "server": "node backend/server.js",
     "phone-bridge": "node services/phoneBridge/server.js",
     "training-pipeline": "node services/trainingPipeline.ts",
+    "setup-db": "node scripts/setup-db.js",
     "test": "vitest run && go test ./... && cargo test --manifest-path src-tauri/Cargo.toml && pytest -q",
     "lint": "eslint \"**/*.ts\" \"**/*.tsx\""
   },
