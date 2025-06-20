@@ -1,3 +1,6 @@
+import { createCloudChatSession, sendMessageStream, CloudProvider } from './cloudAIService';
+import { agentOrchestrator } from './agentOrchestrator';
+
 export interface BrainPadEntry {
   content: string;
   timestamp: number;
@@ -26,6 +29,23 @@ class BrainPadService {
     }
     if (typeof window !== 'undefined') {
       window.addEventListener('message', this.msgHandler);
+    }
+  }
+
+  async summarize(content: string, apiKey: string, provider: CloudProvider = 'gemini'): Promise<string[]> {
+    try {
+      const session = await createCloudChatSession(provider, apiKey);
+      if (!session) return [];
+      let text = '';
+      for await (const chunk of sendMessageStream(session, `Summarize the following note into concise bullet points:\n${content}`)) {
+        text += chunk;
+      }
+      return text
+        .split(/\n+/)
+        .map(l => l.replace(/^[-*•]\s*/, '').trim())
+        .filter(Boolean);
+    } catch {
+      return [];
     }
   }
 
@@ -63,8 +83,6 @@ class BrainPadService {
     }
   }
 }
-
-import { agentOrchestrator } from './agentOrchestrator';
 
 export const brainPadService = new BrainPadService();
 
