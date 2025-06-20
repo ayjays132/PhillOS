@@ -64,6 +64,24 @@ static EFI_STATUS load_file(EFI_HANDLE image, const CHAR16 *path, VOID **data, U
     return EFI_SUCCESS;
 }
 
+static EFI_STATUS load_svg_animation(EFI_HANDLE image, const CHAR16 *path,
+                                     VOID **data, UINTN *size) {
+    EFI_STATUS status = load_file(image, path, data, size);
+    if (EFI_ERROR(status))
+        return status;
+
+    if (*size < 8 ||
+        CompareMem((UINT8 *)(*data) + *size - 8, "PHILSVG", 8) != 0) {
+        BS->FreePool(*data);
+        *data = NULL;
+        *size = 0;
+        return EFI_LOAD_ERROR;
+    }
+
+    *size -= 8; /* strip trailer */
+    return EFI_SUCCESS;
+}
+
 EFI_STATUS load_boot_animation(EFI_HANDLE image, const char *cmdline,
                                VOID **svg_data, UINTN *svg_size,
                                VOID **sprite_data, UINTN *sprite_size) {
@@ -88,12 +106,12 @@ EFI_STATUS load_boot_animation(EFI_HANDLE image, const char *cmdline,
 
     EFI_STATUS status;
     if (use_sprite) {
-        status = load_file(image, L"\\EFI\\PHILLOS\\bootanim_sprite.svgz", sprite_data, sprite_size);
+        status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim_sprite.svgz", sprite_data, sprite_size);
     } else {
-        status = load_file(image, L"\\EFI\\PHILLOS\\bootanim.svgz", svg_data, svg_size);
+        status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim.svgz", svg_data, svg_size);
         if (EFI_ERROR(status)) {
             /* fallback to sprite if SVG missing */
-            status = load_file(image, L"\\EFI\\PHILLOS\\bootanim_sprite.svgz", sprite_data, sprite_size);
+            status = load_svg_animation(image, L"\\EFI\\PHILLOS\\bootanim_sprite.svgz", sprite_data, sprite_size);
         }
     }
     return status;
