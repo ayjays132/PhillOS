@@ -139,6 +139,46 @@ app.get('/api/weblens/summarize', (req, res) => {
   res.json({ summary: `Summary of ${url}` });
 });
 
+// --- MediaSphere ---
+app.get('/api/mediasphere/media', (req, res) => {
+  res.json({ items: [] });
+});
+
+// --- SoundScape ---
+app.get('/api/soundscape/tracks', (req, res) => {
+  res.json({ tracks: [] });
+});
+
+// --- VisionVault ---
+app.get('/api/visionvault/images', (req, res) => {
+  res.json({ images: [] });
+});
+
+// --- SecureCore ---
+app.post('/api/securecore/scan', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// --- AppForge ---
+app.post('/api/appforge/build', (req, res) => {
+  res.json({ success: true });
+});
+
+// --- SpaceManager ---
+app.get('/api/spacemanager/usage', (req, res) => {
+  res.json({ used: 0, total: 0 });
+});
+
+// --- Pulse Monitor ---
+app.get('/api/pulsemonitor/status', (req, res) => {
+  res.json({ bpm: 72 });
+});
+
+// --- BrainPad ---
+app.get('/api/brainpad/entries', (req, res) => {
+  res.json({ entries: [] });
+});
+
 const PORT = process.env.PORT || 3001;
 if (!process.env.VITEST) {
   app.listen(PORT, () => {
