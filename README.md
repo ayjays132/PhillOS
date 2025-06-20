@@ -137,9 +137,9 @@ Game controllers can navigate these elements with the arrow keys or D‑pad and 
 
 ## Voice Interaction
 
-PhillOS includes optional voice input and output for the AI CoPilot. The widget features a microphone button that toggles speech recognition using the browser's built-in Web Speech API. When enabled, spoken phrases are transcribed into the chat input field. After the model responds, the reply is read aloud using speech synthesis.
+PhillOS includes optional voice input and output for the AI CoPilot. The widget features a microphone button that toggles speech recognition. By default it uses the browser's Web Speech API, but if unsupported or if the preference `phillos_voice_mode` is set to `whisper`, recorded audio will be transcribed locally using Whisper through `@xenova/transformers`. Spoken phrases are inserted into the chat input and replies are read aloud using speech synthesis.
 
-Most modern browsers support these APIs, but they may require an HTTPS context and user permission. If voice features are unavailable, the microphone button will have no effect.
+Whisper mode requires a one-time model download of about 150 MB which is cached for future sessions. Most modern browsers support the required features, though they may need an HTTPS context and user permission. If voice features are unavailable, the microphone button will have no effect.
 
 ## Theme Switching
 
