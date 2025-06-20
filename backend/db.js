@@ -31,10 +31,10 @@ CREATE TABLE IF NOT EXISTS preferences(key TEXT PRIMARY KEY, value TEXT);
   return db;
 }
 
-export async function query(sql) {
-  return db.prepare(sql).all();
+export async function query(sql, params = []) {
+  return db.prepare(sql).all(params);
 }
 
-export async function execute(sql) {
-  db.prepare(sql).run();
+export async function execute(sql, params = []) {
+  db.prepare(sql).run(params);
 }

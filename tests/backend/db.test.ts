@@ -15,7 +15,7 @@ describe('db async api', () => {
   it('insert and query notes', async () => {
     const { initDb, query, execute } = await import('../../backend/db.js');
     initDb();
-    await execute("INSERT INTO notes(content, created_at) VALUES('test', 1)");
+    await execute('INSERT INTO notes(content, created_at) VALUES(?, ?)', ['test', 1]);
     const rows = await query('SELECT content, created_at FROM notes');
     expect(rows[0]).toEqual({ content: 'test', created_at: 1 });
   });
