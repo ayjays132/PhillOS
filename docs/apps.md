@@ -19,8 +19,8 @@ This document summarizes the demo applications bundled with the prototype. They 
 - **API:** `/api/pulsemonitor/status`
 
 ## VisionVault
-- **Purpose:** image gallery and SmartTags integration.
-- **API:** `/api/visionvault/images`
+- **Purpose:** image gallery with SmartTags and AR capabilities.
+- **API:** `/api/visionvault/images`, `/api/visionvault/index`, `/api/visionvault/enhance`, `/api/visionvault/ar_memories`
 
 ## SpaceManager
 - **Purpose:** show disk usage information.
