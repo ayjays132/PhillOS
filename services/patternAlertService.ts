@@ -1,25 +1,59 @@
 import { SystemMetrics } from './modelManager';
+import { getProfile, saveProfile } from '../backend/db.js';
+
+type MetricKey = 'bpm' | 'load' | 'memory' | 'threat';
+
+interface Profile {
+  count: number;
+  mean: Record<MetricKey, number>;
+  variance: Record<MetricKey, number>;
+}
 
 class PatternAlertService {
-  private history: SystemMetrics[] = [];
-  private maxHistory = 60;
+  private profile: Profile = {
+    count: 0,
+    mean: { bpm: 0, load: 0, memory: 0, threat: 0 },
+    variance: { bpm: 0, load: 0, memory: 0, threat: 0 },
+  };
 
-  process(m: SystemMetrics): number {
-    this.history.push(m);
-    if (this.history.length > this.maxHistory) this.history.shift();
-    if (this.history.length < 5) return 0;
-    const keys: (keyof SystemMetrics)[] = ['bpm', 'load', 'memory', 'threat'];
-    const scores = keys.map(k => this.zScore(k, m[k]));
+  async loadProfile() {
+    const data = await getProfile('pattern_profile');
+    if (data) this.profile = data as Profile;
+  }
+
+  private async persist() {
+    await saveProfile('pattern_profile', this.profile);
+  }
+
+  train(m: SystemMetrics) {
+    const keys: MetricKey[] = ['bpm', 'load', 'memory', 'threat'];
+    const p = this.profile;
+    const n = p.count + 1;
+    keys.forEach(k => {
+      const delta = m[k] - p.mean[k];
+      p.mean[k] += delta / n;
+      p.variance[k] += delta * (m[k] - p.mean[k]);
+    });
+    p.count = n;
+    this.persist().catch(() => {});
+  }
+
+  predict(m: SystemMetrics): number {
+    if (this.profile.count < 5) return 0;
+    const keys: MetricKey[] = ['bpm', 'load', 'memory', 'threat'];
+    const scores = keys.map(k => {
+      const mean = this.profile.mean[k];
+      const variance = this.profile.variance[k] / this.profile.count;
+      const sd = Math.sqrt(variance) || 1;
+      return (m[k] - mean) / sd;
+    });
     const max = Math.max(...scores.map(s => Math.abs(s)));
-    // scale to 0..1 using typical 3-sigma range
     return Math.min(1, max / 3);
   }
 
-  private zScore(key: keyof SystemMetrics, value: number): number {
-    const vals = this.history.map(h => h[key]);
-    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-    const sd = Math.sqrt(vals.reduce((a, b) => a + (b - avg) ** 2, 0) / vals.length) || 1;
-    return (value - avg) / sd;
+  process(m: SystemMetrics): number {
+    this.train(m);
+    return this.predict(m);
   }
 }
 

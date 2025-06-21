@@ -75,6 +75,18 @@ describe('backend server theme API', () => {
     expect(res.body).toEqual({ score: 66 });
   });
 
+  it('trains and predicts anomaly score', async () => {
+    const { default: app } = await import('../../backend/server.js');
+    let res = await request(app)
+      .post('/api/securecore/train')
+      .send({ metrics: { bpm: 70, load: 0.1, memory: 0.2, threat: 0 } });
+    expect(res.body).toEqual({ success: true });
+    res = await request(app)
+      .post('/api/securecore/predict')
+      .send({ metrics: { bpm: 120, load: 1, memory: 0.2, threat: 0 } });
+    expect(res.body.score).toBeGreaterThan(0);
+  });
+
   it('blocks high risk executables', async () => {
     const fsMock = { readFileSync: vi.fn(() => '{}'), writeFileSync: vi.fn(), mkdirSync: vi.fn() };
     vi.doMock('fs', () => ({ default: fsMock }));

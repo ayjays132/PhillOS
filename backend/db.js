@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS notes(id INTEGER PRIMARY KEY AUTOINCREMENT, content T
 CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, completed INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS tags(path TEXT PRIMARY KEY, tags TEXT);
 CREATE TABLE IF NOT EXISTS preferences(key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS profiles(name TEXT PRIMARY KEY, data TEXT);
 `);
   const count = db.prepare('SELECT COUNT(*) as c FROM emails').get().c || 0;
   if (count === 0) {
@@ -37,4 +38,16 @@ export async function query(sql, params = []) {
 
 export async function execute(sql, params = []) {
   db.prepare(sql).run(params);
+}
+
+export async function getProfile(name) {
+  const row = db.prepare('SELECT data FROM profiles WHERE name=?').get(name);
+  return row && row.data ? JSON.parse(row.data) : null;
+}
+
+export async function saveProfile(name, data) {
+  const text = JSON.stringify(data);
+  db.prepare(
+    'INSERT INTO profiles(name,data) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET data=?'
+  ).run(name, text, text);
 }

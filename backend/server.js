@@ -171,6 +171,9 @@ app.use(express.json());
 const server = createServer(app);
 
 initDb();
+patternAlertService.loadProfile().catch(err => {
+  console.error('Failed to load pattern profile', err);
+});
 
 const PHONE_BRIDGE_URL = process.env.PHONE_BRIDGE_URL || 'http://localhost:3002';
 const PROXY_TIMEOUT = Number(process.env.PHONE_BRIDGE_TIMEOUT || 2000);
@@ -673,6 +676,30 @@ app.get('/api/securecore/threat', (req, res) => {
 
 app.get('/api/securecore/threatpredict', (req, res) => {
   res.json({ score: threatPredictScore });
+});
+
+app.post('/api/securecore/train', (req, res) => {
+  const metrics = req.body?.metrics;
+  if (!metrics) return res.status(400).json({ error: 'metrics required' });
+  try {
+    patternAlertService.train(metrics);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('train error', err);
+    res.status(500).json({ error: 'train failed' });
+  }
+});
+
+app.post('/api/securecore/predict', (req, res) => {
+  const metrics = req.body?.metrics;
+  if (!metrics) return res.status(400).json({ error: 'metrics required' });
+  try {
+    const score = patternAlertService.predict(metrics);
+    res.json({ score });
+  } catch (err) {
+    console.error('predict error', err);
+    res.status(500).json({ error: 'predict failed' });
+  }
 });
 
 app.post('/api/autopatch/run', (req, res) => {
