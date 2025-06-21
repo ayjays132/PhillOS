@@ -16,6 +16,12 @@ CURSOR_DARK_SRC ?= cursor_dark.svg
 CURSOR_LIGHT ?= $(OUT_DIR)/cursor_light.svgz
 CURSOR_DARK ?= $(OUT_DIR)/cursor_dark.svgz
 
+# Optional eBPF objects to include in the boot image
+INCLUDE_BPF ?= 0
+BPF_DIR ?= bpf
+BPF_OBJECTS ?= anomaly.bpf.o
+BPF_FILES := $(addprefix $(BPF_DIR)/,$(BPF_OBJECTS))
+
 # Secure Boot signing
 SIGN_KEY ?= keys/db.key
 SIGN_CERT ?= keys/db.crt
@@ -121,19 +127,23 @@ $(CURSOR_LIGHT): $(CURSOR_LIGHT_SRC) | $(OUT_DIR)
 $(CURSOR_DARK): $(CURSOR_DARK_SRC) | $(OUT_DIR)
         python3 ../scripts/embed_svg.py $< $@
 # EFI System Partition image
-$(ESP_IMG): $(SIGNED_BOOTLOADER) $(KERNEL_ELF) $(BOOTANIM) $(CURSOR_LIGHT) $(CURSOR_DARK) | $(OUT_DIR)
+$(ESP_IMG): $(SIGNED_BOOTLOADER) $(KERNEL_ELF) $(BOOTANIM) $(CURSOR_LIGHT) $(CURSOR_DARK) $(BPF_FILES) | $(OUT_DIR)
 	rm -f $@
 	dd if=/dev/zero of=$@ bs=1M count=64
 	mkfs.fat -n PHILLOS $@
 	mkdir -p $(OUT_DIR)/esp/EFI/BOOT
 	mkdir -p $(OUT_DIR)/esp/EFI/PHILLOS
-	cp $(SIGNED_BOOTLOADER) $(OUT_DIR)/esp/EFI/BOOT/BOOTX64.EFI
-	cp $(KERNEL_ELF) $(OUT_DIR)/esp/EFI/PHILLOS/
+        cp $(SIGNED_BOOTLOADER) $(OUT_DIR)/esp/EFI/BOOT/BOOTX64.EFI
+        cp $(KERNEL_ELF) $(OUT_DIR)/esp/EFI/PHILLOS/
         cp $(BOOTANIM) $(OUT_DIR)/esp/EFI/PHILLOS/
         cp $(CURSOR_LIGHT) $(OUT_DIR)/esp/EFI/PHILLOS/
         cp $(CURSOR_DARK) $(OUT_DIR)/esp/EFI/PHILLOS/
-	mcopy -s -i $@ $(OUT_DIR)/esp/* ::/
-	rm -rf $(OUT_DIR)/esp
+ifneq ($(INCLUDE_BPF),0)
+        mkdir -p $(OUT_DIR)/esp/lib/phillos
+        cp $(BPF_FILES) $(OUT_DIR)/esp/lib/phillos/
+endif
+        mcopy -s -i $@ $(OUT_DIR)/esp/* ::/
+        rm -rf $(OUT_DIR)/esp
 
 iso: $(ESP_IMG)
 	grub-mkrescue -o $(ISO) $(ESP_IMG)
