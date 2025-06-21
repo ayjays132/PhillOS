@@ -36,3 +36,25 @@ func TestHandleCompare(t *testing.T) {
         t.Fatalf("expected response, got %+v", resp)
     }
 }
+
+// Test offline scenario when ollama is missing
+func TestHandleCompareOffline(t *testing.T) {
+    oldPath := os.Getenv("PATH")
+    os.Setenv("PATH", "")
+    defer os.Setenv("PATH", oldPath)
+
+    req := httptest.NewRequest(http.MethodPost, "/api/genlab/compare", strings.NewReader(`{"prompt":"hi"}`))
+    w := httptest.NewRecorder()
+    handleCompare(w, req)
+
+    if w.Code != http.StatusOK {
+        t.Fatalf("status %d", w.Code)
+    }
+    var resp compareResponse
+    if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+        t.Fatal(err)
+    }
+    if resp.A != "" || resp.B != "" {
+        t.Fatalf("expected empty strings when ollama missing, got %+v", resp)
+    }
+}

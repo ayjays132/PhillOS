@@ -49,6 +49,8 @@ Both commands should succeed. If not, review your install steps or adjust your e
 
 Before the first build run `./scripts/setup-vkd3d.sh` to fetch the vkd3d-proton sources. They are cached under `external/vkd3d` so subsequent builds work offline.
 
+For offline installations you can also pre-download the Proton runtime. Place a `<version>.tar.gz` archive in the directory specified by `PHILLOS_CACHE_DIR` (defaults to `cache/`) and set `PROTON_DOWNLOAD_URL` to `file://$PHILLOS_CACHE_DIR/<version>.tar.gz`. The launcher will extract the archive without contacting the network. The helper script `./scripts/setup-proton.sh` downloads and verifies the file for you.
+
 If you plan to use the WASM AI models, compile them once before building the
 rest of the project:
 
