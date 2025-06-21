@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-import sys, subprocess, tempfile, os
-
-def fnv1a64(data: bytes) -> bytes:
-    h = 0xcbf29ce484222325
-    for b in data:
-        h ^= b
-        h = (h * 0x100000001b3) & 0xffffffffffffffff
-    return h.to_bytes(8, 'big')
+import sys, subprocess, tempfile, os, hashlib
 
 if len(sys.argv) != 3:
     print("Usage: sign_module.py <private-key.pem> <module.ko>")
@@ -16,7 +9,8 @@ key, module = sys.argv[1], sys.argv[2]
 with open(module, 'rb') as f:
     data = f.read()
 
-digest = fnv1a64(data)
+# SHA-256 digest of the module contents
+digest = hashlib.sha256(data).digest()
 with tempfile.NamedTemporaryFile(delete=False) as tf:
     tf.write(digest)
     tf.flush()
