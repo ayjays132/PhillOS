@@ -59,3 +59,51 @@ uint32_t fb_get_pitch(void) { return fb_pitch; }
 
 // GPU vendor detection implemented in gpu.c.
 // Future work will load vendor-specific drivers based on the detected GPU.
+
+void fb_draw_line(uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1,
+                  uint32_t color)
+{
+    if (!fb_ptr)
+        return;
+
+    int dx = (int)x1 - (int)x0;
+    int dy = (int)y1 - (int)y0;
+    int sx = dx >= 0 ? 1 : -1;
+    int sy = dy >= 0 ? 1 : -1;
+    dx = dx >= 0 ? dx : -dx;
+    dy = dy >= 0 ? dy : -dy;
+
+    int err = (dx > dy ? dx : -dy) / 2;
+    while (1) {
+        fb_draw_pixel(x0, y0, color);
+        if (x0 == x1 && y0 == y1)
+            break;
+        int e2 = err;
+        if (e2 > -dx) { err -= dy; x0 += sx; }
+        if (e2 < dy)  { err += dx; y0 += sy; }
+    }
+}
+
+void fb_fill_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h,
+                  uint32_t color)
+{
+    if (!fb_ptr)
+        return;
+
+    for (uint32_t j = 0; j < h; j++) {
+        if (y + j >= fb_height)
+            break;
+        uint32_t *row = (uint32_t*)(fb_ptr + ((y + j) * fb_pitch + x) * 4);
+        for (uint32_t i = 0; i < w && x + i < fb_width; i++)
+            row[i] = color;
+    }
+}
+
+void fb_draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h,
+                  uint32_t color)
+{
+    fb_draw_line(x, y, x + w - 1, y, color);
+    fb_draw_line(x, y, x, y + h - 1, color);
+    fb_draw_line(x + w - 1, y, x + w - 1, y + h - 1, color);
+    fb_draw_line(x, y + h - 1, x + w - 1, y + h - 1, color);
+}
