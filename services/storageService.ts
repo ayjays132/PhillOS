@@ -1,5 +1,6 @@
 import { NavItem, WidgetOrder, PhoneSettings } from '../types';
 import { agentOrchestrator } from './agentOrchestrator';
+import { cursorService } from '../src/services/cursorService';
 
 const WIDGET_ORDER_KEY = 'phillos_widget_order';
 const DOCK_ITEMS_KEY = 'phillos_dock_items_v1';
@@ -15,6 +16,7 @@ class StorageService {
     this.getDockItems();
     this.getPhoneSettings();
     this.getVoiceEngine();
+    cursorService.getCursor();
   }
 
   getWidgetOrder(): WidgetOrder | null {

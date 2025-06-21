@@ -83,6 +83,11 @@ export const ConversationalSettingsView: React.FC = () => {
                 AI Settings
               </Link>
             </p>
+            <p className="mt-1">
+              <Link to="/settings/cursor" className="text-cyan-300 hover:underline">
+                Cursor Settings
+              </Link>
+            </p>
           </div>
         )}
         {messages.map((msg) => (

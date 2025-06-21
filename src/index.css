@@ -3,11 +3,16 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --phillos-cursor: auto;
+  }
   html.theme-dark body {
     @apply bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white/90 antialiased;
+    cursor: var(--phillos-cursor), auto;
   }
   html.theme-light body {
     @apply bg-gradient-to-br from-white via-gray-200 to-blue-300 text-gray-900 antialiased;
+    cursor: var(--phillos-cursor), auto;
   }
 }
 @layer utilities {
