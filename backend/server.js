@@ -13,7 +13,12 @@ import ffi from 'ffi-napi';
 import { patternAlertService } from '../services/patternAlertService';
 import { exec } from 'child_process';
 
-const STORAGE_DIR = path.resolve(process.env.PHILLOS_STORAGE_DIR || path.join(__dirname, '../storage'));
+const STORAGE_DIR = path.resolve(
+  process.env.PHILLOS_STORAGE_DIR || path.join(__dirname, '../storage'),
+);
+const APP_DIR = path.resolve(
+  process.env.PHILLOS_APP_DIR || path.join(__dirname, '../apps'),
+);
 const ALLOWED_FILES = new Set(['protonSettings.json', 'theme.cfg', 'cursor.cfg']);
 
 function sanitizeStoragePath(name) {
@@ -51,7 +56,12 @@ async function saveAIConfig(config) {
 
 function sanitizeUserPath(p) {
   if (typeof p !== 'string' || p.includes('\0')) throw new Error('invalid path');
-  return path.resolve(p);
+  const resolved = path.resolve(p);
+  const rel = path.relative(APP_DIR, resolved);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+    throw new Error('invalid path');
+  }
+  return resolved;
 }
 
 function loadSettings() {
@@ -792,4 +802,11 @@ if (!process.env.VITEST) {
 export default app;
 export function setThreatScore(score) { threatScore = score; }
 export function setThreatPredictScore(score) { threatPredictScore = score; }
-export { sanitizeUserPath, sanitizeStoragePath, STORAGE_DIR, loadAIConfig, saveAIConfig };
+export {
+  sanitizeUserPath,
+  sanitizeStoragePath,
+  STORAGE_DIR,
+  APP_DIR,
+  loadAIConfig,
+  saveAIConfig,
+};

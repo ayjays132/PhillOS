@@ -5,6 +5,7 @@ beforeEach(() => {
   vi.resetModules();
   process.env.VITEST = '1';
   process.env.PHILLOS_STORAGE_DIR = '/tmp/test-storage';
+  process.env.PHILLOS_APP_DIR = '/tmp/app';
 });
 
 describe('backend server theme API', () => {
@@ -60,6 +61,21 @@ describe('backend server theme API', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects exe paths outside app dir', async () => {
+    const fsMock = { readFileSync: vi.fn(() => '{}'), writeFileSync: vi.fn(), mkdirSync: vi.fn() };
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app)
+      .post('/api/launch-proton')
+      .send({ path: '/other/outside.exe' });
+    expect(res.status).toBe(400);
+  });
+
+  it('sanitizeUserPath rejects escaping paths', async () => {
+    const mod = await import('../../backend/server.js');
+    expect(() => mod.sanitizeUserPath('/outside/file.exe')).toThrow();
+  });
+
   it('returns current threat score', async () => {
     const { default: app, setThreatScore } = await import('../../backend/server.js');
     setThreatScore(55);
@@ -79,7 +95,9 @@ describe('backend server theme API', () => {
     vi.doMock('fs', () => ({ default: fsMock }));
     vi.doMock('../../backend/sandboxShield.js', () => ({ scoreExecutable: () => 90, RISK_THRESHOLD: 70 }));
     const { default: app } = await import('../../backend/server.js');
-    const res = await request(app).post('/api/launch-proton').send({ path: '/mal.exe' });
+    const res = await request(app)
+      .post('/api/launch-proton')
+      .send({ path: '/tmp/app/mal.exe' });
     expect(res.status).toBe(403);
   });
 });
