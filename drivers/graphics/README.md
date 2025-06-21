@@ -8,29 +8,30 @@ The `gpu.c` driver scans the PCI bus to identify attached display controllers.
 If the vendor ID matches Nvidia (`0x10DE`), AMD (`0x1002`), or Intel (`0x8086`),
 the detected vendor is returned for use by the kernel.
 
-## Future Vendor-Specific Drivers
+## Vendor-Specific Drivers
 
-Currently only a generic framebuffer is used. In the future the plan is to load
-specialized drivers based on the detected GPU vendor. Once a PCI scan
-identifies an Nvidia, AMD, or Intel device, a corresponding driver module will
-be loaded to provide accelerated graphics. Other vendors will fall back to the
-EFI framebuffer. This directory now contains stub driver structures for each
-vendor that will be expanded in later revisions.
+In addition to the generic framebuffer driver the tree now ships simple
+implementations for Nvidia, AMD and Intel GPUs. After a PCI scan identifies a
+supported device the matching source file programs a few common registers,
+selects an initial display mode and exposes hooks so the Vulkan loader can use
+the hardware. Unsupported vendors fall back to the EFI framebuffer.
 
 ## Initialization Flow
 
 `init_gpu_driver()` performs a PCI scan and selects a vendor specific driver
-when an Nvidia, AMD or Intel device is discovered.  Each driver stub now probes
-its device's BAR registers, maps the framebuffer region and then calls the
-generic `init_framebuffer()` helper so early graphics output continues to work.
-The active driver can be queried with `gpu_get_active_driver()`.
+when an Nvidia, AMD or Intel device is discovered.  The implementation now
+initializes the GPU's registers, configures the detected mode and exposes
+acceleration hooks so Vulkan or vkd3d can talk to the hardware. Each driver
+still maps the framebuffer BAR and calls the generic `init_framebuffer()` helper
+so early graphics output continues to work. The active driver can be queried
+with `gpu_get_active_driver()`.
 
 ## Supported Hardware
 
 PhillOS currently supports basic initialization for discrete Nvidia and AMD GPUs
-as well as integrated Intel graphics.  The drivers map the framebuffer BAR and
-enable a simple linear framebuffer.  Devices are matched solely by PCI vendor
-ID:
+as well as integrated Intel graphics. The drivers map the framebuffer BAR,
+program a handful of registers and expose Vulkan acceleration hooks. Devices are
+matched solely by PCI vendor ID:
 
 - Nvidia (`0x10DE`)
 - AMD/ATI (`0x1002`)

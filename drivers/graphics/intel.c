@@ -12,6 +12,26 @@ static int intel_match(const pci_device_t *dev)
 
 static const pci_device_t *intel_dev = NULL;
 
+static void intel_program_regs(void)
+{
+    debug_puts("Intel: programming registers\n");
+}
+
+static void intel_set_mode(uint32_t w, uint32_t h)
+{
+    debug_puts("Intel: set display mode ");
+    debug_puthex(w);
+    debug_putc('x');
+    debug_puthex(h);
+    debug_putc('\n');
+}
+
+static int intel_enable_vulkan(void)
+{
+    debug_puts("Intel: exposing Vulkan hooks\n");
+    return 0;
+}
+
 static void intel_hw_init(const pci_device_t *dev)
 {
     debug_puts("Initializing Intel GPU\n");
@@ -24,6 +44,7 @@ static void intel_hw_init(const pci_device_t *dev)
     debug_putc('\n');
 
     init_framebuffer(&boot_info_get()->fb);
+    intel_program_regs();
     gpu_set_active_driver(&intel_driver);
 }
 
@@ -42,6 +63,8 @@ static void intel_pnp_init(const pci_device_t *dev)
 gpu_driver_t intel_driver = {
     .vendor = GPU_VENDOR_INTEL,
     .init = intel_init,
+    .set_mode = intel_set_mode,
+    .enable_vulkan = intel_enable_vulkan,
 };
 
 driver_t intel_pnp_driver = {

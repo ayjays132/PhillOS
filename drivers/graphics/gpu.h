@@ -13,6 +13,8 @@ typedef enum {
 typedef struct {
     gpu_vendor_t vendor;
     void (*init)(void);
+    void (*set_mode)(uint32_t width, uint32_t height);
+    int  (*enable_vulkan)(void);
 } gpu_driver_t;
 
 gpu_vendor_t detect_gpu_vendor(void);
