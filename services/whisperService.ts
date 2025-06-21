@@ -41,3 +41,9 @@ export class WhisperService {
     });
   }
 }
+
+export const whisperService = new WhisperService();
+
+import { agentOrchestrator } from './agentOrchestrator';
+
+agentOrchestrator.registerAction('whisper.transcribe', params => whisperService.transcribe(params?.audio as Blob));

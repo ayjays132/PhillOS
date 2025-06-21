@@ -45,3 +45,7 @@ export class SoundAnalyzer {
 }
 
 export const soundAnalyzer = new SoundAnalyzer();
+
+import { agentOrchestrator } from './agentOrchestrator';
+
+agentOrchestrator.registerAction('sound.noise_level', params => soundAnalyzer.getNoiseLevel(Number(params?.duration || 500)));

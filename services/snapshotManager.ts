@@ -46,3 +46,9 @@ class SnapshotManager {
 }
 
 export const snapshotManager = new SnapshotManager();
+
+import { agentOrchestrator } from './agentOrchestrator';
+
+agentOrchestrator.registerAction('snapshot.list', () => snapshotManager.list());
+agentOrchestrator.registerAction('snapshot.add', params => snapshotManager.addSnapshot(String(params?.data || '')));
+agentOrchestrator.registerAction('snapshot.rollback', () => snapshotManager.rollback());

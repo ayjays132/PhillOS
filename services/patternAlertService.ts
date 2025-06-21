@@ -24,3 +24,7 @@ class PatternAlertService {
 }
 
 export const patternAlertService = new PatternAlertService();
+
+import { agentOrchestrator } from './agentOrchestrator';
+
+agentOrchestrator.registerAction('pattern.process', params => patternAlertService.process(params as SystemMetrics));

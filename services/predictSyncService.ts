@@ -39,3 +39,8 @@ class PredictSyncService {
 }
 
 export const predictSyncService = new PredictSyncService();
+
+import { agentOrchestrator } from './agentOrchestrator';
+
+agentOrchestrator.registerAction('predict.record_access', params => predictSyncService.recordAccess(String(params?.path || '')));
+agentOrchestrator.registerAction('predict.recent_files', params => predictSyncService.getRecentFiles(Number(params?.limit || 5)));
