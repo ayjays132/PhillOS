@@ -780,16 +780,34 @@ app.post('/api/tasks/:id/toggle', async (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/api/tags', async (req, res) => {
-  const tags = await query('SELECT id, name FROM tags');
+app.get('/api/filetags', async (req, res) => {
+  const p = req.query.path;
+  if (!p) return res.status(400).json({ error: 'path required' });
+  let file;
+  try {
+    file = sanitizeUserPath(String(p));
+  } catch {
+    return res.status(400).json({ error: 'invalid path' });
+  }
+  const row = (await query('SELECT tags FROM tags WHERE path=?', [file]))[0];
+  const tags = row && row.tags ? JSON.parse(row.tags) : [];
   res.json({ tags });
 });
 
-app.post('/api/tags', async (req, res) => {
-  const { name } = req.body || {};
-  if (!name) return res.status(400).json({ error: 'name required' });
-  const text = String(name);
-  await execute('INSERT OR IGNORE INTO tags(name) VALUES(?)', [text]);
+app.post('/api/filetags', async (req, res) => {
+  const { path: p, tags } = req.body || {};
+  if (!p) return res.status(400).json({ error: 'path required' });
+  let file;
+  try {
+    file = sanitizeUserPath(String(p));
+  } catch {
+    return res.status(400).json({ error: 'invalid path' });
+  }
+  const text = JSON.stringify(Array.isArray(tags) ? tags : []);
+  await execute(
+    'INSERT INTO tags(path, tags) VALUES(?, ?) ON CONFLICT(path) DO UPDATE SET tags=?',
+    [file, text, text],
+  );
   res.json({ success: true });
 });
 

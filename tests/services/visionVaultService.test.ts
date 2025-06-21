@@ -8,10 +8,15 @@ vi.mock('../../src/wasm/vision', () => ({
 
 beforeEach(() => {
   vi.resetModules();
-  (global as any).fetch = vi.fn(async () => ({
-    ok: true,
-    json: async () => ({ images })
-  }));
+  (global as any).fetch = vi.fn(async (url: string) => {
+    if (url.startsWith('/api/visionvault/images')) {
+      return { ok: true, json: async () => ({ images }) } as any;
+    }
+    if (url.startsWith('/api/filetags')) {
+      return { ok: true, json: async () => ({ tags: [] }) } as any;
+    }
+    return { ok: true, json: async () => ({}) } as any;
+  });
 });
 
 describe('visionVaultService', () => {

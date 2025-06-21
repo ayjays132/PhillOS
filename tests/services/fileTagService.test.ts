@@ -7,6 +7,12 @@ vi.mock('@tauri-apps/api/tauri', () => ({
 describe('fileTagService', () => {
   beforeEach(() => {
     vi.resetModules();
+    (global as any).fetch = vi.fn(async (url: string) => {
+      if (url.startsWith('/api/filetags')) {
+        return { ok: true, json: async () => ({ tags: [] }) } as any;
+      }
+      return { ok: true, json: async () => ({}) } as any;
+    });
   });
 
   it('calls smart_tags command', async () => {
@@ -18,6 +24,7 @@ describe('fileTagService', () => {
   it('returns empty array on error', async () => {
     const { invoke } = await import('@tauri-apps/api/tauri');
     (invoke as any).mockRejectedValue(new Error('fail'));
+    (global as any).fetch = vi.fn(async () => ({ ok: true, json: async () => ({ tags: [] }) }));
     const { fileTagService } = await import('../../services/fileTagService');
     const tags = await fileTagService.tagFile('x');
     expect(tags).toEqual([]);

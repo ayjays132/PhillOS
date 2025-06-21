@@ -43,6 +43,8 @@ Start the Go/Node server:
 ```bash
 npm run server
 ```
+If upgrading from an earlier version remove `storage/phillos.db` or run
+`npm run setup-db` to create the new shared tags table.
 
 ## Launch the Tauri Front-End
 

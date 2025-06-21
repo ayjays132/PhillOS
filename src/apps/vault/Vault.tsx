@@ -46,6 +46,7 @@ export const Vault: React.FC = () => {
   const [selected, setSelected] = useState<FileNode | null>(null);
   const [preview, setPreview] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export const Vault: React.FC = () => {
   const handleSelect = async (node: FileNode) => {
     setSelected(node);
     setTags([]);
+    setTagInput('');
     if (node.isDir) {
       if (!node.children) {
         const children = await fetchDir(node.path);
@@ -75,6 +77,9 @@ export const Vault: React.FC = () => {
       } catch {
         setPreview('Unable to preview file');
       }
+      const existing = await fileTagService.getTags(node.path);
+      setTags(existing);
+      setTagInput(existing.join(', '));
     }
   };
 
@@ -95,6 +100,15 @@ export const Vault: React.FC = () => {
     if (selected && !selected.isDir) {
       const t = await fileTagService.tagFile(selected.path);
       setTags(t);
+      setTagInput(t.join(', '));
+    }
+  };
+
+  const saveTags = async () => {
+    if (selected && !selected.isDir) {
+      const parts = tagInput.split(',').map(t => t.trim()).filter(Boolean);
+      await fileTagService.setTags(selected.path, parts);
+      setTags(parts);
     }
   };
 
@@ -190,8 +204,24 @@ export const Vault: React.FC = () => {
             </ul>
           </div>
         )}
-        {tags.length > 0 && (
-          <div className="mt-2 text-xs">Tags: {tags.join(', ')}</div>
+        {selected && !selected.isDir && (
+          <div className="mt-2 text-xs space-y-1">
+            <div>
+              <input
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                placeholder="tag1, tag2"
+                className="px-1 py-0.5 rounded text-black text-xs"
+              />
+              <button
+                onClick={saveTags}
+                className="ml-1 px-2 py-0.5 bg-blue-600 text-white rounded text-xs"
+              >
+                Save
+              </button>
+            </div>
+            {tags.length > 0 && <div>Tags: {tags.join(', ')}</div>}
+          </div>
         )}
       </GlassCard>
       </div>
