@@ -52,6 +52,17 @@ void fb_draw_pixel(uint32_t x, uint32_t y, uint32_t color)
     *pixel = color;
 }
 
+void fb_clear(uint32_t color)
+{
+    if (!fb_ptr)
+        return;
+    for (uint32_t y = 0; y < fb_height; y++) {
+        uint32_t *row = (uint32_t*)(fb_ptr + y * fb_pitch * 4);
+        for (uint32_t x = 0; x < fb_width; x++)
+            row[x] = color;
+    }
+}
+
 uint64_t fb_get_base(void) { return fb_base; }
 uint64_t fb_get_size(void) { return fb_size; }
 uint32_t fb_get_width(void) { return fb_width; }
@@ -107,6 +118,33 @@ void fb_draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h,
     fb_draw_line(x, y, x, y + h - 1, color);
     fb_draw_line(x + w - 1, y, x + w - 1, y + h - 1, color);
     fb_draw_line(x, y + h - 1, x + w - 1, y + h - 1, color);
+}
+
+void fb_draw_circle(uint32_t x0, uint32_t y0, uint32_t r, uint32_t color)
+{
+    if (!fb_ptr)
+        return;
+    int x = r;
+    int y = 0;
+    int err = 0;
+    while (x >= y) {
+        fb_draw_pixel(x0 + x, y0 + y, color);
+        fb_draw_pixel(x0 + y, y0 + x, color);
+        fb_draw_pixel(x0 - y, y0 + x, color);
+        fb_draw_pixel(x0 - x, y0 + y, color);
+        fb_draw_pixel(x0 - x, y0 - y, color);
+        fb_draw_pixel(x0 - y, y0 - x, color);
+        fb_draw_pixel(x0 + y, y0 - x, color);
+        fb_draw_pixel(x0 + x, y0 - y, color);
+        y++;
+        if (err <= 0) {
+            err += 2 * y + 1;
+        }
+        if (err > 0) {
+            x--;
+            err -= 2 * x + 1;
+        }
+    }
 }
 
 void fb_draw_char(uint32_t x, uint32_t y, char c,
