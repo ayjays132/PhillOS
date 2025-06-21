@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { spawn } from 'child_process';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createProtonLauncher } from '../backend/protonLauncher.ts';
 import { agentService } from '../services/agentService.ts';
@@ -30,6 +31,10 @@ export class PhillosTool {
             code === 0 ? resolve() : reject(new Error(`build.sh exited with code ${code}`));
           });
         });
+        const imgPath = new URL('../dist/bootloader/esp.img', import.meta.url).pathname;
+        if (!fs.existsSync(imgPath)) {
+          throw new Error('Build completed but esp.img not found');
+        }
       });
 
     program
