@@ -11,6 +11,7 @@ import { scoreExecutable, RISK_THRESHOLD } from './sandboxShield.js';
 import { initDb, query, execute } from './db.js';
 import ffi from 'ffi-napi';
 import { patternAlertService } from '../services/patternAlertService';
+import { researchMate } from '../services/researchMate';
 import { exec } from 'child_process';
 
 const STORAGE_DIR = path.resolve(process.env.PHILLOS_STORAGE_DIR || path.join(__dirname, '../storage'));
@@ -377,11 +378,13 @@ app.get('/api/weblens/summarize', async (req, res) => {
         /<meta[^>]*property=['"]article:published_time['"][^>]*content=['"]([^'"]+)['"]/i,
       ) || [null, '']
     )[1].trim();
-    const citations = Array.from(
+    const citationsRaw = Array.from(
       text.matchAll(/<a[^>]*href=['"]([^'"]+)['"][^>]*>(.*?)<\/a>/gi),
     )
       .slice(0, 5)
       .map(m => ({ text: m[2].replace(/<[^>]+>/g, ''), url: m[1] }));
+    const verified = await researchMate.verifyCitations(citationsRaw);
+    const citations = citationsRaw.map((c, i) => ({ ...c, verified: verified[i] }));
 
     res.json({
       summary: text.slice(0, 200),

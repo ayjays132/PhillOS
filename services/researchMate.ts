@@ -1,35 +1,39 @@
+import fs from 'fs/promises';
+import path from 'path';
 import { agentOrchestrator } from './agentOrchestrator';
 
-async function loadVerifier(): Promise<(text: string) => Promise<boolean>> {
+const KB_FILE = path.resolve('backend/citationKB.json');
+
+async function loadKB(): Promise<Record<string, boolean>> {
   try {
-    const mod = await import('../src/wasm/citation');
-    return await mod.loadCitationVerifier();
+    const data = await fs.readFile(KB_FILE, 'utf8');
+    return JSON.parse(data);
   } catch {
-    return async () => true;
+    return {};
   }
 }
 
 class ResearchMate {
-  private verifier: Promise<(text: string) => Promise<boolean>> | null = null;
+  private kb: Promise<Record<string, boolean>> | null = null;
 
-  private async ensure() {
-    if (!this.verifier) this.verifier = loadVerifier();
-    return this.verifier;
+  private async getKB() {
+    if (!this.kb) this.kb = loadKB();
+    return this.kb;
   }
 
-  async verifyCitation(text: string): Promise<boolean> {
-    const v = await this.ensure();
-    return v(text);
+  async verifyCitation(c: { text: string; url: string }): Promise<boolean> {
+    const kb = await this.getKB();
+    return !!kb[c.url];
   }
 
-  async verifyCitations(citations: { text: string; url: string }[]): Promise<boolean[]> {
-    const v = await this.ensure();
-    return Promise.all(citations.map(c => v(`${c.text} ${c.url}`)));
+  async verifyCitations(cs: { text: string; url: string }[]): Promise<boolean[]> {
+    const kb = await this.getKB();
+    return cs.map(c => !!kb[c.url]);
   }
 }
 
 export const researchMate = new ResearchMate();
 
 agentOrchestrator.registerAction('research.verify_citation', params =>
-  researchMate.verifyCitation(String(params?.text || '')),
+  researchMate.verifyCitation({ text: String(params?.text || ''), url: String(params?.url || '') }),
 );
