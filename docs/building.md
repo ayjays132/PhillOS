@@ -12,6 +12,11 @@ Ensure the following packages are installed on your system:
 - `dosfstools` (provides `mkfs.fat`)
 - `mtools` (provides `mcopy` and `mmd`)
 - `grub-mkrescue`
+- `nodejs` and `npm`
+- `rustc` and `cargo`
+- `@tauri-apps/cli` (install with `cargo install tauri-cli` or `npm i -g @tauri-apps/cli`)
+- `go` (for the backend server)
+- `python3`
 
 Package names vary by distribution. Example commands:
 

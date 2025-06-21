@@ -23,8 +23,19 @@ if [ -f bootloader/bootanim.svg ]; then
     python3 scripts/embed_svg.py bootloader/bootanim.svg dist/bootloader/bootanim.svgz
 fi
 
-# Build bootloader and kernel
+# Build bootloader and kernel image
 make -C bootloader OUT_DIR=../dist/bootloader
+
+# Compile kernel utilities
+if [ -f kernel/Makefile ]; then
+    make -C kernel
+fi
 
 # Build web UI
 npm run build
+
+# Build the Tauri backend when Cargo is available
+if command -v cargo >/dev/null 2>&1; then
+    cargo build --release --manifest-path src-tauri/Cargo.toml
+    cp src-tauri/target/release/phillos_tauri dist/phillos-tauri || true
+fi
