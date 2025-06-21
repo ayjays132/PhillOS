@@ -17,6 +17,9 @@ export const MediaSphere: React.FC = () => {
   const [result, setResult] = useState('');
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [duration, setDuration] = useState(0);
+  const [localFile, setLocalFile] = useState<File | null>(null);
+  const [encoding, setEncoding] = useState('');
+  const [recap, setRecap] = useState('');
 
   useEffect(() => { mediaSphereService.getMedia().then(setItems); }, []);
 
@@ -27,6 +30,25 @@ export const MediaSphere: React.FC = () => {
     const c = await mediaSphereService.getChapters(selected);
     setChapters(c.chapters || []);
     setDuration(c.duration || 0);
+  };
+
+  const analyzeLocal = async () => {
+    if (!localFile) return;
+    const c = await mediaSphereService.detectChaptersWasm(localFile);
+    setChapters(c);
+    setDuration(60);
+  };
+
+  const createRecap = async () => {
+    if (selected == null) return;
+    const r = await mediaSphereService.createRecap(selected);
+    setRecap(r.result || '');
+  };
+
+  const advise = async () => {
+    if (selected == null) return;
+    const r = await mediaSphereService.getEncodingAdvice(selected);
+    if (r.recommended) setEncoding(`${r.bitrate} -> ${r.recommended}`);
   };
 
   return (
@@ -44,6 +66,20 @@ export const MediaSphere: React.FC = () => {
           <button onClick={analyze} className="px-2 py-1 text-xs rounded bg-blue-500 text-white">Analyze</button>
           {result && <span className="text-sm">{result}</span>}
         </div>
+        <div className="flex items-center gap-2 mt-2">
+          <input type="file" accept="video/*" onChange={e => setLocalFile(e.target.files?.[0] || null)} className="text-xs" />
+          <button onClick={analyzeLocal} className="px-2 py-1 text-xs rounded bg-purple-500 text-white">Detect Locally</button>
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          <button onClick={createRecap} className="px-2 py-1 text-xs rounded bg-green-600 text-white">Create Recap</button>
+          <button onClick={advise} className="px-2 py-1 text-xs rounded bg-gray-700 text-white">Encoding Advice</button>
+        </div>
+        {(encoding || recap) && (
+          <div className="text-xs mt-1 space-y-1">
+            {encoding && <div>Advice: {encoding}</div>}
+            {recap && <div>Recap: {recap}</div>}
+          </div>
+        )}
         {chapters.length > 0 && (
           <>
             <div className="relative h-2 bg-gray-600 rounded my-2">
