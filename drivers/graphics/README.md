@@ -47,3 +47,11 @@ drawing primitives. `fb_draw_pixel()` sets an individual pixel, while the new
 line and rectangle rendering directly in kernel space. These are intended for
 early boot diagnostics and simple UI prototypes until a full graphics stack is
 available.
+
+### Text Output
+
+The framebuffer driver now bundles a tiny 8x8 bitmap font derived from
+public domain sources. `fb_draw_char()` renders a single ASCII character and
+`fb_draw_text()` draws a string using this font. Passing `0xFFFFFFFF` as the
+background color leaves untouched pixels unchanged, enabling simple overlay text
+like the "OFFLINE MODE" banner shown during kernel initialization.

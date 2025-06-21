@@ -2,6 +2,7 @@
 #include "../../kernel/boot_info.h"
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
+#include "font8x8_basic.h"
 
 static uint8_t *fb_ptr = NULL;
 static uint64_t fb_base = 0;
@@ -106,4 +107,28 @@ void fb_draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h,
     fb_draw_line(x, y, x, y + h - 1, color);
     fb_draw_line(x + w - 1, y, x + w - 1, y + h - 1, color);
     fb_draw_line(x, y + h - 1, x + w - 1, y + h - 1, color);
+}
+
+void fb_draw_char(uint32_t x, uint32_t y, char c,
+                  uint32_t fg, uint32_t bg)
+{
+    if (!fb_ptr)
+        return;
+    const unsigned char *glyph = font8x8_basic[(unsigned char)c];
+    for (uint32_t j = 0; j < 8; j++) {
+        for (uint32_t i = 0; i < 8; i++) {
+            uint32_t color = (glyph[j] & (1 << i)) ? fg : bg;
+            if (color != 0xFFFFFFFF)
+                fb_draw_pixel(x + i, y + j, color);
+        }
+    }
+}
+
+void fb_draw_text(uint32_t x, uint32_t y, const char *s,
+                  uint32_t fg, uint32_t bg)
+{
+    while (*s) {
+        fb_draw_char(x, y, *s++, fg, bg);
+        x += 8;
+    }
 }
