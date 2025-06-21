@@ -107,6 +107,20 @@ When creating the SVG consider the `theme_dark` flag from `boot_info_t` and
 define both light and dark gradients so the loader can toggle them based on the
 `theme.cfg` setting.
 
+### Embedding the boot cursor
+
+Two simple SVGs provide the boot cursor displayed while the React app loads.
+Compress them with `scripts/embed_svg.py` similar to the boot animation:
+
+```bash
+python3 scripts/embed_svg.py bootloader/cursor_light.svg dist/bootloader/cursor_light.svgz
+python3 scripts/embed_svg.py bootloader/cursor_dark.svg dist/bootloader/cursor_dark.svgz
+```
+
+The loader selects `cursor_dark.svgz` or `cursor_light.svgz` based on
+`boot_info.theme_dark` and passes the raw blob to the frontend via
+`boot_info.cursor_base` and `boot_info.cursor_size`.
+
 ## Querying Kernel Metrics
 
 After building the bootloader and kernel you can inspect runtime metrics via the

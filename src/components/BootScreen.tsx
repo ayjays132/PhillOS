@@ -26,6 +26,7 @@ const decodeDataUrl = (data: any, mime: string): string | null => {
 const BootScreen: React.FC = () => {
   const [svgUrl, setSvgUrl] = useState<string | null>(null);
   const [spriteUrl, setSpriteUrl] = useState<string | null>(null);
+  const [cursorUrl, setCursorUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const win: any = window as any;
@@ -41,6 +42,17 @@ const BootScreen: React.FC = () => {
       if (url) {
         setSpriteUrl(url);
         return () => URL.revokeObjectURL(url);
+      }
+    }
+    if (info?.cursorBase) {
+      const url = decodeDataUrl(info.cursorBase, 'image/svg+xml');
+      if (url) {
+        setCursorUrl(url);
+        document.documentElement.style.setProperty('--phillos-cursor', `url(${url}) 0 0`);
+        return () => {
+          URL.revokeObjectURL(url);
+          document.documentElement.style.removeProperty('--phillos-cursor');
+        };
       }
     }
     return;
