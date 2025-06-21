@@ -5,6 +5,7 @@
 @layer base {
   :root {
     --phillos-cursor: auto;
+    --cursor-color: #fff;
   }
   html.theme-dark body {
     @apply bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white/90 antialiased;
@@ -13,6 +14,14 @@
   html.theme-light body {
     @apply bg-gradient-to-br from-white via-gray-200 to-blue-300 text-gray-900 antialiased;
     cursor: var(--phillos-cursor), auto;
+  }
+
+  html.theme-dark {
+    --cursor-color: #fff;
+  }
+
+  html.theme-light {
+    --cursor-color: #000;
   }
 
   body.custom-cursor-active {
@@ -34,17 +43,23 @@
   }
 }
 @keyframes pulse-slow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 @keyframes bounce-slow {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(-5%);
-    animation-timing-function: cubic-bezier(0.8,0,1,1);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
   50% {
     transform: translateY(0);
-    animation-timing-function: cubic-bezier(0,0,0.2,1);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
 }
 .animate-pulse-slow {
@@ -71,13 +86,47 @@
   transform: translate(-50%, -50%);
   z-index: 10000;
 }
-.cursor-overlay img {
+.cursor-overlay svg {
   width: 24px;
   height: 24px;
+  fill: var(--cursor-color);
   animation: cursor-blink 1s infinite;
 }
 
+.cursor-overlay.animated svg,
+.cursor-preview.animated svg {
+  animation:
+    cursor-blink 1s infinite,
+    cursor-bounce 1.5s ease-in-out infinite;
+}
+
+.cursor-overlay.no-animation svg,
+.cursor-preview.no-animation svg {
+  animation: none;
+}
+
+.cursor-preview {
+  width: 24px;
+  height: 24px;
+  display: flex;
+}
+
 @keyframes cursor-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes cursor-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
