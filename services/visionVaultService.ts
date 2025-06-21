@@ -31,7 +31,9 @@ function similarity(a: Feature, b: Feature): number {
 class VisionVaultService {
   private images: string[] = [];
   private index: { src: string; vec: Feature }[] = [];
+  private arMemories: { name: string; lat: number; lon: number }[] = [];
   private modelPromise: Promise<(src: string) => Promise<Feature>> | null = null;
+  private xrSession: XRSession | null = null;
 
   private async ensureModel() {
     if (!this.modelPromise) this.modelPromise = loadModel();
@@ -39,6 +41,18 @@ class VisionVaultService {
   }
 
   private async buildIndex() {
+    try {
+      const res = await fetch('/api/visionvault/index');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.index)) {
+          this.index = data.index;
+          return;
+        }
+      }
+    } catch {
+      // ignore and build dynamically
+    }
     if (!this.images.length) return;
     const model = await this.ensureModel();
     this.index = await Promise.all(
@@ -54,10 +68,30 @@ class VisionVaultService {
       const data = await res.json();
       this.images = data.images || [];
       await this.buildIndex();
+      this.loadARMemories().catch(() => {});
       return this.images;
     } catch {
       return [];
     }
+  }
+
+  private async loadARMemories() {
+    if (this.arMemories.length) return this.arMemories;
+    try {
+      const res = await fetch('/api/visionvault/ar_memories');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.memories)) this.arMemories = data.memories;
+      }
+    } catch {
+      // ignore
+    }
+    return this.arMemories;
+  }
+
+  async getARMemories() {
+    await this.loadARMemories();
+    return this.arMemories;
   }
 
   async search(query: string, limit = 5): Promise<string[]> {
@@ -71,6 +105,52 @@ class VisionVaultService {
       .slice(0, limit);
     return results.map(r => r.src);
   }
+
+  async enhance(src: string, filter = 'auto'): Promise<string> {
+    try {
+      const res = await fetch('/api/visionvault/enhance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ src, filter }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.src || src;
+      }
+    } catch {
+      // ignore
+    }
+    return src;
+  }
+
+  async startAR() {
+    if (this.xrSession || !('xr' in navigator)) return;
+    try {
+      const session = await (navigator as any).xr.requestSession('immersive-ar', {
+        requiredFeatures: ['local-floor'],
+      });
+      this.xrSession = session;
+      const overlay = document.createElement('div');
+      overlay.id = 'ar-overlay';
+      overlay.style.position = 'fixed';
+      overlay.style.top = '10px';
+      overlay.style.left = '10px';
+      overlay.style.color = 'yellow';
+      overlay.style.zIndex = '10000';
+      overlay.textContent = 'AR active';
+      document.body.appendChild(overlay);
+      session.addEventListener('end', () => overlay.remove());
+    } catch {
+      this.xrSession = null;
+    }
+  }
+
+  stopAR() {
+    if (this.xrSession) {
+      this.xrSession.end();
+      this.xrSession = null;
+    }
+  }
 }
 
 export const visionVaultService = new VisionVaultService();
@@ -79,3 +159,4 @@ agentOrchestrator.registerAction('visionvault.get_images', () => visionVaultServ
 agentOrchestrator.registerAction('visionvault.search', params =>
   visionVaultService.search(String(params?.query || ''), Number(params?.limit) || 5)
 );
+agentOrchestrator.registerAction('vision.ar_memories', () => visionVaultService.getARMemories());

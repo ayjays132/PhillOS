@@ -8,6 +8,7 @@ import { URL } from 'url';
 import { spawn } from 'child_process';
 import { createProtonLauncher } from './protonLauncher.js';
 import { initDb, query, execute } from './db.js';
+import ffi from 'ffi-napi';
 
 const STORAGE_DIR = path.resolve(process.env.PHILLOS_STORAGE_DIR || path.join(__dirname, '../storage'));
 const ALLOWED_FILES = new Set(['protonSettings.json', 'theme.cfg']);
@@ -438,6 +439,57 @@ app.get('/api/visionvault/images', (req, res) => {
   } catch {}
   if (images.length === 0) images = demoImages;
   res.json({ images });
+});
+
+app.get('/api/visionvault/index', (req, res) => {
+  try {
+    const p = path.join(STORAGE_DIR, 'vision_index.json');
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    return res.json(data);
+  } catch {
+    return res.json({ index: [] });
+  }
+});
+
+let imageproc = null;
+try {
+  imageproc = ffi.Library('./libimageproc', {
+    enhance_image: ['int', ['string', 'string', 'string']],
+  });
+} catch (err) {
+  console.log('Imageproc library not loaded:', err.message);
+}
+
+app.post('/api/visionvault/enhance', (req, res) => {
+  const { src, filter } = req.body || {};
+  if (!src) return res.status(400).json({ error: 'src required' });
+  const base = src.replace(/^\/images\//, '');
+  const inPath = path.join(STORAGE_DIR, 'images', base);
+  const ext = path.extname(inPath);
+  const outFile = path.basename(inPath, ext) + '_enh' + ext;
+  const outPath = path.join(STORAGE_DIR, 'images', outFile);
+  try {
+    if (imageproc) {
+      const ret = imageproc.enhance_image(inPath, outPath, filter || 'auto');
+      if (ret !== 0) throw new Error('proc fail');
+    } else {
+      fs.copyFileSync(inPath, outPath);
+    }
+    return res.json({ src: '/images/' + outFile });
+  } catch (err) {
+    console.log('Enhance failed', err.message);
+    return res.status(500).json({ error: 'enhance failed' });
+  }
+});
+
+app.get('/api/visionvault/ar_memories', (req, res) => {
+  try {
+    const p = path.join(STORAGE_DIR, 'vision_ar_memories.json');
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    return res.json(data);
+  } catch {
+    return res.json({ memories: [] });
+  }
 });
 
 // --- SecureCore ---
