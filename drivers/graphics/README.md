@@ -37,3 +37,12 @@ ID:
 - Intel (`0x8086`)
 
 Other GPUs fall back to the EFI framebuffer driver.
+
+## Framebuffer Helpers
+
+Alongside vendor detection the generic framebuffer now exposes a few simple
+drawing primitives. `fb_draw_pixel()` sets an individual pixel, while the new
+`fb_draw_line()`, `fb_draw_rect()` and `fb_fill_rect()` helpers allow basic
+line and rectangle rendering directly in kernel space. These are intended for
+early boot diagnostics and simple UI prototypes until a full graphics stack is
+available.

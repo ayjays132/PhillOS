@@ -334,7 +334,7 @@ Development details, including how to build and sign modules, are covered in
 
 ## Offline Installation and Usage
 
-PhillOS can run without an internet connection once the UI files are cached by the service worker.
+PhillOS can run without an internet connection once the UI files are cached by the service worker. See [docs/offline.md](docs/offline.md) for a concise guide.
 
 1. Build the project and generate the ISO as described above, then flash it to a USB stick.
 2. Boot from the USB drive. The browser loads all core assets and API responses into the cache so subsequent boots work completely offline.
