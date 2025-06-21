@@ -46,8 +46,9 @@ This document summarizes the demo applications bundled with the prototype. They 
 - **API:** `/api/weblens/summarize?url=...`
 
 ## GenLab
-- **Purpose:** compare responses from two models.
+- **Purpose:** compare responses from two models and provide PromptCoach tips.
 - **API:** `POST /api/genlab/compare`
+- **Usage:** as you type a prompt, `genlab.prompt_coach` generates bullet point tips to refine it.
 
 ## TimeAI
 - **Purpose:** calendar with scheduling powered by `timeai_scheduler.py`.
@@ -56,5 +57,18 @@ This document summarizes the demo applications bundled with the prototype. They 
 ## Vault
 - **Purpose:** browse the filesystem and run SmartTags on a file.
 - **API:** Tauri commands `list_dir`, `copy_file`, `move_file`, `smart_tags`
+- **Usage:** press **AutoClean** to call `autoclean.suggest` and list stale files. Archive or delete them directly from the app.
 
 Each application is intentionally lightweight. They are orchestrated by the Agent mode which can invoke their services to fulfil complex requests.
+
+
+## Additional Agent Actions
+
+These services expose new AI capabilities through the orchestrator:
+
+- **AutoPatch:** `autopatch.start` and `autopatch.stop` manage background OS updates.
+- **MemoryHub:** store short-term context with `memoryhub.add_entry` and retrieve it using `memoryhub.get_windows`.
+- **Workspace Snapshots:** save and restore layouts via `workspace.save` and `workspace.load`.
+- **System Stats:** query the kernel scheduler using `system.query_scheduler` or receive hot-plug events with `system.device_event`.
+
+Use `npx phillos agent start` and speak or type natural language requests. The orchestrator maps them onto these actions automatically.
