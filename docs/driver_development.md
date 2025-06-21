@@ -36,7 +36,7 @@ The driver manager calls `match` and `init` during PCI scanning. When a device d
 
 ## Signing Modules
 
-When Secure Boot is active, the kernel only loads modules signed with a trusted private key. Modules must now contain a 256‑byte RSA‑2048 signature. Use the helper script to sign a module:
+When Secure Boot is active, the kernel only loads modules signed with a trusted private key. Modules must now contain a 256-byte RSA-2048 signature. The module contents are hashed with **SHA-256** before signing. Use the helper script to sign a module:
 
 ```bash
 scripts/sign_module.py privkey.pem mydriver.ko
