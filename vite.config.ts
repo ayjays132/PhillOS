@@ -17,6 +17,18 @@ export default defineConfig(({ mode }) => {
             additionalManifestEntries: [{ url: '/src/index.tsx', revision: null }],
             runtimeCaching: [
               {
+                urlPattern: /\/api\/(theme|cursor|aiconfig|tasks).*$/,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'settings-cache',
+                  networkTimeoutSeconds: 5,
+                  expiration: {
+                    maxEntries: 20,
+                    maxAgeSeconds: 24 * 60 * 60
+                  }
+                }
+              },
+              {
                 urlPattern: /\/api\/.*$/,
                 handler: 'NetworkFirst',
                 options: {

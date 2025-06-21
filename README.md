@@ -504,6 +504,14 @@ To force the latest version:
 3. Alternatively, clear site data to remove all cached files.
 4. You can also open the *Offline & Updates* widget on the dashboard and use the **Check for Updates** or **Clear Cache** buttons.
 
+### Clearing Dynamic Caches
+
+User settings and recent tasks are stored by the service worker so the OS remains functional offline. If these caches become stale:
+
+1. Open **Application → Cache Storage** in your browser's developer tools.
+2. Delete the `settings-cache` and `api-cache` entries.
+3. Reload the page to fetch fresh data from the backend when online.
+
 ## Phone Hardware Requirements & Usage
 
 Basic phone integration requires the following hardware:
