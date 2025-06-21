@@ -82,6 +82,24 @@ static EFI_STATUS load_svg_animation(EFI_HANDLE image, const CHAR16 *path,
     return EFI_SUCCESS;
 }
 
+static EFI_STATUS load_svg_cursor(EFI_HANDLE image, const CHAR16 *path,
+                                  VOID **data, UINTN *size) {
+    EFI_STATUS status = load_file(image, path, data, size);
+    if (EFI_ERROR(status))
+        return status;
+
+    if (*size < 8 ||
+        CompareMem((UINT8 *)(*data) + *size - 8, "PHILSVG", 8) != 0) {
+        BS->FreePool(*data);
+        *data = NULL;
+        *size = 0;
+        return EFI_LOAD_ERROR;
+    }
+
+    *size -= 8;
+    return EFI_SUCCESS;
+}
+
 EFI_STATUS load_boot_animation(EFI_HANDLE image, const char *cmdline,
                                UINT8 theme_dark,
                                VOID **svg_data, UINTN *svg_size,
@@ -121,5 +139,26 @@ EFI_STATUS load_boot_animation(EFI_HANDLE image, const char *cmdline,
             }
         }
     }
+    return status;
+}
+
+EFI_STATUS load_boot_cursor(EFI_HANDLE image, UINT8 theme_dark,
+                            VOID **cursor_data, UINTN *cursor_size)
+{
+    *cursor_data = NULL;
+    *cursor_size = 0;
+
+    EFI_STATUS status;
+    if (theme_dark)
+        status = load_svg_cursor(image, L"\\EFI\\PHILLOS\\cursor_dark.svgz",
+                                  cursor_data, cursor_size);
+    else
+        status = load_svg_cursor(image, L"\\EFI\\PHILLOS\\cursor_light.svgz",
+                                  cursor_data, cursor_size);
+
+    if (EFI_ERROR(status))
+        status = load_svg_cursor(image, L"\\EFI\\PHILLOS\\cursor_light.svgz",
+                                  cursor_data, cursor_size);
+
     return status;
 }

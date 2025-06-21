@@ -301,6 +301,15 @@ static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
         }
     }
 
+    VOID *cursor_data = NULL;
+    UINTN cursor_size = 0;
+    status = load_boot_cursor(image, info->theme_dark,
+                              &cursor_data, &cursor_size);
+    if (!EFI_ERROR(status) && cursor_data) {
+        info->cursor_base = (uint64_t)cursor_data;
+        info->cursor_size = cursor_size;
+    }
+
     UINTN map_size = 0, map_key, desc_size;
     UINT32 desc_ver;
     status = uefi_call_wrapper(BS->GetMemoryMap, 5, &map_size, NULL, &map_key, &desc_size, &desc_ver);

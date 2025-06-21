@@ -10,6 +10,11 @@ ISO ?= $(OUT_DIR)/phillos.iso
 # Boot animation paths
 BOOTANIM_SRC ?= bootanim.svg
 BOOTANIM ?= $(OUT_DIR)/bootanim.svgz
+# Boot cursor paths
+CURSOR_LIGHT_SRC ?= cursor_light.svg
+CURSOR_DARK_SRC ?= cursor_dark.svg
+CURSOR_LIGHT ?= $(OUT_DIR)/cursor_light.svgz
+CURSOR_DARK ?= $(OUT_DIR)/cursor_dark.svgz
 
 # Secure Boot signing
 SIGN_KEY ?= keys/db.key
@@ -103,16 +108,20 @@ $(BOOTLOADER): $(BOOTLOADER_OBJS) | $(OUT_DIR)
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym 		-j .rel -j .rela -j .reloc -j .eh_frame 		--target=efi-app-x86_64 $(OUT_DIR)/bootloader.so $@
 
 $(SIGNED_BOOTLOADER): $(BOOTLOADER)
-	@if [ -f "$(SIGN_KEY)" ] && [ -f "$(SIGN_CERT)" ]; then \
-	sbsign --key $(SIGN_KEY) --cert $(SIGN_CERT) --output $@ $<; \
-	else \
-	cp $< $@; \
-	fi
+        @if [ -f "$(SIGN_KEY)" ] && [ -f "$(SIGN_CERT)" ]; then \
+        sbsign --key $(SIGN_KEY) --cert $(SIGN_CERT) --output $@ $<; \
+        else \
+        cp $< $@; \
+        fi
 
 $(BOOTANIM): $(BOOTANIM_SRC) | $(OUT_DIR)
-	python3 ../scripts/embed_svg.py $< $@
+        python3 ../scripts/embed_svg.py $< $@
+$(CURSOR_LIGHT): $(CURSOR_LIGHT_SRC) | $(OUT_DIR)
+        python3 ../scripts/embed_svg.py $< $@
+$(CURSOR_DARK): $(CURSOR_DARK_SRC) | $(OUT_DIR)
+        python3 ../scripts/embed_svg.py $< $@
 # EFI System Partition image
-$(ESP_IMG): $(SIGNED_BOOTLOADER) $(KERNEL_ELF) $(BOOTANIM) | $(OUT_DIR)
+$(ESP_IMG): $(SIGNED_BOOTLOADER) $(KERNEL_ELF) $(BOOTANIM) $(CURSOR_LIGHT) $(CURSOR_DARK) | $(OUT_DIR)
 	rm -f $@
 	dd if=/dev/zero of=$@ bs=1M count=64
 	mkfs.fat -n PHILLOS $@
@@ -120,7 +129,9 @@ $(ESP_IMG): $(SIGNED_BOOTLOADER) $(KERNEL_ELF) $(BOOTANIM) | $(OUT_DIR)
 	mkdir -p $(OUT_DIR)/esp/EFI/PHILLOS
 	cp $(SIGNED_BOOTLOADER) $(OUT_DIR)/esp/EFI/BOOT/BOOTX64.EFI
 	cp $(KERNEL_ELF) $(OUT_DIR)/esp/EFI/PHILLOS/
-	cp $(BOOTANIM) $(OUT_DIR)/esp/EFI/PHILLOS/
+        cp $(BOOTANIM) $(OUT_DIR)/esp/EFI/PHILLOS/
+        cp $(CURSOR_LIGHT) $(OUT_DIR)/esp/EFI/PHILLOS/
+        cp $(CURSOR_DARK) $(OUT_DIR)/esp/EFI/PHILLOS/
 	mcopy -s -i $@ $(OUT_DIR)/esp/* ::/
 	rm -rf $(OUT_DIR)/esp
 

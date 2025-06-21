@@ -31,6 +31,8 @@ typedef struct {
     uint64_t svg_size;
     uint64_t sprite_base;
     uint64_t sprite_size;
+    uint64_t cursor_base;
+    uint64_t cursor_size;
     uint8_t  theme_dark; // 1 = dark, 0 = light
     char cmdline[128];
 } boot_info_t;
