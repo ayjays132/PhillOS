@@ -14,7 +14,7 @@ import { patternAlertService } from '../services/patternAlertService';
 import { exec } from 'child_process';
 
 const STORAGE_DIR = path.resolve(process.env.PHILLOS_STORAGE_DIR || path.join(__dirname, '../storage'));
-const ALLOWED_FILES = new Set(['protonSettings.json', 'theme.cfg', 'cursor.cfg']);
+const ALLOWED_FILES = new Set(['protonSettings.json', 'theme.cfg', 'cursor.cfg', 'workspaceSnaps.json']);
 
 function sanitizeStoragePath(name) {
   const base = path.basename(name);
@@ -25,6 +25,7 @@ function sanitizeStoragePath(name) {
 const SETTINGS_FILE = sanitizeStoragePath('protonSettings.json');
 const THEME_FILE = sanitizeStoragePath('theme.cfg');
 const CURSOR_FILE = sanitizeStoragePath('cursor.cfg');
+const WORKSPACE_FILE = sanitizeStoragePath('workspaceSnaps.json');
 
 async function loadAIConfig() {
   try {
@@ -133,6 +134,25 @@ async function saveCursor(cur) {
     // ignore
   }
 }
+
+function loadWorkspaces() {
+  try {
+    return JSON.parse(fs.readFileSync(WORKSPACE_FILE, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+function saveWorkspaces() {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    fs.writeFileSync(WORKSPACE_FILE, JSON.stringify(workspaceSnaps, null, 2));
+  } catch {
+    // ignore
+  }
+}
+
+let workspaceSnaps = loadWorkspaces();
 
 const API_TOKEN = process.env.API_TOKEN || '';
 
@@ -699,8 +719,37 @@ app.post('/api/appforge/build', (req, res) => {
 });
 
 // --- SpaceManager ---
-app.get('/api/spacemanager/usage', (req, res) => {
-  res.json({ used: 42, total: 100 });
+app.post('/api/spacemanager/snapshot', (req, res) => {
+  const { name, layout } = req.body || {};
+  if (!name || !Array.isArray(layout)) return res.status(400).json({ error: 'invalid' });
+  workspaceSnaps[name] = layout;
+  saveWorkspaces();
+  res.json({ success: true });
+});
+
+app.get('/api/spacemanager/snapshot', (req, res) => {
+  const name = String(req.query.name || 'default');
+  res.json({ layout: workspaceSnaps[name] || [] });
+});
+
+app.get('/api/spacemanager/snapshots', (req, res) => {
+  res.json({ workspaces: Object.keys(workspaceSnaps) });
+});
+
+app.get('/api/spacemanager/groups', (req, res) => {
+  const name = String(req.query.workspace || 'default');
+  const snap = workspaceSnaps[name] || [];
+  const groups = Array.from(new Set(snap.map(w => w.group ?? 0))).sort((a,b) => a - b);
+  res.json({ groups });
+});
+
+app.post('/api/spacemanager/switch', (req, res) => {
+  const { workspace, group } = req.body || {};
+  const snap = workspaceSnaps[workspace];
+  if (!snap) return res.status(404).json({ error: 'workspace not found' });
+  const g = Number(group);
+  const windows = snap.filter(w => (w.group ?? 0) === g);
+  res.json({ windows });
 });
 
 // --- Pulse Monitor ---
