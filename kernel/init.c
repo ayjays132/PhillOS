@@ -9,6 +9,7 @@
 #include "../drivers/graphics/gpu.h"
 #include "../drivers/driver_manager.h"
 #include "../drivers/register.h"
+#include "offline.h"
 #include "scheduler/uhs.h"
 #include "scheduler/chaos_sched.h"
 
@@ -39,6 +40,7 @@ float sched_last_residual(void)
 
 void kernel_main(boot_info_t *boot_info) {
     g_boot_info = boot_info;
+    offline_init(boot_info);
     // Placeholder for kernel initialization logic
     init_physical_memory(boot_info);
     init_paging();
@@ -50,6 +52,10 @@ void kernel_main(boot_info_t *boot_info) {
     driver_manager_init();
     init_framebuffer(&boot_info->fb);
     fb_fill_rect(20, 20, 100, 60, 0x0000FF00); // simple boot banner
+    if (offline_is_enabled())
+        fb_draw_text(24, 24, "OFFLINE MODE", 0x00FFFFFF, 0x00000000);
+    else
+        fb_draw_text(24, 24, "ONLINE MODE", 0x00FFFFFF, 0x00000000);
     chaos_sched_init(&g_sched, 0.01f, 0.005f, 0.1f, 0.1f);
     chaos_sched_add(&g_sched, 0);
     // Kernel is now initialized

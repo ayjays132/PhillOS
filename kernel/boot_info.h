@@ -34,6 +34,7 @@ typedef struct {
     uint64_t cursor_base;
     uint64_t cursor_size;
     uint8_t  theme_dark; // 1 = dark, 0 = light
+    uint8_t  offline;    // 1 = offline mode
     char cmdline[128];
 } boot_info_t;
 

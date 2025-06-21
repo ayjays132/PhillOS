@@ -13,6 +13,10 @@ void fb_fill_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h,
                   uint32_t color);
 void fb_draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h,
                   uint32_t color);
+void fb_draw_char(uint32_t x, uint32_t y, char c,
+                  uint32_t fg, uint32_t bg);
+void fb_draw_text(uint32_t x, uint32_t y, const char *s,
+                  uint32_t fg, uint32_t bg);
 
 uint64_t fb_get_base(void);
 uint64_t fb_get_size(void);
