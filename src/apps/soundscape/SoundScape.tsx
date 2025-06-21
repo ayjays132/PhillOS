@@ -14,8 +14,21 @@ export const SoundScape: React.FC = () => {
   const [eq, setEq] = useState<EQSettings>({ low: 0, mid: 0, high: 0 });
 
   useEffect(() => {
+    let cancelled = false;
     soundScapeService.getTracks().then(setTracks);
-    soundAnalyzer.getNoiseLevel().then(level => setEq(calculateEqForNoise(level)));
+
+    const updateEq = async () => {
+      const level = await soundAnalyzer.getNoiseLevel();
+      if (!cancelled) {
+        setEq(calculateEqForNoise(level));
+        setTimeout(updateEq, 5000);
+      }
+    };
+    updateEq();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
