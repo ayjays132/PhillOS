@@ -17,6 +17,7 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [Application Overview](docs/apps.md)
 - [Configuring AI Providers](docs/ai_providers.md)
 - [Agent Mode](#agent-mode)
+- [Agent Mode Walkthrough](docs/agent_mode_walkthrough.md)
 - [Kernel and Agent Integration](#kernel-and-agent-integration)
 - [Getting Started](docs/getting_started.md)
 - [Building the Bootloader & Kernel](#building-the-bootloader--kernel)
@@ -187,6 +188,8 @@ npx phillos smarttags notes/todo.txt
 ```
 
 These commands launch the underlying Python and Node helpers while the agent coordinates results between applications.
+
+For a step-by-step walkthrough of registering actions and orchestrating multiple apps, see [docs/agent_mode_walkthrough.md](docs/agent_mode_walkthrough.md).
 
 ## Kernel and Agent Integration
 
