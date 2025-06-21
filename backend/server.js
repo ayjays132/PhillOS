@@ -10,6 +10,8 @@ import { createProtonLauncher } from './protonLauncher.js';
 import { scoreExecutable, RISK_THRESHOLD } from './sandboxShield.js';
 import { initDb, query, execute } from './db.js';
 import ffi from 'ffi-napi';
+import { patternAlertService } from '../services/patternAlertService';
+import { exec } from 'child_process';
 
 const STORAGE_DIR = path.resolve(process.env.PHILLOS_STORAGE_DIR || path.join(__dirname, '../storage'));
 const ALLOWED_FILES = new Set(['protonSettings.json', 'theme.cfg']);
@@ -533,6 +535,37 @@ app.get('/api/autopatch/last', (req, res) => {
   res.json({ last: lastPatch });
 });
 
+// --- Eco Detect ---
+function detectIdleDrain(callback) {
+  exec('ps -eo pid,pcpu,pmem,comm --no-headers', (err, stdout) => {
+    if (err) return callback([]);
+    const procs = stdout
+      .trim()
+      .split('\n')
+      .map(line => {
+        const [pid, cpu, mem, ...cmd] = line.trim().split(/\s+/);
+        return { pid: Number(pid), cpu: parseFloat(cpu), mem: parseFloat(mem), cmd: cmd.join(' ') };
+      })
+      .filter(p => p.cpu > 20 || p.mem > 50);
+    callback(procs);
+  });
+}
+
+app.get('/api/eco/detect', (req, res) => {
+  detectIdleDrain(list => res.json({ list }));
+});
+
+app.post('/api/eco/kill', (req, res) => {
+  const pid = Number(req.body?.pid);
+  if (!pid) return res.status(400).json({ error: 'pid required' });
+  try {
+    process.kill(pid);
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'failed' });
+  }
+});
+
 // --- AppForge ---
 app.post('/api/appforge/build', (req, res) => {
   res.json({ success: true });
@@ -553,12 +586,14 @@ const wss = new WebSocketServer({ server, path: '/ws/pulse' });
 const insightsWss = new WebSocketServer({ server, path: '/ws/insights' });
 
 function collectMetrics() {
-  return {
+  const base = {
     bpm: Math.round(os.loadavg()[0] * 10 + 70),
     load: os.loadavg()[0],
     memory: 1 - os.freemem() / os.totalmem(),
     threat: threatScore,
   };
+  const anomaly = patternAlertService.process(base);
+  return { ...base, anomaly };
 }
 
 setInterval(() => {
