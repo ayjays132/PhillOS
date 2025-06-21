@@ -476,6 +476,7 @@ app.get('/api/pulsemonitor/status', (req, res) => {
 });
 
 const wss = new WebSocketServer({ server, path: '/ws/pulse' });
+const insightsWss = new WebSocketServer({ server, path: '/ws/insights' });
 
 function collectMetrics() {
   return {
@@ -489,6 +490,20 @@ function collectMetrics() {
 setInterval(() => {
   const msg = JSON.stringify(collectMetrics());
   wss.clients.forEach(c => {
+    if (c.readyState === 1) c.send(msg);
+  });
+}, 1000);
+
+function collectInsights() {
+  return {
+    energy: Math.random(),
+    tempo: Math.floor(Math.random() * 120) + 60,
+  };
+}
+
+setInterval(() => {
+  const msg = JSON.stringify(collectInsights());
+  insightsWss.clients.forEach(c => {
     if (c.readyState === 1) c.send(msg);
   });
 }, 1000);
