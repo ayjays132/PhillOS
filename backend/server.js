@@ -134,6 +134,16 @@ async function saveCursor(cur) {
   }
 }
 
+const API_TOKEN = process.env.API_TOKEN || '';
+
+function checkToken(req, res, next) {
+  if (!API_TOKEN) return next();
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : header;
+  if (token === API_TOKEN) return next();
+  return res.status(401).json({ error: 'unauthorized' });
+}
+
 const app = express();
 app.use(express.json());
 
@@ -145,7 +155,7 @@ const PHONE_BRIDGE_URL = process.env.PHONE_BRIDGE_URL || 'http://localhost:3002'
 const PROXY_TIMEOUT = Number(process.env.PHONE_BRIDGE_TIMEOUT || 2000);
 const MAX_RETRIES = 2;
 
-app.use('/phonebridge', (req, res) => {
+app.use('/phonebridge', checkToken, (req, res) => {
   const target = new URL(req.originalUrl.replace(/^\/phonebridge/, ''), PHONE_BRIDGE_URL);
   const body = req.body && Object.keys(req.body).length ? JSON.stringify(req.body) : null;
   const opts = {
@@ -179,7 +189,7 @@ app.use('/phonebridge', (req, res) => {
   attempt(MAX_RETRIES);
 });
 
-app.post('/api/launch-proton', async (req, res) => {
+app.post('/api/launch-proton', checkToken, async (req, res) => {
   let { path: exePath, version, prefix, wine } = req.body || {};
 
   if (!exePath) {
@@ -365,6 +375,7 @@ app.get('/api/weblens/summarize', async (req, res) => {
 });
 
 // --- MediaSphere ---
+app.use('/api/mediasphere', checkToken);
 let firewallEnabled = true;
 let threatScore = 0;
 let threatPredictScore = 0;
