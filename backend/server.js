@@ -326,6 +326,48 @@ async function detectScenes(file) {
   return { duration, chapters: times.map((t, i) => ({ start: t, title: `Scene ${i + 1}` })) };
 }
 
+async function analyzeBitrate(file) {
+  return new Promise(resolve => {
+    const p = spawn('ffprobe', [
+      '-v', 'error',
+      '-select_streams', 'v:0',
+      '-show_entries', 'stream=bit_rate',
+      '-of', 'default=noprint_wrappers=1:nokey=1',
+      file,
+    ]);
+    let out = '';
+    p.stdout.on('data', d => { out += d; });
+    p.on('close', () => {
+      const br = parseInt(out.trim(), 10) || 0;
+      let recommended = 'original';
+      if (br > 8000000) recommended = '8000k';
+      else if (br > 4000000) recommended = '4000k';
+      else if (br > 2000000) recommended = '2000k';
+      resolve({ bitrate: br, recommended });
+    });
+    p.on('error', () => resolve({ bitrate: 0, recommended: 'unknown' }));
+  });
+}
+
+async function createRecap(file) {
+  const { chapters } = await detectScenes(file);
+  const times = chapters.slice(0, 3).map(c => c.start);
+  if (!times.length) return { result: 'no scenes' };
+  const outFile = path.join(os.tmpdir(), 'recap.mp4');
+  return new Promise(resolve => {
+    const args = [
+      '-i', file,
+      '-t', '15',
+      '-c', 'copy',
+      outFile,
+      '-y',
+    ];
+    const p = spawn('ffmpeg', args);
+    p.on('close', () => resolve({ result: outFile }));
+    p.on('error', () => resolve({ result: '' }));
+  });
+}
+
 app.post('/api/mediasphere/chapters', async (req, res) => {
   const { id } = req.body || {};
   const dir = path.join(STORAGE_DIR, 'media');
@@ -338,6 +380,34 @@ app.post('/api/mediasphere/chapters', async (req, res) => {
     }
   } catch {}
   res.json({ chapters: [], duration: 0 });
+});
+
+app.post('/api/mediasphere/bitrate', async (req, res) => {
+  const { id } = req.body || {};
+  const dir = path.join(STORAGE_DIR, 'media');
+  try {
+    const files = fs.readdirSync(dir).filter(f => !fs.statSync(path.join(dir, f)).isDirectory());
+    const file = files[id - 1];
+    if (file) {
+      const data = await analyzeBitrate(path.join(dir, file));
+      return res.json(data);
+    }
+  } catch {}
+  res.json({ bitrate: 0, recommended: 'unknown' });
+});
+
+app.post('/api/mediasphere/recap', async (req, res) => {
+  const { id } = req.body || {};
+  const dir = path.join(STORAGE_DIR, 'media');
+  try {
+    const files = fs.readdirSync(dir).filter(f => !fs.statSync(path.join(dir, f)).isDirectory());
+    const file = files[id - 1];
+    if (file) {
+      const data = await createRecap(path.join(dir, file));
+      return res.json(data);
+    }
+  } catch {}
+  res.json({ result: '' });
 });
 
 // --- SoundScape ---
