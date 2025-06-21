@@ -37,4 +37,15 @@ describe('secureCoreService', () => {
     expect(fetch).toHaveBeenCalledWith('/api/securecore/threat');
     expect(res).toEqual({ score: 42 });
   });
+
+  it('getThreatPrediction fetches predicted value', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ score: 33 }),
+    })) as any);
+    const { secureCoreService } = await import('../../services/secureCoreService');
+    const res = await secureCoreService.getThreatPrediction();
+    expect(fetch).toHaveBeenCalledWith('/api/securecore/threatpredict');
+    expect(res).toEqual({ score: 33 });
+  });
 });

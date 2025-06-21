@@ -4,7 +4,7 @@ This document summarizes the demo applications bundled with the prototype. They 
 
 ## SecureCore
 - **Purpose:** control the firewall and perform quick scans.
-- **API:** `/api/securecore/status`, `/api/securecore/toggle`, `/api/securecore/scan`
+- **API:** `/api/securecore/status`, `/api/securecore/toggle`, `/api/securecore/scan`, `/api/securecore/threat`, `/api/securecore/threatpredict`
 
 ## MediaSphere
 - **Purpose:** browse videos and request AI analysis.
