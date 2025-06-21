@@ -6,6 +6,8 @@ describe('patternAlertService', () => {
   });
 
   it('returns higher score for anomalies', async () => {
+    const { initDb } = await import('../../backend/db.js');
+    initDb();
     const { patternAlertService } = await import('../../services/patternAlertService');
     for (let i = 0; i < 10; i++) {
       patternAlertService.process({ bpm: 70, load: 0.2, memory: 0.3, threat: 0 });
