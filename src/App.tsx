@@ -29,6 +29,7 @@ import { ConversationalSettingsView } from './components/settings/Conversational
 import PhoneSettingsView from './components/settings/PhoneSettingsView';
 import MemorySettings from './components/MemorySettings';
 import MemoryHub from './components/MemoryHub';
+import SettingsApp from './src/apps/settings';
 import { useResponsive } from './hooks/useResponsive';
 import { useDeviceType } from './hooks/useDeviceType';
 import { useOnboarding } from './hooks/useOnboarding';
@@ -105,6 +106,7 @@ const App: React.FC = () => {
           <Route path="/settings" element={<ConversationalSettingsView />} />
           <Route path="/settings/phone" element={<PhoneSettingsView />} />
           <Route path="/settings/memory" element={<MemorySettings />} />
+          <Route path="/settings/ai" element={<SettingsApp />} />
           <Route path="/memory-hub" element={<MemoryHub />} />
           <Route path="*" element={isOnboardingComplete ? <Navigate to="/home" replace /> : <Navigate to="/onboarding" replace />} />
         </Routes>

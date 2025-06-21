@@ -25,6 +25,24 @@ function sanitizeStoragePath(name) {
 const SETTINGS_FILE = sanitizeStoragePath('protonSettings.json');
 const THEME_FILE = sanitizeStoragePath('theme.cfg');
 
+async function loadAIConfig() {
+  try {
+    const row = (await query("SELECT value FROM preferences WHERE key='ai_config'"))[0];
+    if (row && row.value) return JSON.parse(row.value);
+  } catch {}
+  return null;
+}
+
+async function saveAIConfig(config) {
+  try {
+    const val = JSON.stringify(config);
+    await execute(
+      'INSERT INTO preferences(key,value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=?',
+      ['ai_config', val, val],
+    );
+  } catch {}
+}
+
 function sanitizeUserPath(p) {
   if (typeof p !== 'string' || p.includes('\0')) throw new Error('invalid path');
   return path.resolve(p);
@@ -164,6 +182,19 @@ app.post('/api/theme', async (req, res) => {
     return res.status(400).json({ error: 'invalid theme' });
   }
   await saveTheme(theme);
+  res.json({ success: true });
+});
+
+app.get('/api/aiconfig', async (req, res) => {
+  res.json({ config: await loadAIConfig() });
+});
+
+app.post('/api/aiconfig', async (req, res) => {
+  const { config } = req.body || {};
+  if (!config || typeof config !== 'object') {
+    return res.status(400).json({ error: 'invalid config' });
+  }
+  await saveAIConfig(config);
   res.json({ success: true });
 });
 
@@ -676,4 +707,4 @@ if (!process.env.VITEST) {
 export default app;
 export function setThreatScore(score) { threatScore = score; }
 export function setThreatPredictScore(score) { threatPredictScore = score; }
-export { sanitizeUserPath, sanitizeStoragePath, STORAGE_DIR };
+export { sanitizeUserPath, sanitizeStoragePath, STORAGE_DIR, loadAIConfig, saveAIConfig };

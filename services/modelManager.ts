@@ -1,6 +1,7 @@
 import { createCloudChatSession, sendMessageStream as sendCloudStream, CloudProvider, CloudChatSession } from './cloudAIService';
 import { createQwenChatSession, QwenChatSession } from './qwenService';
 import { AIModelPreference, ChatMessage } from '../types';
+import { getAIConfig } from '../config/aiConfig';
 import { memoryHubService } from './memoryHubService';
 import { agentOrchestrator } from './agentOrchestrator';
 import { pipeline } from '@xenova/transformers';
@@ -37,7 +38,8 @@ export const createModelSession = async (
   options: { provider?: CloudProvider; apiKey?: string; history?: ChatMessage[] } = {}
 ): Promise<ModelSession | null> => {
   if (preference === 'cloud') {
-    const provider = options.provider || 'gemini';
+    const cfg = getAIConfig();
+    const provider = options.provider || cfg.cloudProvider;
     const session = await createCloudChatSession(provider, options.apiKey || '', options.history);
     return session ? { type: 'cloud', cloudSession: session } : null;
   }
@@ -79,9 +81,10 @@ export async function* sendModelMessageStream(
 
 export const summarize = async (text: string): Promise<string> => {
   if (!summarizer) {
+    const cfg = getAIConfig();
     summarizer = await loadWasmSummarizer();
     if (!summarizer) {
-      summarizer = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6');
+      summarizer = await pipeline('summarization', cfg.summarizerModel);
     }
   }
   const result = await summarizer(text);
@@ -93,9 +96,10 @@ export const tagText = async (
   labels: string[]
 ): Promise<string[]> => {
   if (!classifier) {
+    const cfg = getAIConfig();
     classifier = await loadWasmClassifier();
     if (!classifier) {
-      classifier = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
+      classifier = await pipeline('zero-shot-classification', cfg.classifierModel);
     }
   }
   const result = await classifier(text, { candidate_labels: labels });

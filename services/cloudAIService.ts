@@ -1,6 +1,7 @@
 import type { GoogleGenAI, Chat, GenerateContentResponse, Part, Content } from "@google/genai";
 import type OpenAI from 'openai';
 import { ChatMessage } from '../types';
+import { getAIConfig } from '../config/aiConfig';
 
 export type CloudProvider = 'gemini' | 'openai';
 
@@ -78,7 +79,7 @@ import { agentOrchestrator } from './agentOrchestrator';
 
 agentOrchestrator.registerAction('cloudai.create_session', params => {
   return createCloudChatSession(
-    (params?.provider as CloudProvider) || 'gemini',
+    (params?.provider as CloudProvider) || getAIConfig().cloudProvider,
     String(params?.apiKey || ''),
     params?.history as ChatMessage[] | undefined
   );

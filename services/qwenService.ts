@@ -3,8 +3,9 @@ import { ChatMessage } from '../types';
 import { agentOrchestrator } from './agentOrchestrator';
 
 // Allow overriding the local model via Vite env variable.
-// Default to the Qwen3-1.7B model as recommended in the design docs.
-const MODEL = import.meta.env.VITE_LOCAL_AI_MODEL || 'qwen3:1.7b';
+// Default path can be changed via aiConfig as well.
+import { getAIConfig } from '../config/aiConfig';
+const MODEL = import.meta.env.VITE_LOCAL_AI_MODEL || getAIConfig().localModel;
 const OLLAMA_URL = 'http://localhost:11434';
 
 export const verifyOllamaAvailable = async () => {
