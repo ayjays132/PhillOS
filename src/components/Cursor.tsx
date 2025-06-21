@@ -1,14 +1,20 @@
 import React, { useEffect, useRef } from 'react';
 import { useCursor } from '../contexts/CursorContext';
-import defaultCursor from '../assets/cursors/arrow_light.svg?url';
-import macCursor from '../assets/cursors/mac.svg?url';
+import { useTheme } from '../contexts/ThemeContext';
+import lightCursor from '../assets/cursors/arrow_light.svg?url';
+import darkCursor from '../assets/cursors/arrow_dark.svg?url';
 
 const Cursor: React.FC = () => {
-  const { style } = useCursor();
+  const { style, animated } = useCursor();
+  const { theme } = useTheme();
   const ref = useRef<HTMLDivElement>(null);
   const pos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
+    if (style !== 'svg') {
+      document.body.classList.remove('custom-cursor-active');
+      return;
+    }
     document.body.classList.add('custom-cursor-active');
     const move = (e: MouseEvent) => {
       pos.current.x = e.clientX;
@@ -28,13 +34,15 @@ const Cursor: React.FC = () => {
       cancelAnimationFrame(raf);
       document.body.classList.remove('custom-cursor-active');
     };
-  }, []);
+  }, [style]);
 
-  const src = style === 'mac' ? macCursor : defaultCursor;
+  const src = theme === 'dark' ? darkCursor : lightCursor;
+
+  if (style !== 'svg') return null;
 
   return (
     <div ref={ref} className="cursor-overlay">
-      <img src={src} alt="cursor" />
+      <img src={src} alt="cursor" style={{ animation: animated ? undefined : 'none' }} />
     </div>
   );
 };

@@ -6,7 +6,6 @@ import BootScreen from './components/BootScreen';
 import { HashRouter } from 'react-router-dom';
 import lightCursor from './assets/cursors/arrow_light.svg?url';
 import darkCursor from './assets/cursors/arrow_dark.svg?url';
-import macCursor from './assets/cursors/mac.svg?url';
 import { StorageProvider } from './contexts/StorageProvider';
 import { CloudSyncProvider } from './contexts/CloudSyncContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -21,10 +20,10 @@ if (!rootElement) {
   throw new Error('Could not find root element to mount to');
 }
 
-let initialCursorStyle: 'default' | 'mac' = 'default';
+let initialCursorStyle: 'default' | 'svg' = 'default';
 try {
   const stored = localStorage.getItem('phillos_cursor_style');
-  if (stored === 'default' || stored === 'mac') {
+  if (stored === 'default' || stored === 'svg') {
     initialCursorStyle = stored;
   }
 } catch {}
@@ -42,8 +41,8 @@ try {
 } catch {}
 
 const cursorUrl =
-  initialCursorStyle === 'mac'
-    ? macCursor
+  initialCursorStyle === 'svg'
+    ? (initialThemeDark ? darkCursor : lightCursor)
     : initialThemeDark
       ? darkCursor
       : lightCursor;
