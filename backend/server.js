@@ -333,9 +333,20 @@ app.post('/api/inboxai/reply', async (req, res) => {
 
 // --- WebLens ---
 app.get('/api/weblens/summarize', async (req, res) => {
-  const url = req.query.url || '';
+  const url = String(req.query.url || '');
+  let parsed;
   try {
-    const r = await fetch(String(url));
+    parsed = new URL(url);
+  } catch (err) {
+    return res.status(400).json({ error: 'invalid url' });
+  }
+
+  if (!/^https?:$/.test(parsed.protocol) || ['localhost', '127.0.0.1'].includes(parsed.hostname)) {
+    return res.status(400).json({ error: 'disallowed host' });
+  }
+
+  try {
+    const r = await fetch(String(parsed));
     const text = await r.text();
 
     const title = (text.match(/<title>([^<]+)<\/title>/i) || [null, ''])[1].trim();

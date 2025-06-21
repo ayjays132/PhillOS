@@ -133,3 +133,12 @@ it('returns article metadata and citations', async () => {
   expect(res.body.meta.author).toBe('Bob');
   expect(res.body.citations.length).toBe(1);
 });
+
+it('rejects local hostnames', async () => {
+  const fetchMock = vi.fn();
+  vi.stubGlobal('fetch', fetchMock as any);
+  const { default: app } = await import('../../backend/server.js');
+  const res = await request(app).get('/api/weblens/summarize?url=http://localhost');
+  expect(res.status).toBe(400);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
