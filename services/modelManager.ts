@@ -153,6 +153,7 @@ export interface SystemMetrics {
   load: number;
   memory: number;
   threat: number;
+  anomaly?: number;
 }
 
 type AnomalyHandler = (msg: string, metrics: SystemMetrics) => void;
