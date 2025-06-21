@@ -8,6 +8,7 @@ import { StorageProvider } from './contexts/StorageProvider';
 import { CloudSyncProvider } from './contexts/CloudSyncContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { CursorProvider } from './contexts/CursorContext';
+import Cursor from './components/Cursor';
 import { PhoneProvider } from './contexts/PhoneContext';
 import { MemoryHubProvider } from './contexts/MemoryHubContext';
 import { BrainPadProvider } from './contexts/BrainPadContext';
@@ -32,6 +33,7 @@ const renderApp = () => (
                 <MemoryHubProvider>
                   <BrainPadProvider>
                     <App />
+                    <Cursor />
                   </BrainPadProvider>
                 </MemoryHubProvider>
               </PhoneProvider>

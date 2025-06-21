@@ -14,6 +14,10 @@
     @apply bg-gradient-to-br from-white via-gray-200 to-blue-300 text-gray-900 antialiased;
     cursor: var(--phillos-cursor), auto;
   }
+
+  body.custom-cursor-active {
+    cursor: none;
+  }
 }
 @layer utilities {
   .glass-card-style {
@@ -57,4 +61,23 @@
   .widget-card {
     @apply glass-card-style glass-card-hover p-3 h-full flex flex-col overflow-hidden;
   }
+}
+
+.cursor-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+}
+.cursor-overlay img {
+  width: 24px;
+  height: 24px;
+  animation: cursor-blink 1s infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }

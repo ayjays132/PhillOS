@@ -1,6 +1,7 @@
 # Custom Cursor Themes
 
 PhillOS supports customizable cursor themes. The active theme is stored on the backend in `cursor.cfg` and synchronized with the frontend through `/api/cursor`.
+The built-in styles are **Default** (a simple arrow) and **Mac**.
 
 ## Adding Themes
 
@@ -12,6 +13,6 @@ SVGs are imported with the `?url` suffix so Vite inlines them as data URIs for o
 
 ## Integration with Light/Dark Theme
 
-By default PhillOS ships with `arrow_light.svg` and `arrow_dark.svg` which pair with the light and dark UI themes. The cursor URL is applied via the CSS variable `--phillos-cursor` in `index.css` and updated whenever the theme changes.
+By default PhillOS ships with `arrow_light.svg` and a Mac-inspired `mac.svg`. The cursor graphic is rendered at the pointer position by the `Cursor` component and the system cursor is hidden via CSS.
 
 Users can switch cursor themes from **Settings → Cursor Settings**.
