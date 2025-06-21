@@ -14,7 +14,7 @@ import { patternAlertService } from '../services/patternAlertService';
 import { exec } from 'child_process';
 
 const STORAGE_DIR = path.resolve(process.env.PHILLOS_STORAGE_DIR || path.join(__dirname, '../storage'));
-const ALLOWED_FILES = new Set(['protonSettings.json', 'theme.cfg']);
+const ALLOWED_FILES = new Set(['protonSettings.json', 'theme.cfg', 'cursor.cfg']);
 
 function sanitizeStoragePath(name) {
   const base = path.basename(name);
@@ -24,6 +24,7 @@ function sanitizeStoragePath(name) {
 
 const SETTINGS_FILE = sanitizeStoragePath('protonSettings.json');
 const THEME_FILE = sanitizeStoragePath('theme.cfg');
+const CURSOR_FILE = sanitizeStoragePath('cursor.cfg');
 
 async function loadAIConfig() {
   try {
@@ -83,6 +84,33 @@ async function saveTheme(theme) {
   try {
     fs.mkdirSync(STORAGE_DIR, { recursive: true });
     fs.writeFileSync(THEME_FILE, theme);
+  } catch {
+    // ignore
+  }
+}
+
+async function loadCursor() {
+  try {
+    const row = (await query("SELECT value FROM preferences WHERE key='cursor'"))[0];
+    if (row && (row.value === 'light' || row.value === 'dark')) return row.value;
+  } catch {}
+  try {
+    return fs.readFileSync(CURSOR_FILE, 'utf8').trim();
+  } catch {
+    return 'light';
+  }
+}
+
+async function saveCursor(cur) {
+  try {
+    await execute(
+      'INSERT INTO preferences(key,value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=?',
+      ['cursor', cur, cur],
+    );
+  } catch {}
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    fs.writeFileSync(CURSOR_FILE, cur);
   } catch {
     // ignore
   }
@@ -182,6 +210,19 @@ app.post('/api/theme', async (req, res) => {
     return res.status(400).json({ error: 'invalid theme' });
   }
   await saveTheme(theme);
+  res.json({ success: true });
+});
+
+app.get('/api/cursor', async (req, res) => {
+  res.json({ cursor: await loadCursor() });
+});
+
+app.post('/api/cursor', async (req, res) => {
+  const { cursor } = req.body || {};
+  if (cursor !== 'light' && cursor !== 'dark') {
+    return res.status(400).json({ error: 'invalid cursor' });
+  }
+  await saveCursor(cursor);
   res.json({ success: true });
 });
 

@@ -84,6 +84,34 @@ describe('backend server theme API', () => {
   });
 });
 
+describe('backend server cursor API', () => {
+  it('returns cursor from file', async () => {
+    const fsMock = {
+      readFileSync: vi.fn(() => 'light'),
+      writeFileSync: vi.fn(),
+      mkdirSync: vi.fn(),
+    };
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).get('/api/cursor');
+    expect(res.body).toEqual({ cursor: 'light' });
+  });
+
+  it('saves cursor to file', async () => {
+    const writeFileSync = vi.fn();
+    const fsMock = {
+      readFileSync: vi.fn(() => 'dark'),
+      writeFileSync,
+      mkdirSync: vi.fn(),
+    };
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).post('/api/cursor').send({ cursor: 'light' });
+    expect(res.body).toEqual({ success: true });
+    expect(writeFileSync).toHaveBeenCalled();
+  });
+});
+
 describe('backend server ai config API', () => {
   it('saves and returns config', async () => {
     const { default: app } = await import('../../backend/server.js');

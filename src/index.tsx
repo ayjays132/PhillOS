@@ -7,6 +7,7 @@ import { HashRouter } from 'react-router-dom';
 import { StorageProvider } from './contexts/StorageProvider';
 import { CloudSyncProvider } from './contexts/CloudSyncContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { CursorProvider } from './contexts/CursorContext';
 import { PhoneProvider } from './contexts/PhoneContext';
 import { MemoryHubProvider } from './contexts/MemoryHubContext';
 import { BrainPadProvider } from './contexts/BrainPadContext';
@@ -26,13 +27,15 @@ const renderApp = () => (
       <StorageProvider>
         <CloudSyncProvider>
           <ThemeProvider>
-            <PhoneProvider>
-              <MemoryHubProvider>
-                <BrainPadProvider>
-                  <App />
-                </BrainPadProvider>
-              </MemoryHubProvider>
-            </PhoneProvider>
+            <CursorProvider>
+              <PhoneProvider>
+                <MemoryHubProvider>
+                  <BrainPadProvider>
+                    <App />
+                  </BrainPadProvider>
+                </MemoryHubProvider>
+              </PhoneProvider>
+            </CursorProvider>
           </ThemeProvider>
         </CloudSyncProvider>
       </StorageProvider>
