@@ -44,3 +44,14 @@ scripts/sign_module.py privkey.pem mydriver.ko
 
 `verify_module_signature()` in `kernel/security/signature.c` checks this trailer before loading the module. Unsigned or mismatched modules will be rejected.
 
+## eBPF-Based Anomaly Detection
+
+PhillOS can monitor system calls using eBPF programs. Compile the probes with `clang` targeting the `bpf` backend and place the resulting `.bpf.o` files under a top level `bpf/` directory. When building the kernel pass `INCLUDE_BPF=1` to copy these objects into `/lib/phillos/`:
+
+```bash
+clang -target bpf -O2 -c drivers/security/bpf/anomaly.bpf.c -o bpf/anomaly.bpf.o
+make -C bootloader INCLUDE_BPF=1
+```
+
+If `INCLUDE_BPF` is omitted the kernel still builds, but the anomaly driver falls back to a basic syscall predictor when eBPF support is unavailable.
+
