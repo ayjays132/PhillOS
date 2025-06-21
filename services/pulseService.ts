@@ -62,3 +62,7 @@ class PulseService {
 }
 
 export const pulseService = new PulseService();
+
+import { agentOrchestrator } from './agentOrchestrator';
+
+agentOrchestrator.registerAction('pulse.trends', () => pulseService.getTrends());

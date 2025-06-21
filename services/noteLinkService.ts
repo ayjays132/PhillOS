@@ -25,3 +25,7 @@ class NoteLinkService {
 }
 
 export const noteLinkService = new NoteLinkService();
+
+import { agentOrchestrator } from './agentOrchestrator';
+
+agentOrchestrator.registerAction('notelink.match', params => noteLinkService.linkNotes((params?.entries as BrainPadEntry[]) || []));

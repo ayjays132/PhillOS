@@ -108,6 +108,19 @@ class InboxAIService {
     }
     return event;
   }
+
+  async sendMessage(body: string): Promise<boolean> {
+    try {
+      const res = await fetch('/api/inboxai/reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: 0, body }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
 }
 
 import { agentOrchestrator } from './agentOrchestrator';
@@ -121,3 +134,4 @@ agentOrchestrator.registerAction('inbox.get_messages', () => inboxAIService.getM
 agentOrchestrator.registerAction('inbox.summarize', params => inboxAIService.summarizeMessage(Number(params?.id)));
 agentOrchestrator.registerAction('inbox.condense_thread', params => inboxAIService.chainShrink(Number(params?.id)));
 agentOrchestrator.registerAction('inbox.extract_meeting', params => inboxAIService.extractMeeting(Number(params?.id)));
+agentOrchestrator.registerAction('inbox.send', params => inboxAIService.sendMessage(String(params?.body || '')));
