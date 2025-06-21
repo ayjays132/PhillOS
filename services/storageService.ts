@@ -113,23 +113,11 @@ class StorageService {
     }
   }
 
-  async getCursorStyle(): Promise<'default' | 'mac' | null> {
+  async getCursorStyle(): Promise<'default' | 'svg' | null> {
     try {
       const stored = localStorage.getItem(CURSOR_STYLE_KEY);
-      if (stored === 'default' || stored === 'mac') {
+      if (stored === 'default' || stored === 'svg') {
         return stored;
-      }
-    } catch {
-      // ignore
-    }
-
-    try {
-      const res = await fetch('/api/cursor');
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (data && (data.cursor === 'default' || data.cursor === 'mac')) {
-        localStorage.setItem(CURSOR_STYLE_KEY, data.cursor);
-        return data.cursor;
       }
     } catch {
       // ignore
@@ -137,16 +125,9 @@ class StorageService {
     return null;
   }
 
-  async setCursorStyle(style: 'default' | 'mac') {
+  async setCursorStyle(style: 'default' | 'svg') {
     try {
       localStorage.setItem(CURSOR_STYLE_KEY, style);
-    } catch {}
-    try {
-      await fetch('/api/cursor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cursor: style }),
-      });
     } catch {
       // ignore
     }
@@ -197,4 +178,4 @@ export const storageService = new StorageService();
 agentOrchestrator.registerAction('storage.get_theme', () => storageService.getTheme());
 agentOrchestrator.registerAction('storage.set_theme', params => storageService.setTheme(params?.theme as 'light' | 'dark'));
 agentOrchestrator.registerAction('storage.get_cursor_style', () => storageService.getCursorStyle());
-agentOrchestrator.registerAction('storage.set_cursor_style', params => storageService.setCursorStyle(params?.style as 'default' | 'mac'));
+agentOrchestrator.registerAction('storage.set_cursor_style', params => storageService.setCursorStyle(params?.style as 'default' | 'svg'));

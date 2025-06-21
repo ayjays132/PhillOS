@@ -3,12 +3,11 @@ import { GlassCard } from '../GlassCard';
 import { useCursor } from '../../contexts/CursorContext';
 import { MousePointer } from 'lucide-react';
 import defaultCursor from '../../assets/cursors/arrow_light.svg?url';
-import macCursor from '../../assets/cursors/mac.svg?url';
 
 export const CursorSettingsView: React.FC = () => {
-  const { style, setStyle } = useCursor();
+  const { style, setStyle, animated, setAnimated } = useCursor();
 
-  const previewUrl = style === 'mac' ? macCursor : defaultCursor;
+  const previewUrl = style === 'svg' ? defaultCursor : 'auto';
 
   return (
     <GlassCard className="!shadow-2xl !shadow-blue-600/30 !border-white/15 h-full flex flex-col gap-4">
@@ -24,16 +23,24 @@ export const CursorSettingsView: React.FC = () => {
           className="bg-transparent border border-white/20 rounded px-2 py-1"
         >
           <option value="default">Default</option>
-          <option value="mac">Mac</option>
+          <option value="svg">SVG</option>
         </select>
       </label>
       <div className="mt-4 flex items-center gap-2">
         <span className="text-sm">Preview:</span>
         <div
           className="w-6 h-6 border border-white/20"
-          style={{ cursor: `url(${previewUrl}) 0 0, auto` }}
+          style={{ cursor: style === 'svg' ? `url(${previewUrl}) 0 0, auto` : 'auto' }}
         />
       </div>
+      <label className="inline-flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={animated}
+          onChange={e => setAnimated(e.target.checked)}
+        />
+        <span>Animate cursor</span>
+      </label>
     </GlassCard>
   );
 };
