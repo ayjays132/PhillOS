@@ -9,11 +9,11 @@ class GestureService {
   private listeners = new Set<WorkspaceSwitchListener>();
   private touchStartX = 0;
   private voice: VoiceService | null = null;
-  private workspaces: string[] = [];
+  private targets: string[] = [];
   private current = 0;
 
-  init(workspaces: string[]) {
-    this.workspaces = workspaces;
+  init(targets: string[]) {
+    this.targets = targets;
     if (typeof window !== 'undefined') {
       window.addEventListener('keydown', this.onKey);
       window.addEventListener('touchstart', this.onTouchStart);
@@ -25,8 +25,8 @@ class GestureService {
       if (/next workspace/i.test(text)) this.next();
       if (/previous workspace/i.test(text)) this.prev();
     });
-    if (this.workspaces.length) {
-      contextBus.publish('workspace.active', this.workspaces[this.current]);
+    if (this.targets.length) {
+      contextBus.publish('workspace.active', this.targets[this.current]);
     }
   }
 
@@ -55,17 +55,17 @@ class GestureService {
   };
 
   next() {
-    if (this.workspaces.length === 0) return;
-    this.current = (this.current + 1) % this.workspaces.length;
-    const id = this.workspaces[this.current];
+    if (this.targets.length === 0) return;
+    this.current = (this.current + 1) % this.targets.length;
+    const id = this.targets[this.current];
     this.emit(id);
     contextBus.publish('workspace.active', id);
   }
 
   prev() {
-    if (this.workspaces.length === 0) return;
-    this.current = (this.current - 1 + this.workspaces.length) % this.workspaces.length;
-    const id = this.workspaces[this.current];
+    if (this.targets.length === 0) return;
+    this.current = (this.current - 1 + this.targets.length) % this.targets.length;
+    const id = this.targets[this.current];
     this.emit(id);
     contextBus.publish('workspace.active', id);
   }

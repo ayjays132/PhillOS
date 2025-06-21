@@ -1,5 +1,6 @@
 import { agentOrchestrator } from './agentOrchestrator';
 
+
 export interface WindowLayout {
   id: string;
   x: number;
@@ -41,25 +42,71 @@ class WorkspaceSnapService {
     }
   }
 
-  save(name: string, layout: WindowLayout[]) {
+  async save(name: string, layout: WindowLayout[]) {
     this.snaps[name] = layout;
     this.persist();
+    try {
+      await fetch('/api/spacemanager/snapshot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, layout }),
+      });
+    } catch {
+      // ignore network errors
+    }
   }
 
-  loadSnapshot(name: string): WindowLayout[] | null {
+  async loadSnapshot(name: string): Promise<WindowLayout[] | null> {
+    try {
+      const res = await fetch(`/api/spacemanager/snapshot?name=${encodeURIComponent(name)}`);
+      if (res.ok) {
+        const data = (await res.json()) as { layout: WindowLayout[] };
+        this.snaps[name] = data.layout;
+        this.persist();
+        return [...data.layout];
+      }
+    } catch {
+      // ignore
+    }
     const snap = this.snaps[name];
     return snap ? [...snap] : null;
   }
 
-  list(): string[] {
+  async list(): Promise<string[]> {
+    try {
+      const res = await fetch('/api/spacemanager/snapshots');
+      if (res.ok) {
+        const data = (await res.json()) as { workspaces: string[] };
+        return data.workspaces;
+      }
+    } catch {
+      // ignore
+    }
     return Object.keys(this.snaps);
+  }
+
+  getGroups(name: string): number[] {
+    const snap = this.snaps[name];
+    if (!snap) return [];
+    const set = new Set<number>();
+    snap.forEach(w => set.add(w.group ?? 0));
+    return Array.from(set).sort((a, b) => a - b);
+  }
+
+  switchGroup(name: string, group: number): WindowLayout[] | null {
+    const snap = this.snaps[name];
+    if (!snap) return null;
+    return snap.filter(w => (w.group ?? 0) === group).map(w => ({ ...w }));
   }
 }
 
 export const workspaceSnapService = new WorkspaceSnapService();
 
 agentOrchestrator.registerAction('workspace.save', params => {
-  workspaceSnapService.save(String(params?.name || 'default'), params?.layout as WindowLayout[] ?? []);
+  return workspaceSnapService.save(
+    String(params?.name || 'default'),
+    (params?.layout as WindowLayout[]) ?? [],
+  );
 });
 
 agentOrchestrator.registerAction('workspace.load', params => {
