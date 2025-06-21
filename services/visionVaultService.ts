@@ -34,6 +34,7 @@ class VisionVaultService {
   private arMemories: { name: string; lat: number; lon: number }[] = [];
   private modelPromise: Promise<(src: string) => Promise<Feature>> | null = null;
   private xrSession: XRSession | null = null;
+  private tagCache: Record<string, string[]> = {};
 
   private async ensureModel() {
     if (!this.modelPromise) this.modelPromise = loadModel();
@@ -75,6 +76,32 @@ class VisionVaultService {
     }
   }
 
+  async getTags(path: string): Promise<string[]> {
+    if (this.tagCache[path]) return this.tagCache[path];
+    try {
+      const res = await fetch(`/api/filetags?path=${encodeURIComponent(path)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.tags)) {
+          this.tagCache[path] = data.tags;
+          return data.tags;
+        }
+      }
+    } catch {}
+    return [];
+  }
+
+  async setTags(path: string, tags: string[]) {
+    this.tagCache[path] = tags;
+    try {
+      await fetch('/api/filetags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path, tags }),
+      });
+    } catch {}
+  }
+
   private async loadARMemories() {
     if (this.arMemories.length) return this.arMemories;
     try {
@@ -97,13 +124,21 @@ class VisionVaultService {
   async search(query: string, limit = 5): Promise<string[]> {
     if (!this.index.length) await this.getImages();
     if (!this.index.length) return [];
+    const q = query.toLowerCase();
+    const tagMatches: string[] = [];
+    for (const img of this.images) {
+      const tags = await this.getTags(img);
+      if (tags.some(t => t.toLowerCase().includes(q))) tagMatches.push(img);
+    }
+
     const model = await this.ensureModel();
     const qvec = await model(query);
     const results = this.index
       .map(e => ({ src: e.src, score: similarity(e.vec, qvec) }))
       .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-    return results.map(r => r.src);
+      .map(r => r.src);
+    const combined = Array.from(new Set([...tagMatches, ...results]));
+    return combined.slice(0, limit);
   }
 
   async enhance(src: string, filter = 'auto'): Promise<string> {

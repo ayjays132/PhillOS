@@ -7,9 +7,21 @@ export const VisionVault: React.FC = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<string[]>([]);
   const [arEnabled, setArEnabled] = useState(false);
+  const [tags, setTags] = useState<Record<string, string[]>>({});
+  const [edit, setEdit] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    visionVaultService.getImages().then(setImages);
+    visionVaultService.getImages().then(async imgs => {
+      setImages(imgs);
+      const entries: Record<string, string[]> = {};
+      for (const img of imgs) {
+        entries[img] = await visionVaultService.getTags(img);
+      }
+      setTags(entries);
+      const ed: Record<string, string> = {};
+      for (const k of Object.keys(entries)) ed[k] = entries[k].join(', ');
+      setEdit(ed);
+    });
   }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -50,7 +62,7 @@ export const VisionVault: React.FC = () => {
         </form>
         <div className="grid grid-cols-2 gap-2 overflow-auto">
           {display.map((src, i) => (
-            <div key={i} className="relative">
+            <div key={i} className="relative space-y-1">
               <img src={src} alt={`img-${i}`} className="rounded" />
               <button
                 onClick={async () => {
@@ -62,6 +74,24 @@ export const VisionVault: React.FC = () => {
               >
                 Enhance
               </button>
+              <div className="text-xs">
+                <input
+                  value={edit[src] || ''}
+                  onChange={e => setEdit({ ...edit, [src]: e.target.value })}
+                  className="px-1 py-0.5 rounded text-black text-xs"
+                />
+                <button
+                  onClick={async () => {
+                    const parts = (edit[src] || '').split(',').map(t => t.trim()).filter(Boolean);
+                    await visionVaultService.setTags(src, parts);
+                    setTags(t => ({ ...t, [src]: parts }));
+                  }}
+                  className="ml-1 px-1 py-0.5 bg-blue-600 text-white rounded text-xs"
+                >
+                  Save
+                </button>
+                {tags[src]?.length > 0 && <div>Tags: {tags[src].join(', ')}</div>}
+              </div>
             </div>
           ))}
         </div>
