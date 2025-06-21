@@ -1,6 +1,9 @@
 use std::fs;
 use std::path::{Path, PathBuf, Component};
 use std::process::Command;
+use std::os::unix::io::AsRawFd;
+use std::fs::OpenOptions;
+use libc;
 use tauri::command;
 use serde::{Serialize, Deserialize};
 use rusqlite::{params, Connection};
@@ -12,6 +15,96 @@ pub struct FsEntry {
     path: String,
     is_dir: bool,
 }
+
+const KERNEL_QUERY_HEAP_USAGE: u32 = 1;
+const KERNEL_QUERY_SCHED_STATS: u32 = 2;
+const KERNEL_QUERY_AI_HEAP_USAGE: u32 = 3;
+const KERNEL_QUERY_NEXT_DEVICE_EVENT: u32 = 4;
+
+#[repr(C)]
+#[derive(Default)]
+struct KernelQueryRequest {
+    query: u32,
+    nonce: u32,
+    signature: u32,
+}
+
+#[repr(C)]
+#[derive(Default)]
+struct KernelQueryResponse {
+    result: u64,
+}
+
+#[repr(C)]
+#[derive(Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceEvent {
+    added: bool,
+    bus: u8,
+    slot: u8,
+    func: u8,
+    vendor_id: u16,
+    device_id: u16,
+    class_code: u8,
+    subclass: u8,
+}
+
+#[repr(C)]
+#[derive(Default)]
+struct IDevice {
+    bus: u8,
+    slot: u8,
+    func: u8,
+    vendor_id: u16,
+    device_id: u16,
+    class_code: u8,
+    subclass: u8,
+}
+
+#[repr(C)]
+#[derive(Default)]
+struct KernelDeviceEvent {
+    added: u8,
+    dev: IDevice,
+}
+
+#[repr(C)]
+#[derive(Default)]
+struct QueryIoc {
+    req: KernelQueryRequest,
+    res: KernelQueryResponse,
+    event: KernelDeviceEvent,
+}
+
+fn sign_token(nonce: u32, query: u32) -> u32 {
+    let mut hash = 0x5a17c3e4u32 ^ nonce ^ query;
+    hash ^= 0x811C9DC5;
+    hash = hash.wrapping_mul(0x01000193);
+    hash
+}
+
+const IOC_NRBITS: libc::c_ulong = 8;
+const IOC_TYPEBITS: libc::c_ulong = 8;
+const IOC_SIZEBITS: libc::c_ulong = 14;
+const IOC_DIRBITS: libc::c_ulong = 2;
+
+const IOC_NRSHIFT: libc::c_ulong = 0;
+const IOC_TYPESHIFT: libc::c_ulong = IOC_NRSHIFT + IOC_NRBITS;
+const IOC_SIZESHIFT: libc::c_ulong = IOC_TYPESHIFT + IOC_TYPEBITS;
+const IOC_DIRSHIFT: libc::c_ulong = IOC_SIZESHIFT + IOC_SIZEBITS;
+
+const IOC_WRITE: libc::c_ulong = 1;
+const IOC_READ: libc::c_ulong = 2;
+
+const fn ioc(dir: libc::c_ulong, t: libc::c_ulong, nr: libc::c_ulong, size: libc::c_ulong) -> libc::c_ulong {
+    (dir << IOC_DIRSHIFT) | (t << IOC_TYPESHIFT) | (nr << IOC_NRSHIFT) | (size << IOC_SIZESHIFT)
+}
+
+const fn iowr(t: libc::c_ulong, nr: libc::c_ulong, size: libc::c_ulong) -> libc::c_ulong {
+    ioc(IOC_READ | IOC_WRITE, t, nr, size)
+}
+
+const QUERY_IOCTL: libc::c_ulong = iowr('p' as libc::c_ulong, 1, std::mem::size_of::<QueryIoc>() as libc::c_ulong);
 
 fn normalize_path<P: AsRef<Path>>(path: P) -> PathBuf {
     let mut result = PathBuf::new();
@@ -235,6 +328,64 @@ fn smart_tags(path: String) -> Result<Vec<String>, String> {
     }
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SchedStats {
+    task_count: u32,
+    last_residual: f32,
+}
+
+#[command]
+fn query_scheduler() -> Result<SchedStats, String> {
+    let mut ioc = QueryIoc::default();
+    ioc.req.query = KERNEL_QUERY_SCHED_STATS;
+    ioc.req.nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as u32;
+    ioc.req.signature = sign_token(ioc.req.nonce, ioc.req.query);
+    let file = OpenOptions::new().read(true).write(true).open("/dev/phillos-query")
+        .map_err(|e| e.to_string())?;
+    let ret = unsafe { libc::ioctl(file.as_raw_fd(), QUERY_IOCTL, &mut ioc) };
+    if ret < 0 {
+        return Err("ioctl failed".into());
+    }
+    let count = (ioc.res.result & 0xFFFF_FFFF) as u32;
+    let bits = (ioc.res.result >> 32) as u32;
+    let residual = f32::from_bits(bits);
+    Ok(SchedStats { task_count: count, last_residual: residual })
+}
+
+#[command]
+fn next_device_event() -> Result<Option<DeviceEvent>, String> {
+    let mut ioc = QueryIoc::default();
+    ioc.req.query = KERNEL_QUERY_NEXT_DEVICE_EVENT;
+    ioc.req.nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as u32;
+    ioc.req.signature = sign_token(ioc.req.nonce, ioc.req.query);
+    let file = OpenOptions::new().read(true).write(true).open("/dev/phillos-query")
+        .map_err(|e| e.to_string())?;
+    let ret = unsafe { libc::ioctl(file.as_raw_fd(), QUERY_IOCTL, &mut ioc) };
+    if ret < 0 {
+        return Err("ioctl failed".into());
+    }
+    if ioc.res.result == 0 {
+        return Ok(None);
+    }
+    Ok(Some(DeviceEvent {
+        added: ioc.event.added != 0,
+        bus: ioc.event.dev.bus,
+        slot: ioc.event.dev.slot,
+        func: ioc.event.dev.func,
+        vendor_id: ioc.event.dev.vendor_id,
+        device_id: ioc.event.dev.device_id,
+        class_code: ioc.event.dev.class_code,
+        subclass: ioc.event.dev.subclass,
+    }))
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -247,7 +398,9 @@ fn main() {
             save_event,
             load_events,
             call_scheduler,
-            smart_tags
+            smart_tags,
+            query_scheduler,
+            next_device_event
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

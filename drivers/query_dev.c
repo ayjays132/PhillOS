@@ -10,6 +10,7 @@
 typedef struct {
     kernel_query_request_t req;
     kernel_query_response_t res;
+    kernel_device_event_t event;
 } query_ioc_t;
 
 #ifndef QUERY_IOCTL
@@ -24,14 +25,12 @@ static long query_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
     query_ioc_t ioc;
     if (copy_from_user(&ioc, (void __user *)arg, sizeof(ioc)))
         return -EFAULT;
-    /* Placeholder implementation - returns zeroed result */
-    switch (ioc.req.query) {
-    case KERNEL_QUERY_HEAP_USAGE:
-    case KERNEL_QUERY_SCHED_STATS:
-    case KERNEL_QUERY_AI_HEAP_USAGE:
-        ioc.res.result = 0;
-        break;
-    default:
+    if (ioc.req.query == KERNEL_QUERY_NEXT_DEVICE_EVENT) {
+        if (kernel_pop_device_event(&ioc.event) == 0)
+            ioc.res.result = 1;
+        else
+            ioc.res.result = 0;
+    } else if (kernel_query(&ioc.req, &ioc.res) != 0) {
         return -EINVAL;
     }
     if (copy_to_user((void __user *)arg, &ioc, sizeof(ioc)))

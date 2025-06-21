@@ -13,6 +13,7 @@
 typedef struct {
     kernel_query_request_t req;
     kernel_query_response_t res;
+    kernel_device_event_t event;
 } query_ioc_t;
 
 #define QUERY_IOCTL _IOWR('p', 1, query_ioc_t)
@@ -39,6 +40,8 @@ int main(int argc, char **argv)
         req.query = KERNEL_QUERY_SCHED_STATS;
     } else if (strcmp(argv[1], "ai_heap") == 0) {
         req.query = KERNEL_QUERY_AI_HEAP_USAGE;
+    } else if (strcmp(argv[1], "event") == 0) {
+        req.query = KERNEL_QUERY_NEXT_DEVICE_EVENT;
     } else {
         fprintf(stderr, "Unknown query type\n");
         return 1;
@@ -69,6 +72,15 @@ int main(int argc, char **argv)
         union { uint32_t u; float f; } conv;
         conv.u = bits;
         printf("tasks:%u residual:%f\n", count, conv.f);
+    } else if (req.query == KERNEL_QUERY_NEXT_DEVICE_EVENT) {
+        if (ioc.res.result) {
+            printf("%s %04x:%04x bus %u slot %u func %u\n",
+                   ioc.event.added ? "added" : "removed",
+                   ioc.event.dev.vendor_id, ioc.event.dev.device_id,
+                   ioc.event.dev.bus, ioc.event.dev.slot, ioc.event.dev.func);
+        } else {
+            printf("no event\n");
+        }
     } else {
         printf("%llu\n", (unsigned long long)ioc.res.result);
     }
