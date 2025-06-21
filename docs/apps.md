@@ -29,6 +29,7 @@ This document summarizes the demo applications bundled with the prototype. They 
 ## AppForge
 - **Purpose:** simulate building a project.
 - **API:** `/api/appforge/build`
+- **Features:** on load, `appForgeService.recommendApps()` suggests apps you use least. The HealthMonitor panel shows CPU and memory trends with alerts when usage is high.
 
 ## BrainPad
 - **Purpose:** simple note pad stored in local storage.
