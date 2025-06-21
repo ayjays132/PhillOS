@@ -5,6 +5,7 @@ beforeEach(() => {
   vi.resetModules();
   process.env.VITEST = '1';
   process.env.PHILLOS_STORAGE_DIR = '/tmp/test-storage';
+  delete process.env.API_TOKEN;
 });
 
 describe('backend server theme API', () => {
@@ -132,4 +133,20 @@ it('returns article metadata and citations', async () => {
   expect(res.body.meta.title).toBe('Art');
   expect(res.body.meta.author).toBe('Bob');
   expect(res.body.citations.length).toBe(1);
+});
+
+describe('token auth middleware', () => {
+  it('rejects unauthorized proton launch', async () => {
+    process.env.API_TOKEN = 'secret';
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).post('/api/launch-proton').send({ path: '/x' });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects unauthorized phone bridge access', async () => {
+    process.env.API_TOKEN = 'secret';
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).get('/phonebridge/test');
+    expect(res.status).toBe(401);
+  });
 });
