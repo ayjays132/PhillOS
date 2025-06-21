@@ -186,3 +186,18 @@ remains intact.
   register the service worker on the first boot. Clearing the browser storage or
   using a new profile forces the assets to be fetched again from the USB drive.
 
+## Boot Troubleshooting
+
+Common boot problems and how to resolve them:
+
+* **"Security Violation" at start up** – Secure Boot is rejecting the unsigned
+  loader or kernel. Either disable Secure Boot in your firmware settings or sign
+  `dist/bootloader/phillos.efi` and `dist/kernel.efi` with your own keys using
+  `sbsign`.
+* **Missing EFI drivers** – QEMU and some firmware implementations require
+  additional FAT or storage drivers. Copy the needed `*.efi` files to the ESP or
+  load them from the firmware shell before booting.
+* **Boot hangs with no output** – Enable debug logging to capture early
+  messages. When launching QEMU pass `-debugcon stdio` (or
+  `-debugcon file:boot.log -d guest_errors`) to record the debug stream written
+  by `kernel/debug.c` to I/O port `0xE9`.
