@@ -2,27 +2,38 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
-import os from 'os';
 import { sanitizeArgs } from '../cli/utils/validate.ts';
 
 export async function downloadProton(base, version) {
   const url = process.env.PROTON_DOWNLOAD_URL ||
     `https://steamcdn-a.akamaihd.net/client/${version}.tar.gz`;
+
+  const cacheDir = process.env.PHILLOS_CACHE_DIR || 'cache';
+  await fs.promises.mkdir(cacheDir, { recursive: true });
   await fs.promises.mkdir(base, { recursive: true });
-  const tmp = path.join(os.tmpdir(), `${version}.tar.gz`);
+  const cacheFile = path.join(cacheDir, `${version}.tar.gz`);
+
+  if (!fs.existsSync(cacheFile)) {
+    if (url.startsWith('file://')) {
+      const src = new URL(url).pathname;
+      await fs.promises.copyFile(src, cacheFile);
+    } else {
+      await new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(cacheFile);
+        https.get(url, res => {
+          if ((res.statusCode || 0) >= 400) {
+            reject(new Error(`Failed to download Proton: ${res.statusCode}`));
+            return;
+          }
+          res.pipe(file);
+          file.on('finish', () => file.close(resolve));
+        }).on('error', reject);
+      });
+    }
+  }
+
   await new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(tmp);
-    https.get(url, res => {
-      if ((res.statusCode || 0) >= 400) {
-        reject(new Error(`Failed to download Proton: ${res.statusCode}`));
-        return;
-      }
-      res.pipe(file);
-      file.on('finish', () => file.close(resolve));
-    }).on('error', reject);
-  });
-  await new Promise((resolve, reject) => {
-    const tar = spawn('tar', ['-xf', tmp, '-C', base]);
+    const tar = spawn('tar', ['-xf', cacheFile, '-C', base]);
     tar.on('error', reject);
     tar.on('exit', code => {
       code === 0 ? resolve() : reject(new Error(`tar exited with code ${code}`));
