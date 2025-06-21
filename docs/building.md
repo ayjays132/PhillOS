@@ -152,3 +152,37 @@ make -C tests/kernel_memory
 ```
 
 If the output is `kernel memory tests passed` the allocator behaved as expected.
+
+## Preparing a Self-Contained USB
+
+To run PhillOS entirely offline you can bundle all required assets on the boot
+media. After running `./scripts/build.sh` copy the contents of `dist/` to a FAT
+formatted USB drive or flash `dist/bootloader/phillos.iso` to the stick with
+`dd` or a graphical tool like balenaEtcher. Optionally pre-populate additional
+components before creating the ISO:
+
+1. Execute `./scripts/setup-vkd3d.sh` to download the `vkd3d-proton` sources so
+   the DirectX 12 translation library is available without a network
+   connection.
+2. Run `./scripts/setup-proton.sh` with the desired version to fetch Proton and
+   place it under `dist/proton/<version>/`. Set `PROTON_SHA256` and
+   `PROTON_DOWNLOAD_URL` if using a local mirror.
+3. If you plan to use the Qwen model offline, invoke `./scripts/setup-ollama.sh`
+   before building. The model files are cached in `cache/` and copied into the
+   boot image.
+
+During the first boot the service worker caches all UI assets from the USB
+drive. Subsequent boots no longer require internet access as long as the cache
+remains intact.
+
+### Troubleshooting Offline Boot Issues
+
+* **Blank screen after the boot animation** – Your GPU may need proprietary
+  firmware not bundled with the image. Copy the required `.bin` files from your
+  Linux distribution into `dist/bootloader/esp/lib/firmware/` before generating
+  the ISO. Passing `nomodeset` on the kernel command line can also bypass GPU
+  initialization.
+* **Service worker not caching files** – Make sure the browser is allowed to
+  register the service worker on the first boot. Clearing the browser storage or
+  using a new profile forces the assets to be fetched again from the USB drive.
+
