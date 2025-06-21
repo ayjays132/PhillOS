@@ -133,6 +133,12 @@ void init_gpu_driver(void)
     if (drv && drv->init) {
         active_driver = drv;
         drv->init();
+        if (drv->set_mode) {
+            framebuffer_info_t *fb = &boot_info_get()->fb;
+            drv->set_mode(fb->width, fb->height);
+        }
+        if (drv->enable_vulkan)
+            drv->enable_vulkan();
     }
 
     if (init_vkd3d(vendor))
