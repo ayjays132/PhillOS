@@ -30,7 +30,9 @@ async function loadAIConfig() {
   try {
     const row = (await query("SELECT value FROM preferences WHERE key='ai_config'"))[0];
     if (row && row.value) return JSON.parse(row.value);
-  } catch {}
+  } catch (err) {
+    console.error('Failed to load AI config', err);
+  }
   return null;
 }
 
@@ -41,7 +43,10 @@ async function saveAIConfig(config) {
       'INSERT INTO preferences(key,value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=?',
       ['ai_config', val, val],
     );
-  } catch {}
+  } catch (err) {
+    console.error('Failed to save AI config', err);
+    throw err;
+  }
 }
 
 function sanitizeUserPath(p) {
@@ -52,7 +57,8 @@ function sanitizeUserPath(p) {
 function loadSettings() {
   try {
     return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
-  } catch {
+  } catch (err) {
+    console.error('Failed to load settings', err);
     return {};
   }
 }
@@ -66,10 +72,13 @@ async function loadTheme() {
   try {
     const row = (await query("SELECT value FROM preferences WHERE key='theme'"))[0];
     if (row && (row.value === 'light' || row.value === 'dark')) return row.value;
-  } catch {}
+  } catch (err) {
+    console.error('Failed to load theme from DB', err);
+  }
   try {
     return fs.readFileSync(THEME_FILE, 'utf8').trim();
-  } catch {
+  } catch (err) {
+    console.error('Failed to load theme file', err);
     return 'dark';
   }
 }
@@ -80,11 +89,14 @@ async function saveTheme(theme) {
       'INSERT INTO preferences(key,value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=?',
       ['theme', theme, theme],
     );
-  } catch {}
+  } catch (err) {
+    console.error('Failed to save theme to DB', err);
+  }
   try {
     fs.mkdirSync(STORAGE_DIR, { recursive: true });
     fs.writeFileSync(THEME_FILE, theme);
-  } catch {
+  } catch (err) {
+    console.error('Failed to write theme file', err);
     // ignore
   }
 }
@@ -93,10 +105,13 @@ async function loadCursor() {
   try {
     const row = (await query("SELECT value FROM preferences WHERE key='cursor'"))[0];
     if (row && (row.value === 'light' || row.value === 'dark')) return row.value;
-  } catch {}
+  } catch (err) {
+    console.error('Failed to load cursor from DB', err);
+  }
   try {
     return fs.readFileSync(CURSOR_FILE, 'utf8').trim();
-  } catch {
+  } catch (err) {
+    console.error('Failed to load cursor file', err);
     return 'light';
   }
 }
@@ -107,11 +122,14 @@ async function saveCursor(cur) {
       'INSERT INTO preferences(key,value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=?',
       ['cursor', cur, cur],
     );
-  } catch {}
+  } catch (err) {
+    console.error('Failed to save cursor to DB', err);
+  }
   try {
     fs.mkdirSync(STORAGE_DIR, { recursive: true });
     fs.writeFileSync(CURSOR_FILE, cur);
-  } catch {
+  } catch (err) {
+    console.error('Failed to write cursor file', err);
     // ignore
   }
 }
@@ -170,7 +188,8 @@ app.post('/api/launch-proton', async (req, res) => {
 
   try {
     exePath = sanitizeUserPath(exePath);
-  } catch {
+  } catch (err) {
+    console.error('Invalid path provided', err);
     return res.status(400).json({ error: 'invalid path' });
   }
 
@@ -339,8 +358,9 @@ app.get('/api/weblens/summarize', async (req, res) => {
       meta: { title, author, published },
       citations,
     });
-  } catch {
-    res.json({ summary: `Summary of ${url}`, meta: {}, citations: [] });
+  } catch (err) {
+    console.error('WebLens summarize error', err);
+    res.status(500).json({ error: 'failed to fetch url' });
   }
 });
 
@@ -352,13 +372,16 @@ let lastPatch = 0;
 
 app.get('/api/mediasphere/media', (req, res) => {
   const dir = path.join(STORAGE_DIR, 'media');
-  let items = [];
   try {
-    items = fs.readdirSync(dir)
+    const items = fs
+      .readdirSync(dir)
       .filter(f => !fs.statSync(path.join(dir, f)).isDirectory())
       .map((f, i) => ({ id: i + 1, title: f }));
-  } catch {}
-  res.json({ items });
+    res.json({ items });
+  } catch (err) {
+    console.error('Failed to list media', err);
+    res.status(500).json({ error: 'failed to list media' });
+  }
 });
 
 app.post('/api/mediasphere/analyze', (req, res) => {
@@ -371,8 +394,11 @@ app.post('/api/mediasphere/analyze', (req, res) => {
       const size = fs.statSync(path.join(dir, file)).size;
       return res.json({ result: `Size ${size} bytes` });
     }
-  } catch {}
-  res.json({ result: 'Not found' });
+    res.status(404).json({ error: 'file not found' });
+  } catch (err) {
+    console.error('Media analysis error', err);
+    res.status(500).json({ error: 'analysis failed' });
+  }
 });
 
 
@@ -462,8 +488,11 @@ app.post('/api/mediasphere/chapters', async (req, res) => {
       const data = await detectScenes(path.join(dir, file));
       return res.json(data);
     }
-  } catch {}
-  res.json({ chapters: [], duration: 0 });
+    res.status(404).json({ error: 'file not found' });
+  } catch (err) {
+    console.error('Scene detection error', err);
+    res.status(500).json({ error: 'failed to detect scenes' });
+  }
 });
 
 app.post('/api/mediasphere/bitrate', async (req, res) => {
@@ -476,8 +505,11 @@ app.post('/api/mediasphere/bitrate', async (req, res) => {
       const data = await analyzeBitrate(path.join(dir, file));
       return res.json(data);
     }
-  } catch {}
-  res.json({ bitrate: 0, recommended: 'unknown' });
+    res.status(404).json({ error: 'file not found' });
+  } catch (err) {
+    console.error('Bitrate analysis error', err);
+    res.status(500).json({ error: 'bitrate analysis failed' });
+  }
 });
 
 app.post('/api/mediasphere/recap', async (req, res) => {
@@ -490,20 +522,26 @@ app.post('/api/mediasphere/recap', async (req, res) => {
       const data = await createRecap(path.join(dir, file));
       return res.json(data);
     }
-  } catch {}
-  res.json({ result: '' });
+    res.status(404).json({ error: 'file not found' });
+  } catch (err) {
+    console.error('Recap creation error', err);
+    res.status(500).json({ error: 'recap failed' });
+  }
 });
 
 // --- SoundScape ---
 app.get('/api/soundscape/tracks', (req, res) => {
   const dir = path.join(STORAGE_DIR, 'music');
-  let tracks = [];
   try {
-    tracks = fs.readdirSync(dir)
+    const tracks = fs
+      .readdirSync(dir)
       .filter(f => f.endsWith('.mp3'))
       .map((f, i) => ({ id: i + 1, title: path.parse(f).name, artist: 'Unknown' }));
-  } catch {}
-  res.json({ tracks });
+    res.json({ tracks });
+  } catch (err) {
+    console.error('Failed to list tracks', err);
+    res.status(500).json({ error: 'failed to list tracks' });
+  }
 });
 
 // --- VisionVault ---
@@ -514,14 +552,17 @@ const demoImages = [
 
 app.get('/api/visionvault/images', (req, res) => {
   const dir = path.join(STORAGE_DIR, 'images');
-  let images = [];
   try {
-    images = fs.readdirSync(dir)
+    let images = fs
+      .readdirSync(dir)
       .filter(f => /\.(png|jpg|jpeg|gif)$/i.test(f))
       .map(f => path.join('/images', f));
-  } catch {}
-  if (images.length === 0) images = demoImages;
-  res.json({ images });
+    if (images.length === 0) images = demoImages;
+    res.json({ images });
+  } catch (err) {
+    console.error('Failed to list images', err);
+    res.status(500).json({ error: 'failed to list images' });
+  }
 });
 
 app.get('/api/visionvault/index', (req, res) => {
@@ -529,8 +570,9 @@ app.get('/api/visionvault/index', (req, res) => {
     const p = path.join(STORAGE_DIR, 'vision_index.json');
     const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
     return res.json(data);
-  } catch {
-    return res.json({ index: [] });
+  } catch (err) {
+    console.error('Failed to read vision index', err);
+    return res.status(500).json({ error: 'failed to read index' });
   }
 });
 
@@ -570,8 +612,9 @@ app.get('/api/visionvault/ar_memories', (req, res) => {
     const p = path.join(STORAGE_DIR, 'vision_ar_memories.json');
     const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
     return res.json(data);
-  } catch {
-    return res.json({ memories: [] });
+  } catch (err) {
+    console.error('Failed to read AR memories', err);
+    return res.status(500).json({ error: 'failed to read memories' });
   }
 });
 
@@ -633,7 +676,8 @@ app.post('/api/eco/kill', (req, res) => {
   try {
     process.kill(pid);
     res.json({ success: true });
-  } catch {
+  } catch (err) {
+    console.error('Failed to kill process', err);
     res.status(500).json({ error: 'failed' });
   }
 });
