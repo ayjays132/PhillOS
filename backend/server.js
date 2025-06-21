@@ -7,6 +7,7 @@ import { WebSocketServer } from 'ws';
 import { URL } from 'url';
 import { spawn } from 'child_process';
 import { createProtonLauncher } from './protonLauncher.js';
+import { scoreExecutable, RISK_THRESHOLD } from './sandboxShield.js';
 import { initDb, query, execute } from './db.js';
 import ffi from 'ffi-napi';
 
@@ -123,6 +124,12 @@ app.post('/api/launch-proton', async (req, res) => {
     exePath = sanitizeUserPath(exePath);
   } catch {
     return res.status(400).json({ error: 'invalid path' });
+  }
+
+  const risk = scoreExecutable(exePath);
+  threatPredictScore = risk;
+  if (risk > RISK_THRESHOLD) {
+    return res.status(403).json({ error: 'blocked by sandbox', score: risk });
   }
 
   const settings = loadSettings();
@@ -266,6 +273,8 @@ app.get('/api/weblens/summarize', async (req, res) => {
 // --- MediaSphere ---
 let firewallEnabled = true;
 let threatScore = 0;
+let threatPredictScore = 0;
+let lastPatch = 0;
 
 app.get('/api/mediasphere/media', (req, res) => {
   const dir = path.join(STORAGE_DIR, 'media');
@@ -511,6 +520,19 @@ app.get('/api/securecore/threat', (req, res) => {
   res.json({ score: threatScore });
 });
 
+app.get('/api/securecore/threatpredict', (req, res) => {
+  res.json({ score: threatPredictScore });
+});
+
+app.post('/api/autopatch/run', (req, res) => {
+  lastPatch = Date.now();
+  res.json({ success: true });
+});
+
+app.get('/api/autopatch/last', (req, res) => {
+  res.json({ last: lastPatch });
+});
+
 // --- AppForge ---
 app.post('/api/appforge/build', (req, res) => {
   res.json({ success: true });
@@ -618,4 +640,5 @@ if (!process.env.VITEST) {
 
 export default app;
 export function setThreatScore(score) { threatScore = score; }
+export function setThreatPredictScore(score) { threatPredictScore = score; }
 export { sanitizeUserPath, sanitizeStoragePath, STORAGE_DIR };

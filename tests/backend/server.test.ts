@@ -66,6 +66,22 @@ describe('backend server theme API', () => {
     const res = await request(app).get('/api/securecore/threat');
     expect(res.body).toEqual({ score: 55 });
   });
+
+  it('returns predicted threat score', async () => {
+    const { default: app, setThreatPredictScore } = await import('../../backend/server.js');
+    setThreatPredictScore(66);
+    const res = await request(app).get('/api/securecore/threatpredict');
+    expect(res.body).toEqual({ score: 66 });
+  });
+
+  it('blocks high risk executables', async () => {
+    const fsMock = { readFileSync: vi.fn(() => '{}'), writeFileSync: vi.fn(), mkdirSync: vi.fn() };
+    vi.doMock('fs', () => ({ default: fsMock }));
+    vi.doMock('../../backend/sandboxShield.js', () => ({ scoreExecutable: () => 90, RISK_THRESHOLD: 70 }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).post('/api/launch-proton').send({ path: '/mal.exe' });
+    expect(res.status).toBe(403);
+  });
 });
 
 it('returns article metadata and citations', async () => {
