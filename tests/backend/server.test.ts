@@ -84,6 +84,17 @@ describe('backend server theme API', () => {
   });
 });
 
+describe('backend server ai config API', () => {
+  it('saves and returns config', async () => {
+    const { default: app } = await import('../../backend/server.js');
+    const config = { localModel: 'm', cloudProvider: 'gemini', summarizerModel: 's', classifierModel: 'c' };
+    const res1 = await request(app).post('/api/aiconfig').send({ config });
+    expect(res1.body).toEqual({ success: true });
+    const res2 = await request(app).get('/api/aiconfig');
+    expect(res2.body).toEqual({ config });
+  });
+});
+
 it('returns article metadata and citations', async () => {
   vi.stubGlobal('fetch', vi.fn(async () => ({
     text: async () => '<title>Art</title><meta name="author" content="Bob"><meta property="article:published_time" content="2023"><a href="http://c">ref</a>'
