@@ -3,7 +3,6 @@ import { AppPanel } from '../../components/layout/AppPanel';
 import { GlassCard } from '../../components/GlassCard';
 import { weblensResearchService, FactCheckResult } from '../../services/weblensResearchService';
 import { trackerScanService } from '../../services/trackerScanService';
-import { researchMate } from '../../services/researchMate';
 
 interface ArticleMeta {
   title: string;
@@ -56,14 +55,7 @@ export const WebLens: React.FC = () => {
       const data = await res.json();
       setSummary(data.summary);
       setMeta(data.meta || null);
-      const ver = await researchMate.verifyCitations(data.citations || []);
-      setCitations(
-        (data.citations || []).map((c: any, i: number) => ({
-          text: c.text,
-          url: c.url,
-          verified: ver[i],
-        })),
-      );
+      setCitations(data.citations || []);
 
       try {
         const pageRes = await fetch(url);

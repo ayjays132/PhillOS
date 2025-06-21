@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../../src/wasm/citation', () => ({
-  loadCitationVerifier: vi.fn(async () => async (text: string) => text.length % 2 === 0),
+vi.mock('fs/promises', () => ({
+  readFile: vi.fn(async () => JSON.stringify({ u: true })),
 }));
 
 beforeEach(() => {
@@ -9,12 +9,12 @@ beforeEach(() => {
 });
 
 describe('researchMate', () => {
-  it('verifies citations using wasm', async () => {
+  it('verifies citations using knowledge base', async () => {
     const { researchMate } = await import('../../services/researchMate');
     const res = await researchMate.verifyCitations([
       { text: 'a', url: 'u' },
-      { text: 'bb', url: 'u' },
+      { text: 'b', url: 'x' },
     ]);
-    expect(res).toEqual([false, true]);
+    expect(res).toEqual([true, false]);
   });
 });
