@@ -18,7 +18,7 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [Configuring AI Providers](docs/ai_providers.md)
 - [Agent Mode](#agent-mode)
 - [Kernel and Agent Integration](#kernel-and-agent-integration)
-- [Getting Started](#getting-started)
+- [Getting Started](docs/getting_started.md)
 - [Building the Bootloader & Kernel](#building-the-bootloader--kernel)
 - [Project Structure](#project-structure)
 - [Key Architectural Components](#key-architectural-components)
@@ -203,39 +203,7 @@ Start the agent with `npx phillos agent start` to enable these features.
 
 ## Getting Started
 
-1.  **Prerequisites**:
-    *   Node.js and npm.
-    *   A modern web browser (Chrome, Firefox, Edge, Safari).
-    *   Build tools for the bootloader (`make`, `x86_64-elf-gcc`, `binutils`, `gnu-efi`, `dosfstools`, `mtools`, `grub-mkrescue`).
-
-2.  **Clone the Repository** (if applicable, otherwise download the files):
-    ```bash
-    # If this were a git repository:
-    # git clone <repository-url>
-    # cd <repository-name>
-    ```
-    For the current setup, ensure all provided files (`index.html`, `src/index.tsx`, `src/App.tsx`, `src/types.ts`, `metadata.json`, and the `src/components/`, `src/hooks/`, `services/` directories) are in the same project folder.
-
-3.  **Set up Environment Variables**:
-    Copy `.env.example` to `.env` and adjust the values as needed for your environment.
-
-4.  **Run the Application**:
-    *   **Option A (Simple Static Server):**
-        You can use any simple HTTP server. If you have Node.js:
-        1.  Open your terminal in the project's root directory.
-        2.  Install `serve` globally if you haven't: `npm install -g serve`
-        3.  Run: `serve .`
-        4.  Open your browser to the URL provided (usually `http://localhost:3000` or `http://localhost:5000`).
-        *Alternatively, use a browser extension like "Live Server" for VS Code.*
-    *   **Option B (Recommended for full `process.env` support - requires adapting to a Vite project):**
-        1.  In a new directory, initialize a Vite project: `npm create vite@latest phillos-vite-wrapper -- --template react-ts`
-        2.  `cd phillos-vite-wrapper`
-        3.  Replace the contents of the `src` directory and the root `index.html` in `phillos-vite-wrapper` with the files from this PhillOS prototype. Adjust paths in `index.html` if necessary.
-        4.  Run `npm install && npm run dev`.
-
-5.  **Explore PhillOS**:
-    *   You will be guided through the new, in-depth onboarding process.
-    *   Interact with the dashboard widgets and navigation. Experience the "Living Glass" aesthetic.
+For a step-by-step setup guide covering the bootloader, backend services, Tauri shell and Agent Mode, see [docs/getting_started.md](docs/getting_started.md).
 
 ## Building the Bootloader & Kernel
 
