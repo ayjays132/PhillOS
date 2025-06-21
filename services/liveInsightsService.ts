@@ -8,6 +8,7 @@ export interface AudioInsight {
 class LiveInsightsService {
   private socket: WebSocket | null = null;
   private handlers = new Set<(i: AudioInsight) => void>();
+  private subs = new Map<string, () => void>();
 
   private connect() {
     if (this.socket) return;
@@ -33,10 +34,32 @@ class LiveInsightsService {
       if (this.handlers.size === 0) this.socket?.close();
     };
   }
+
+  addBusSubscriber(token: string) {
+    const unsub = this.subscribe(i => {
+      (agentOrchestrator as any).bus.emit('data', { taskId: token, data: i });
+    });
+    this.subs.set(token, unsub);
+  }
+
+  removeBusSubscriber(token: string) {
+    const unsub = this.subs.get(token);
+    if (unsub) {
+      unsub();
+      this.subs.delete(token);
+    }
+  }
 }
 
 export const liveInsightsService = new LiveInsightsService();
 
 agentOrchestrator.registerAction('insights.subscribe', () => {
-  // No-op placeholder for external agents
+  const token = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  liveInsightsService.addBusSubscriber(token);
+  return token;
+});
+
+agentOrchestrator.registerAction('insights.unsubscribe', params => {
+  const token = String((params as any)?.token || '');
+  liveInsightsService.removeBusSubscriber(token);
 });
