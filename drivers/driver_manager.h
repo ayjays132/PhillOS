@@ -35,4 +35,11 @@ void driver_manager_remove_listener(IHotSwapListener *listener);
 
 extern const IDriverManager driver_manager;
 
+typedef struct hot_swap_event {
+    int added; /* 1 = added, 0 = removed */
+    IDevice dev;
+} hot_swap_event_t;
+
+int driver_manager_pop_event(hot_swap_event_t *ev);
+
 #endif // PHILLOS_DRIVER_MANAGER_H

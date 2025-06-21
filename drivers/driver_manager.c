@@ -18,6 +18,29 @@ typedef struct {
 static device_record_t devices[MAX_DEVICES];
 static unsigned device_count = 0;
 
+#define MAX_EVENTS 16
+static hot_swap_event_t event_q[MAX_EVENTS];
+static unsigned event_head = 0, event_tail = 0;
+
+static void push_event(int added, const IDevice *dev)
+{
+    event_q[event_head].added = added;
+    event_q[event_head].dev = *dev;
+    event_head = (event_head + 1) % MAX_EVENTS;
+    if (event_head == event_tail)
+        event_tail = (event_tail + 1) % MAX_EVENTS;
+}
+
+int driver_manager_pop_event(hot_swap_event_t *ev)
+{
+    if (event_head == event_tail)
+        return -1;
+    if (ev)
+        *ev = event_q[event_tail];
+    event_tail = (event_tail + 1) % MAX_EVENTS;
+    return 0;
+}
+
 void driver_manager_add_listener(IHotSwapListener *listener)
 {
     if (!listener)
@@ -100,6 +123,7 @@ static void remove_record(device_record_t *rec)
         if (l->device_removed)
             l->device_removed(&idev);
     }
+    push_event(0, &idev);
 
     unsigned idx = rec - devices;
     if (idx < device_count - 1)
@@ -185,6 +209,7 @@ static void handle_new_device(const pci_device_t *dev)
             if (l->device_added)
                 l->device_added(&idev);
         }
+        push_event(1, &idev);
     }
 }
 
