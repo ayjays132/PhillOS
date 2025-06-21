@@ -1,6 +1,7 @@
 import { agentOrchestrator } from './agentOrchestrator';
 import { workspaceSnapService } from './workspaceSnapService';
 import { VoiceService } from './voiceService';
+import { contextBus } from './contextBus';
 
 export type WorkspaceSwitchListener = (workspace: string) => void;
 
@@ -24,6 +25,9 @@ class GestureService {
       if (/next workspace/i.test(text)) this.next();
       if (/previous workspace/i.test(text)) this.prev();
     });
+    if (this.workspaces.length) {
+      contextBus.publish('workspace.active', this.workspaces[this.current]);
+    }
   }
 
   onSwitch(cb: WorkspaceSwitchListener) {
@@ -53,13 +57,17 @@ class GestureService {
   next() {
     if (this.workspaces.length === 0) return;
     this.current = (this.current + 1) % this.workspaces.length;
-    this.emit(this.workspaces[this.current]);
+    const id = this.workspaces[this.current];
+    this.emit(id);
+    contextBus.publish('workspace.active', id);
   }
 
   prev() {
     if (this.workspaces.length === 0) return;
     this.current = (this.current - 1 + this.workspaces.length) % this.workspaces.length;
-    this.emit(this.workspaces[this.current]);
+    const id = this.workspaces[this.current];
+    this.emit(id);
+    contextBus.publish('workspace.active', id);
   }
 }
 
