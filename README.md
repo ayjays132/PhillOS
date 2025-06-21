@@ -15,7 +15,9 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [Technology Stack](#technology-stack)
 - [Current Prototype Features](#current-prototype-features)
 - [Application Overview](docs/apps.md)
+- [Configuring AI Providers](docs/ai_providers.md)
 - [Agent Mode](#agent-mode)
+- [Kernel and Agent Integration](#kernel-and-agent-integration)
 - [Getting Started](#getting-started)
 - [Building the Bootloader & Kernel](#building-the-bootloader--kernel)
 - [Project Structure](#project-structure)
@@ -184,6 +186,20 @@ npx phillos smarttags notes/todo.txt
 ```
 
 These commands launch the underlying Python and Node helpers while the agent coordinates results between applications.
+
+## Kernel and Agent Integration
+
+The orchestrator communicates with the kernel through Tauri commands. `system.query_scheduler`
+returns scheduler metrics while `system.device_event` streams hot-plug events. Services such as
+AutoClean and PromptCoach register their own actions with the agent:
+
+- **AutoClean** – Enabled from the **Vault** app. Press *AutoClean* to call `autoclean.suggest` and archive or delete stale files.
+- **PromptCoach** – Active in **GenLab**. As you edit a prompt the `genlab.prompt_coach` action provides bullet-point suggestions.
+- **AutoPatch** – Background updates can be started or stopped via `autopatch.start` and `autopatch.stop`.
+- **MemoryHub** – Use `memoryhub.add_entry` and `memoryhub.get_windows` to store and retrieve short-term context.
+- **Workspace Snapshots** – Save window layouts with `workspace.save` and restore them using `workspace.load`.
+
+Start the agent with `npx phillos agent start` to enable these features.
 
 ## Getting Started
 
