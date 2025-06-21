@@ -22,7 +22,7 @@ const KERNEL_QUERY_AI_HEAP_USAGE: u32 = 3;
 const KERNEL_QUERY_NEXT_DEVICE_EVENT: u32 = 4;
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct KernelQueryRequest {
     query: u32,
     nonce: u32,
@@ -30,7 +30,7 @@ struct KernelQueryRequest {
 }
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct KernelQueryResponse {
     result: u64,
 }
@@ -50,7 +50,7 @@ pub struct DeviceEvent {
 }
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct IDevice {
     bus: u8,
     slot: u8,
@@ -62,14 +62,14 @@ struct IDevice {
 }
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct KernelDeviceEvent {
     added: u8,
     dev: IDevice,
 }
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct QueryIoc {
     req: KernelQueryRequest,
     res: KernelQueryResponse,
@@ -317,7 +317,7 @@ fn smart_tags(path: String) -> Result<Vec<String>, String> {
     let path = ensure_safe_path(&path)?;
     let output = Command::new("node")
         .arg("services/tagger.js")
-        .arg(path.to_string_lossy().into())
+        .arg(path.to_string_lossy().to_string())
         .output()
         .map_err(|e| e.to_string())?;
     if output.status.success() {
@@ -386,6 +386,7 @@ fn next_device_event() -> Result<Option<DeviceEvent>, String> {
     }))
 }
 
+#[cfg(not(test))]
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -407,110 +408,5 @@ fn main() {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::tempdir;
+mod tests;
 
-    #[test]
-    fn list_dir_returns_entries() {
-        let dir = tempdir().unwrap();
-        std::env::set_var("PHILLOS_STORAGE_DIR", dir.path());
-        std::fs::write(dir.path().join("a.txt"), b"hi").unwrap();
-        std::fs::create_dir(dir.path().join("sub")).unwrap();
-
-        let mut entries = list_dir(".".into()).unwrap();
-        entries.sort_by(|a, b| a.name.cmp(&b.name));
-        assert_eq!(entries.len(), 2);
-        assert!(entries.iter().any(|e| e.is_dir));
-    }
-
-    #[test]
-    fn copy_file_works() {
-        let dir = tempdir().unwrap();
-        std::env::set_var("PHILLOS_STORAGE_DIR", dir.path());
-        let src = dir.path().join("src.txt");
-        let dest = dir.path().join("dst.txt");
-        std::fs::write(&src, b"hi").unwrap();
-        copy_file("src.txt".into(), "dst.txt".into()).unwrap();
-        assert!(dest.exists());
-    }
-
-    #[test]
-    fn rejects_outside_paths() {
-        let dir = tempdir().unwrap();
-        let base = dir.path().join("base");
-        std::fs::create_dir(&base).unwrap();
-        std::env::set_var("PHILLOS_STORAGE_DIR", &base);
-
-        let outside_dir = dir.path().join("outside");
-        std::fs::create_dir(&outside_dir).unwrap();
-        std::fs::write(outside_dir.join("a.txt"), b"hi").unwrap();
-
-        assert!(list_dir(outside_dir.to_string_lossy().into()).is_err());
-        assert!(copy_file(outside_dir.join("a.txt").to_string_lossy().into(), "b.txt".into()).is_err());
-        assert!(move_file("b.txt".into(), outside_dir.join("c.txt").to_string_lossy().into()).is_err());
-        assert!(smart_tags(outside_dir.join("a.txt").to_string_lossy().into()).is_err());
-    }
-
-    #[test]
-    fn prefetch_files_copies_to_cache() {
-        let dir = tempdir().unwrap();
-        let base = dir.path().join("base");
-        let cache = dir.path().join("cache");
-        std::fs::create_dir(&base).unwrap();
-        std::env::set_var("PHILLOS_STORAGE_DIR", &base);
-        std::env::set_var("PHILLOS_CACHE_DIR", &cache);
-
-        let src = base.join("a.txt");
-        std::fs::write(&src, b"hi").unwrap();
-
-        prefetch_files(vec!["a.txt".into()]).unwrap();
-        assert!(cache.join("a.txt").exists());
-    }
-
-    #[test]
-    fn open_conn_uses_storage_dir() {
-        let dir = tempdir().unwrap();
-        std::env::set_var("PHILLOS_STORAGE_DIR", dir.path());
-        {
-            let _ = open_conn().unwrap();
-        }
-        assert!(dir.path().join("events.db").exists());
-    }
-
-    #[test]
-    fn open_conn_creates_dir_if_missing() {
-        let dir = tempdir().unwrap();
-        let sub = dir.path().join("missing");
-        std::env::set_var("PHILLOS_STORAGE_DIR", &sub);
-        {
-            let _ = open_conn().unwrap();
-        }
-        assert!(sub.join("events.db").exists());
-    }
-
-    #[test]
-    fn delete_file_removes_file() {
-        let dir = tempdir().unwrap();
-        std::env::set_var("PHILLOS_STORAGE_DIR", dir.path());
-        let file = dir.path().join("a.txt");
-        std::fs::write(&file, b"hi").unwrap();
-        delete_file("a.txt".into()).unwrap();
-        assert!(!file.exists());
-    }
-
-    #[test]
-    fn archive_file_moves_to_archive_dir() {
-        let dir = tempdir().unwrap();
-        let base = dir.path().join("base");
-        let archive = dir.path().join("archive");
-        std::fs::create_dir(&base).unwrap();
-        std::env::set_var("PHILLOS_STORAGE_DIR", &base);
-        std::env::set_var("PHILLOS_ARCHIVE_DIR", &archive);
-        let src = base.join("a.txt");
-        std::fs::write(&src, b"hi").unwrap();
-        archive_file("a.txt".into()).unwrap();
-        assert!(archive.join("a.txt").exists());
-        assert!(!src.exists());
-    }
-}
