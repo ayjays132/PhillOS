@@ -1,38 +1,34 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { cursorService } from '../services/cursorService';
-import lightCursor from '../assets/cursors/arrow_light.svg?url';
-import darkCursor from '../assets/cursors/arrow_dark.svg?url';
+import { storageService } from '../../services/storageService';
 
-export type CursorTheme = 'light' | 'dark';
+export type CursorStyle = 'default' | 'mac';
 
 interface CursorContextProps {
-  cursor: CursorTheme;
-  setCursor: (theme: CursorTheme) => void;
+  style: CursorStyle;
+  setStyle: (style: CursorStyle) => void;
 }
 
 const CursorContext = createContext<CursorContextProps | undefined>(undefined);
 
 export const CursorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cursor, setCursorState] = useState<CursorTheme>('light');
+  const [style, setStyleState] = useState<CursorStyle>('default');
 
   useEffect(() => {
-    cursorService.getCursor().then(c => {
-      if (c === 'light' || c === 'dark') {
-        setCursorState(c);
+    storageService.getCursorStyle().then(s => {
+      if (s === 'default' || s === 'mac') {
+        setStyleState(s);
       }
     });
   }, []);
 
   useEffect(() => {
-    const url = cursor === 'light' ? lightCursor : darkCursor;
-    document.documentElement.style.setProperty('--phillos-cursor', `url(${url}) 0 0`);
-    cursorService.setCursor(cursor);
-  }, [cursor]);
+    storageService.setCursorStyle(style);
+  }, [style]);
 
-  const setCursor = (t: CursorTheme) => setCursorState(t);
+  const setStyle = (s: CursorStyle) => setStyleState(s);
 
   return (
-    <CursorContext.Provider value={{ cursor, setCursor }}>
+    <CursorContext.Provider value={{ style, setStyle }}>
       {children}
     </CursorContext.Provider>
   );

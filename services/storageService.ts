@@ -1,6 +1,5 @@
 import { NavItem, WidgetOrder, PhoneSettings } from '../types';
 import { agentOrchestrator } from './agentOrchestrator';
-import { cursorService } from '../src/services/cursorService';
 
 const WIDGET_ORDER_KEY = 'phillos_widget_order';
 const DOCK_ITEMS_KEY = 'phillos_dock_items_v1';
@@ -8,6 +7,7 @@ const PHONE_SETTINGS_KEY = 'phillos_phone_settings_v1';
 const MEMORY_WINDOWS_KEY = 'phillos_memory_windows_v1';
 const THEME_KEY = 'phillos-theme';
 const VOICE_ENGINE_KEY = 'phillos_voice_engine_v1';
+const CURSOR_STYLE_KEY = 'phillos_cursor_style';
 
 class StorageService {
   init() {
@@ -16,7 +16,7 @@ class StorageService {
     this.getDockItems();
     this.getPhoneSettings();
     this.getVoiceEngine();
-    cursorService.getCursor();
+    this.getCursorStyle();
   }
 
   getWidgetOrder(): WidgetOrder | null {
@@ -113,6 +113,45 @@ class StorageService {
     }
   }
 
+  async getCursorStyle(): Promise<'default' | 'mac' | null> {
+    try {
+      const stored = localStorage.getItem(CURSOR_STYLE_KEY);
+      if (stored === 'default' || stored === 'mac') {
+        return stored;
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
+      const res = await fetch('/api/cursor');
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data && (data.cursor === 'default' || data.cursor === 'mac')) {
+        localStorage.setItem(CURSOR_STYLE_KEY, data.cursor);
+        return data.cursor;
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  async setCursorStyle(style: 'default' | 'mac') {
+    try {
+      localStorage.setItem(CURSOR_STYLE_KEY, style);
+    } catch {}
+    try {
+      await fetch('/api/cursor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cursor: style }),
+      });
+    } catch {
+      // ignore
+    }
+  }
+
   async getTheme(): Promise<'light' | 'dark' | null> {
     try {
       const stored = localStorage.getItem(THEME_KEY);
@@ -157,3 +196,5 @@ export const storageService = new StorageService();
 
 agentOrchestrator.registerAction('storage.get_theme', () => storageService.getTheme());
 agentOrchestrator.registerAction('storage.set_theme', params => storageService.setTheme(params?.theme as 'light' | 'dark'));
+agentOrchestrator.registerAction('storage.get_cursor_style', () => storageService.getCursorStyle());
+agentOrchestrator.registerAction('storage.set_cursor_style', params => storageService.setCursorStyle(params?.style as 'default' | 'mac'));

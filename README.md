@@ -85,6 +85,7 @@ This prototype implements the following features from the PhillOS vision:
 -   **Conversational Settings Interface**: A chat-like UI for settings, currently with mocked AI responses to demonstrate the interaction pattern.
 -   **Placeholder App Views**: For conceptual applications like Files, Mail, Gaming, ConverseAI, InBoxAI and WebLens, indicating future development areas.
 -   **API Key Handling**: Users provide their own API keys for Gemini or ChatGPT directly in the UI.
+-   **Cursor Customization**: Choose between different cursor themes (Default or Mac) under **Settings → Cursor**.
 
 ## Using Cloud AI Providers
 

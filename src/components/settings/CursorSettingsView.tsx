@@ -2,13 +2,13 @@ import React from 'react';
 import { GlassCard } from '../GlassCard';
 import { useCursor } from '../../contexts/CursorContext';
 import { MousePointer } from 'lucide-react';
-import lightCursor from '../../assets/cursors/arrow_light.svg?url';
-import darkCursor from '../../assets/cursors/arrow_dark.svg?url';
+import defaultCursor from '../../assets/cursors/arrow_light.svg?url';
+import macCursor from '../../assets/cursors/mac.svg?url';
 
 export const CursorSettingsView: React.FC = () => {
-  const { cursor, setCursor } = useCursor();
+  const { style, setStyle } = useCursor();
 
-  const previewUrl = cursor === 'light' ? lightCursor : darkCursor;
+  const previewUrl = style === 'mac' ? macCursor : defaultCursor;
 
   return (
     <GlassCard className="!shadow-2xl !shadow-blue-600/30 !border-white/15 h-full flex flex-col gap-4">
@@ -19,12 +19,12 @@ export const CursorSettingsView: React.FC = () => {
       <label className="text-sm flex flex-col gap-1">
         <span>Select Theme</span>
         <select
-          value={cursor}
-          onChange={e => setCursor(e.target.value as any)}
+          value={style}
+          onChange={e => setStyle(e.target.value as any)}
           className="bg-transparent border border-white/20 rounded px-2 py-1"
         >
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
+          <option value="default">Default</option>
+          <option value="mac">Mac</option>
         </select>
       </label>
       <div className="mt-4 flex items-center gap-2">
