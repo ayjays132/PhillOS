@@ -5,5 +5,7 @@
 
 void offline_init(boot_info_t *info);
 int offline_is_enabled(void);
+void offline_set(int enabled);
+void offline_reload_cfg(void);
 
 #endif // PHILLOS_OFFLINE_H

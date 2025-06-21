@@ -19,4 +19,6 @@ Boot from the prepared USB drive or load the `dist/` directory via a local web s
 Rebuild the project and replace the files on the USB drive (or in your web server directory) whenever you want to update. The service worker automatically detects new versions and refreshes the cache.
 
 When `offline.cfg` is present the bootloader sets a flag in `boot_info_t`. The kernel displays an "OFFLINE MODE" banner during initialization and avoids any network access.
+The kernel also reloads `offline.cfg` after mounting the boot partition so the
+mode can be toggled simply by editing the file on disk.
 

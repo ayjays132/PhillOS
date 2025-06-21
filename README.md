@@ -340,7 +340,7 @@ Development details, including how to build and sign modules, are covered in
 PhillOS can run without an internet connection once the UI files are cached by the service worker. See [docs/offline.md](docs/offline.md) for a concise guide. Detailed steps for bundling Proton, vkd3d and troubleshooting offline boots are available in [docs/building.md](docs/building.md#preparing-a-self-contained-usb).
 
 1. Build the project and generate the ISO as described above, then flash it to a USB stick.
-2. Boot from the USB drive. The browser loads all core assets and API responses into the cache so subsequent boots work completely offline.
+2. Boot from the USB drive. The browser loads all core assets and API responses into the cache so subsequent boots work completely offline. The kernel re-checks `offline.cfg` on every boot so you can toggle offline mode by editing the file.
 3. Alternatively serve the contents of the `dist/` folder from a local web server:
 
 ```bash
