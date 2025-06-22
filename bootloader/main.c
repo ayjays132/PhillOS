@@ -282,6 +282,61 @@ static void load_offline_cfg(EFI_HANDLE image, boot_info_t *info)
         info->offline = 0;
     }
 }
+
+static void load_gpu_cfg(EFI_HANDLE image, boot_info_t *info)
+{
+    EFI_STATUS status;
+    EFI_LOADED_IMAGE *li;
+    EFI_GUID li_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+    status = uefi_call_wrapper(BS->HandleProtocol, 3, image, &li_guid, (void**)&li);
+    if (EFI_ERROR(status)) {
+        info->gpu_override = GPU_VENDOR_UNKNOWN;
+        return;
+    }
+
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *fs;
+    EFI_GUID fs_guid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
+    status = uefi_call_wrapper(BS->HandleProtocol, 3, li->DeviceHandle, &fs_guid, (void**)&fs);
+    if (EFI_ERROR(status)) {
+        info->gpu_override = GPU_VENDOR_UNKNOWN;
+        return;
+    }
+
+    EFI_FILE_PROTOCOL *root;
+    status = uefi_call_wrapper(fs->OpenVolume, 2, fs, &root);
+    if (EFI_ERROR(status)) {
+        info->gpu_override = GPU_VENDOR_UNKNOWN;
+        return;
+    }
+
+    EFI_FILE_PROTOCOL *file;
+    status = uefi_call_wrapper(root->Open, 5, root,
+                               L"\\EFI\\PHILLOS\\gpu.cfg", EFI_FILE_MODE_READ, 0);
+    if (EFI_ERROR(status)) {
+        info->gpu_override = GPU_VENDOR_UNKNOWN;
+        return;
+    }
+
+    CHAR8 buf[16];
+    UINTN size = sizeof(buf)-1;
+    status = uefi_call_wrapper(file->Read, 3, file, &size, buf);
+    file->Close(file);
+    if (EFI_ERROR(status)) {
+        info->gpu_override = GPU_VENDOR_UNKNOWN;
+        return;
+    }
+    buf[size] = '\0';
+    if (AsciiStrnCmp(buf, "nvidia", 6) == 0 || AsciiStrnCmp(buf, "NVIDIA", 6) == 0)
+        info->gpu_override = GPU_VENDOR_NVIDIA;
+    else if (AsciiStrnCmp(buf, "amd", 3) == 0 || AsciiStrnCmp(buf, "AMD", 3) == 0)
+        info->gpu_override = GPU_VENDOR_AMD;
+    else if (AsciiStrnCmp(buf, "intel", 5) == 0 || AsciiStrnCmp(buf, "INTEL", 5) == 0)
+        info->gpu_override = GPU_VENDOR_INTEL;
+    else if (AsciiStrnCmp(buf, "none", 4) == 0 || AsciiStrnCmp(buf, "NONE", 4) == 0)
+        info->gpu_override = GPU_VENDOR_UNKNOWN;
+    else
+        info->gpu_override = GPU_VENDOR_UNKNOWN;
+}
 static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
 {
     EFI_STATUS status;
@@ -337,6 +392,7 @@ static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
 
     load_theme_cfg(image, info);
     load_offline_cfg(image, info);
+    load_gpu_cfg(image, info);
 
     VOID *svg_data = NULL;
     UINTN svg_size = 0;

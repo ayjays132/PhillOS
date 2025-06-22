@@ -5,6 +5,9 @@
 #include "vkd3d.h"
 #include "../../kernel/debug.h"
 #include "../../kernel/boot_info.h"
+#include "../../kernel/fs/fat32.h"
+#include "../../kernel/memory/heap.h"
+#include <string.h>
 
 static inline uint32_t pci_read32(uint8_t bus, uint8_t slot,
                                   uint8_t func, uint8_t offset)
@@ -104,9 +107,13 @@ static gpu_vendor_t parse_gpu_param(void)
 
 void init_gpu_driver(void)
 {
-    gpu_vendor_t vendor = parse_gpu_param();
-    if (vendor == (gpu_vendor_t)-1)
-        vendor = detect_gpu_vendor();
+    boot_info_t *info = boot_info_get();
+    gpu_vendor_t vendor = info ? info->gpu_override : GPU_VENDOR_UNKNOWN;
+    if (vendor == GPU_VENDOR_UNKNOWN) {
+        vendor = parse_gpu_param();
+        if (vendor == (gpu_vendor_t)-1)
+            vendor = detect_gpu_vendor();
+    }
     const char *name = "Unknown";
     gpu_driver_t *drv = NULL;
     switch (vendor) {
@@ -143,4 +150,75 @@ void init_gpu_driver(void)
 
     if (init_vkd3d(vendor))
         debug_puts("vkd3d unavailable\n");
+}
+
+void gpu_reload_cfg(void)
+{
+    uint32_t size = 0;
+    char *data = fat32_load_file("/EFI/PHILLOS/gpu.cfg", &size);
+    if (!data) {
+        debug_puts("gpu_reload_cfg: gpu.cfg missing\n");
+        return;
+    }
+    gpu_vendor_t vendor = GPU_VENDOR_UNKNOWN;
+    int valid = 0;
+    if (size >= 6 &&
+        ((data[0]=='n'||data[0]=='N') &&
+         (data[1]=='v'||data[1]=='V') &&
+         (data[2]=='i'||data[2]=='I') &&
+         (data[3]=='d'||data[3]=='D') &&
+         (data[4]=='i'||data[4]=='I') &&
+         (data[5]=='a'||data[5]=='A'))) {
+        vendor = GPU_VENDOR_NVIDIA;
+        valid = 1;
+    } else if (size >= 3 &&
+               ((data[0]=='a'||data[0]=='A') &&
+                (data[1]=='m'||data[1]=='M') &&
+                (data[2]=='d'||data[2]=='D'))) {
+        vendor = GPU_VENDOR_AMD;
+        valid = 1;
+    } else if (size >= 5 &&
+               ((data[0]=='i'||data[0]=='I') &&
+                (data[1]=='n'||data[1]=='N') &&
+                (data[2]=='t'||data[2]=='T') &&
+                (data[3]=='e'||data[3]=='E') &&
+                (data[4]=='l'||data[4]=='L'))) {
+        vendor = GPU_VENDOR_INTEL;
+        valid = 1;
+    } else if (size >= 4 &&
+               ((data[0]=='n'||data[0]=='N') &&
+                (data[1]=='o'||data[1]=='O') &&
+                (data[2]=='n'||data[2]=='N') &&
+                (data[3]=='e'||data[3]=='E'))) {
+        vendor = GPU_VENDOR_UNKNOWN;
+        valid = 1;
+    } else if (size >= 4 &&
+               ((data[0]=='a'||data[0]=='A') &&
+                (data[1]=='u'||data[1]=='U') &&
+                (data[2]=='t'||data[2]=='T') &&
+                (data[3]=='o'||data[3]=='O'))) {
+        vendor = GPU_VENDOR_UNKNOWN;
+        valid = 1;
+    }
+    if (!valid)
+        debug_puts("gpu_reload_cfg: malformed config\n");
+    kfree(data);
+    boot_info_t *info = boot_info_get();
+    if (info)
+        info->gpu_override = vendor;
+    debug_puts("gpu override ");
+    switch (vendor) {
+    case GPU_VENDOR_NVIDIA:
+        debug_puts("NVIDIA\n");
+        break;
+    case GPU_VENDOR_AMD:
+        debug_puts("AMD\n");
+        break;
+    case GPU_VENDOR_INTEL:
+        debug_puts("INTEL\n");
+        break;
+    default:
+        debug_puts("UNKNOWN\n");
+        break;
+    }
 }
