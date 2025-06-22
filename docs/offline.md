@@ -22,3 +22,27 @@ When `offline.cfg` is present the bootloader sets a flag in `boot_info_t`. The k
 The kernel also reloads `offline.cfg` after mounting the boot partition so the
 mode can be toggled simply by editing the file on disk.
 
+## Boot Messages
+
+When `offline_reload_cfg` runs the kernel prints a short debug message
+indicating the result. If the configuration file is missing the log shows:
+
+```
+offline_reload_cfg: offline.cfg missing
+```
+
+If the file exists but does not contain a recognized value it prints:
+
+```
+offline_reload_cfg: malformed config
+```
+
+After parsing the file the kernel logs whether offline mode is enabled or
+disabled using one of:
+
+```
+offline mode ENABLED
+offline mode DISABLED
+```
+
+
