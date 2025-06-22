@@ -53,7 +53,12 @@ async function saveAIConfig(config) {
 
 function sanitizeUserPath(p) {
   if (typeof p !== 'string' || p.includes('\0')) throw new Error('invalid path');
-  return path.resolve(p);
+  const resolved = path.resolve(p);
+  const allowed = STORAGE_DIR;
+  if (resolved !== allowed && !resolved.startsWith(allowed + path.sep)) {
+    throw new Error('invalid path');
+  }
+  return resolved;
 }
 
 function loadSettings() {

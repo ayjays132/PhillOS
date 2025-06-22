@@ -92,8 +92,21 @@ describe('backend server theme API', () => {
     vi.doMock('fs', () => ({ default: fsMock }));
     vi.doMock('../../backend/sandboxShield.js', () => ({ scoreExecutable: () => 90, RISK_THRESHOLD: 70 }));
     const { default: app } = await import('../../backend/server.js');
-    const res = await request(app).post('/api/launch-proton').send({ path: '/mal.exe' });
+    const res = await request(app)
+      .post('/api/launch-proton')
+      .send({ path: '/tmp/test-storage/mal.exe' });
     expect(res.status).toBe(403);
+  });
+
+  it('rejects path outside storage', async () => {
+    const { sanitizeUserPath } = await import('../../backend/server.js');
+    expect(() => sanitizeUserPath('../etc/passwd')).toThrow();
+  });
+
+  it('rejects filetags outside storage', async () => {
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).get('/api/filetags').query({ path: '../etc/passwd' });
+    expect(res.status).toBe(400);
   });
 });
 
