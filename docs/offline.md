@@ -45,4 +45,20 @@ offline mode ENABLED
 offline mode DISABLED
 ```
 
+## Switching Themes
+
+`theme.cfg` in the same `EFI/PHILLOS` directory controls whether the light or
+dark UI theme is used. Write `dark`, `light`, `1` or `0` to the file. The
+bootloader reads it during startup and the kernel reloads it after mounting the
+boot partition so you can update the look without rebuilding the ISO.
+
+When `theme_reload_cfg` executes the kernel prints debug messages similar to the
+offline loader:
+
+```
+theme_reload_cfg: theme.cfg missing
+theme_reload_cfg: malformed config
+theme DARK
+```
+
 

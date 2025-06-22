@@ -10,6 +10,7 @@
 #include "../drivers/driver_manager.h"
 #include "../drivers/register.h"
 #include "offline.h"
+#include "theme.h"
 #include "scheduler/uhs.h"
 #include "scheduler/chaos_sched.h"
 
@@ -41,6 +42,7 @@ float sched_last_residual(void)
 void kernel_main(boot_info_t *boot_info) {
     g_boot_info = boot_info;
     offline_init(boot_info);
+    theme_init(boot_info->theme_dark);
     // Placeholder for kernel initialization logic
     init_physical_memory(boot_info);
     init_paging();
@@ -50,9 +52,10 @@ void kernel_main(boot_info_t *boot_info) {
     drivers_register_all();
     fat32_init();
     offline_reload_cfg();
+    theme_reload_cfg();
     driver_manager_init();
     init_framebuffer(&boot_info->fb);
-    fb_clear(boot_info->theme_dark ? 0x00000000 : 0x00FFFFFF);
+    fb_clear(theme_is_dark() ? 0x00000000 : 0x00FFFFFF);
     fb_fill_rect(20, 20, 100, 60, 0x0000FF00); // simple boot banner
     if (offline_is_enabled())
         fb_draw_text(24, 24, "OFFLINE MODE", 0x00FFFFFF, 0x00000000);
