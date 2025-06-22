@@ -61,4 +61,20 @@ theme_reload_cfg: malformed config
 theme DARK
 ```
 
+## GPU Override
+
+`gpu.cfg` in the same `EFI/PHILLOS` directory controls GPU initialization. Write
+`nvidia`, `amd`, `intel`, `none` or `auto` to the file. The bootloader stores
+the selected value in `boot_info_t.gpu_override` and the kernel calls
+`gpu_reload_cfg()` after mounting so you can change vendors without rebuilding.
+
+When `gpu_reload_cfg` executes the kernel prints messages similar to the other
+loaders:
+
+```
+gpu_reload_cfg: gpu.cfg missing
+gpu_reload_cfg: malformed config
+gpu override NVIDIA
+```
+
 

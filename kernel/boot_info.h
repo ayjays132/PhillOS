@@ -2,6 +2,13 @@
 #define PHILLOS_BOOT_INFO_H
 #include <stdint.h>
 
+typedef enum {
+    GPU_VENDOR_UNKNOWN = 0,
+    GPU_VENDOR_NVIDIA,
+    GPU_VENDOR_AMD,
+    GPU_VENDOR_INTEL
+} gpu_vendor_t;
+
 typedef struct {
     uint64_t base;
     uint64_t size;
@@ -35,6 +42,7 @@ typedef struct {
     uint64_t cursor_size;
     uint8_t  theme_dark; // 1 = dark, 0 = light
     uint8_t  offline;    // 1 = offline mode
+    uint8_t  gpu_override; // GPU_VENDOR_* value or GPU_VENDOR_UNKNOWN for auto
     char cmdline[128];
 } boot_info_t;
 
