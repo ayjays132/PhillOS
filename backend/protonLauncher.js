@@ -4,6 +4,30 @@ import path from 'path';
 import https from 'https';
 import { sanitizeArgs } from '../cli/utils/validate.ts';
 
+let offline = false;
+function loadOffline() {
+  const locations = [
+    '/EFI/PHILLOS/offline.cfg',
+    path.resolve(__dirname, '../storage/offline.cfg'),
+  ];
+  for (const p of locations) {
+    try {
+      const data = fs.readFileSync(p, 'utf8').trim();
+      if (/^(1|on|yes|true)$/i.test(data)) {
+        offline = true;
+        console.log(
+          'Offline mode enabled - Proton downloads disabled. Pre-populate dist/proton.'
+        );
+        break;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+loadOffline();
+
 export async function downloadProton(base, version) {
   const url = process.env.PROTON_DOWNLOAD_URL ||
     `https://steamcdn-a.akamaihd.net/client/${version}.tar.gz`;
@@ -17,6 +41,10 @@ export async function downloadProton(base, version) {
     if (url.startsWith('file://')) {
       const src = new URL(url).pathname;
       await fs.promises.copyFile(src, cacheFile);
+    } else if (offline) {
+      throw new Error(
+        `Offline mode active - missing ${version}.tar.gz. Pre-populate dist/proton`
+      );
     } else {
       await new Promise((resolve, reject) => {
         const file = fs.createWriteStream(cacheFile);
@@ -56,12 +84,7 @@ export class ProtonLauncher {
     if (fs.existsSync(protonPath)) {
       return protonPath;
     }
-    try {
-      await downloadProton(base, version);
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
+    await downloadProton(base, version);
     return fs.existsSync(protonPath) ? protonPath : null;
   }
 

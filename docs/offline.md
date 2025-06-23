@@ -7,8 +7,11 @@ PhillOS is designed to function without an internet connection once the core ass
 1. Build the project and generate the bootable ISO using `./scripts/build.sh`.
 2. Flash `dist/bootloader/phillos.iso` to a USB drive with `dd` or your preferred tool.
 3. (Optional) Pre-populate `dist/proton/` by running `./scripts/setup-proton.sh` so Windows games work without network access.
+   The Proton launcher reads `offline.cfg` at startup and will refuse to download
+   missing archives when offline, so the directory must contain the required
+   version ahead of time.
 4. Run `./scripts/setup-ollama.sh` if you intend to use the local Qwen model for the AI CoPilot.
-5. Create an `offline.cfg` file under `EFI/PHILLOS/` on the boot media with `1` to force offline mode.
+5. Create an `offline.cfg` file under `EFI/PHILLOS/` on the boot media with `1` to force offline mode. A copy may also be placed in `storage/` for the backend server.
 
 ## First Boot
 
