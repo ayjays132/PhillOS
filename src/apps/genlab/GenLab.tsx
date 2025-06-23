@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { offlineService } from '../../services/offlineService';
 import Editor from '@monaco-editor/react';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { BrainPadTray } from '../../components/BrainPadTray';
@@ -31,6 +32,11 @@ export const GenLab: React.FC = () => {
   }, [prompt]);
 
   const run = async () => {
+    if (offlineService.isOffline()) {
+      setOutA('Offline mode');
+      setOutB('');
+      return;
+    }
     setRunning(true);
     try {
       const res = await fetch('/api/genlab/compare', {

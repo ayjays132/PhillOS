@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { offlineService } from '../../../services/offlineService';
 import { Send, AlertTriangle, Loader2, Mic, MicOff } from 'lucide-react';
 import { ChatMessage } from '../../types';
 import { createModelSession, sendModelMessageStream, ModelSession } from '../../../services/modelManager';
@@ -56,6 +57,10 @@ export const AICoPilotWidget: React.FC = () => {
   useEffect(() => {
     let mounted = true;
     const initSession = async () => {
+      if (modelPreference === 'cloud' && offlineService.isOffline()) {
+        setError('Offline mode: cloud AI unavailable.');
+        return;
+      }
       if (modelPreference === 'cloud' && !apiKey) {
         setIsApiKeyMissing(true);
         setError('API key required for cloud AI.');
@@ -95,6 +100,15 @@ export const AICoPilotWidget: React.FC = () => {
     initSession();
     return () => { mounted = false; };
   }, [modelPreference, apiKey, cloudProvider]);
+
+  useEffect(() => {
+    const unsub = offlineService.subscribe(o => {
+      if (o && modelPreference === 'cloud') {
+        setError('Offline mode: cloud AI unavailable.');
+      }
+    });
+    return () => unsub();
+  }, [modelPreference]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -163,7 +177,13 @@ export const AICoPilotWidget: React.FC = () => {
   const handleSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
     if (!input.trim() || isLoading || !chatSession) return;
-    if (modelPreference === 'cloud' && isApiKeyMissing) return;
+    if (modelPreference === 'cloud') {
+      if (offlineService.isOffline()) {
+        setError('Offline mode: cloud AI unavailable.');
+        return;
+      }
+      if (isApiKeyMissing) return;
+    }
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
