@@ -1,12 +1,14 @@
-use std::fs;
-use std::path::{Path, PathBuf, Component};
-use std::process::Command;
-use std::os::unix::io::AsRawFd;
-use std::fs::OpenOptions;
 use libc;
-use tauri::command;
-use serde::{Serialize, Deserialize};
+use once_cell::sync::Lazy;
 use rusqlite::{params, Connection};
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::fs::OpenOptions;
+use std::os::unix::io::AsRawFd;
+use std::path::{Component, Path, PathBuf};
+use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
+use tauri::command;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -76,6 +78,23 @@ struct QueryIoc {
     event: KernelDeviceEvent,
 }
 
+static OFFLINE: Lazy<AtomicBool> = Lazy::new(|| AtomicBool::new(false));
+
+fn init_offline_state() {
+    let locations = ["/EFI/PHILLOS/offline.cfg", "storage/offline.cfg"];
+    for p in locations {
+        if let Ok(data) = fs::read_to_string(p) {
+            if data.trim().eq_ignore_ascii_case("1")
+                || data.trim().eq_ignore_ascii_case("true")
+                || data.trim().eq_ignore_ascii_case("on")
+            {
+                OFFLINE.store(true, Ordering::Relaxed);
+                break;
+            }
+        }
+    }
+}
+
 fn sign_token(nonce: u32, query: u32) -> u32 {
     let mut hash = 0x5a17c3e4u32 ^ nonce ^ query;
     hash ^= 0x811C9DC5;
@@ -96,7 +115,12 @@ const IOC_DIRSHIFT: libc::c_ulong = IOC_SIZESHIFT + IOC_SIZEBITS;
 const IOC_WRITE: libc::c_ulong = 1;
 const IOC_READ: libc::c_ulong = 2;
 
-const fn ioc(dir: libc::c_ulong, t: libc::c_ulong, nr: libc::c_ulong, size: libc::c_ulong) -> libc::c_ulong {
+const fn ioc(
+    dir: libc::c_ulong,
+    t: libc::c_ulong,
+    nr: libc::c_ulong,
+    size: libc::c_ulong,
+) -> libc::c_ulong {
     (dir << IOC_DIRSHIFT) | (t << IOC_TYPESHIFT) | (nr << IOC_NRSHIFT) | (size << IOC_SIZESHIFT)
 }
 
@@ -104,7 +128,11 @@ const fn iowr(t: libc::c_ulong, nr: libc::c_ulong, size: libc::c_ulong) -> libc:
     ioc(IOC_READ | IOC_WRITE, t, nr, size)
 }
 
-const QUERY_IOCTL: libc::c_ulong = iowr('p' as libc::c_ulong, 1, std::mem::size_of::<QueryIoc>() as libc::c_ulong);
+const QUERY_IOCTL: libc::c_ulong = iowr(
+    'p' as libc::c_ulong,
+    1,
+    std::mem::size_of::<QueryIoc>() as libc::c_ulong,
+);
 
 fn normalize_path<P: AsRef<Path>>(path: P) -> PathBuf {
     let mut result = PathBuf::new();
@@ -127,7 +155,9 @@ fn ensure_safe_path(p: &str) -> Result<PathBuf, String> {
     let base_env = std::env::var("PHILLOS_STORAGE_DIR").unwrap_or_else(|_| "storage".into());
     let mut base = PathBuf::from(base_env);
     if base.is_relative() {
-        base = std::env::current_dir().map_err(|e| e.to_string())?.join(base);
+        base = std::env::current_dir()
+            .map_err(|e| e.to_string())?
+            .join(base);
     }
     base = normalize_path(base);
 
@@ -192,7 +222,9 @@ fn archive_file(path: String) -> Result<(), String> {
     let archive_env = std::env::var("PHILLOS_ARCHIVE_DIR").unwrap_or_else(|_| "archive".into());
     let mut dest_dir = PathBuf::from(archive_env);
     if dest_dir.is_relative() {
-        dest_dir = std::env::current_dir().map_err(|e| e.to_string())?.join(dest_dir);
+        dest_dir = std::env::current_dir()
+            .map_err(|e| e.to_string())?
+            .join(dest_dir);
     }
     dest_dir = normalize_path(dest_dir);
     fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
@@ -206,7 +238,9 @@ fn prefetch_files(paths: Vec<String>) -> Result<(), String> {
     let cache_env = std::env::var("PHILLOS_CACHE_DIR").unwrap_or_else(|_| "cache".into());
     let mut cache_dir = PathBuf::from(cache_env);
     if cache_dir.is_relative() {
-        cache_dir = std::env::current_dir().map_err(|e| e.to_string())?.join(cache_dir);
+        cache_dir = std::env::current_dir()
+            .map_err(|e| e.to_string())?
+            .join(cache_dir);
     }
     cache_dir = normalize_path(cache_dir);
     fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
@@ -344,7 +378,10 @@ fn query_scheduler() -> Result<SchedStats, String> {
         .unwrap()
         .as_secs() as u32;
     ioc.req.signature = sign_token(ioc.req.nonce, ioc.req.query);
-    let file = OpenOptions::new().read(true).write(true).open("/dev/phillos-query")
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("/dev/phillos-query")
         .map_err(|e| e.to_string())?;
     let ret = unsafe { libc::ioctl(file.as_raw_fd(), QUERY_IOCTL, &mut ioc) };
     if ret < 0 {
@@ -353,7 +390,10 @@ fn query_scheduler() -> Result<SchedStats, String> {
     let count = (ioc.res.result & 0xFFFF_FFFF) as u32;
     let bits = (ioc.res.result >> 32) as u32;
     let residual = f32::from_bits(bits);
-    Ok(SchedStats { task_count: count, last_residual: residual })
+    Ok(SchedStats {
+        task_count: count,
+        last_residual: residual,
+    })
 }
 
 #[command]
@@ -365,7 +405,10 @@ fn next_device_event() -> Result<Option<DeviceEvent>, String> {
         .unwrap()
         .as_secs() as u32;
     ioc.req.signature = sign_token(ioc.req.nonce, ioc.req.query);
-    let file = OpenOptions::new().read(true).write(true).open("/dev/phillos-query")
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("/dev/phillos-query")
         .map_err(|e| e.to_string())?;
     let ret = unsafe { libc::ioctl(file.as_raw_fd(), QUERY_IOCTL, &mut ioc) };
     if ret < 0 {
@@ -386,8 +429,14 @@ fn next_device_event() -> Result<Option<DeviceEvent>, String> {
     }))
 }
 
+#[command]
+fn offline_state() -> bool {
+    OFFLINE.load(Ordering::Relaxed)
+}
+
 #[cfg(not(test))]
 fn main() {
+    init_offline_state();
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             list_dir,
@@ -401,7 +450,8 @@ fn main() {
             call_scheduler,
             smart_tags,
             query_scheduler,
-            next_device_event
+            next_device_event,
+            offline_state
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -409,4 +459,3 @@ fn main() {
 
 #[cfg(test)]
 mod tests;
-

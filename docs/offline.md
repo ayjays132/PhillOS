@@ -25,6 +25,20 @@ When `offline.cfg` is present the bootloader sets a flag in `boot_info_t`. The k
 The kernel also reloads `offline.cfg` after mounting the boot partition so the
 mode can be toggled simply by editing the file on disk.
 
+User space components can check the same file. On startup the Tauri shell and
+the backend server read `offline.cfg` from `/EFI/PHILLOS/` or `storage/` and
+expose the result to applications.
+
+React code can call the `system.offline_state` command to detect whether the
+machine is offline:
+
+```ts
+const offline = await invoke<boolean>('system.offline_state');
+```
+
+When `offline_state` returns `true` the backend disables all outbound network
+requests and certain features such as phone bridging or remote summarization may be unavailable.
+
 ## Boot Messages
 
 When `offline_reload_cfg` runs the kernel prints a short debug message
