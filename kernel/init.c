@@ -11,6 +11,7 @@
 #include "../drivers/register.h"
 #include "offline.h"
 #include "theme.h"
+#include "cursor.h"
 #include "display.h"
 #include "scheduler/uhs.h"
 #include "scheduler/chaos_sched.h"
@@ -44,6 +45,7 @@ void kernel_main(boot_info_t *boot_info) {
     g_boot_info = boot_info;
     offline_init(boot_info);
     theme_init(boot_info->theme_dark);
+    cursor_init(boot_info->theme_dark);
     // Placeholder for kernel initialization logic
     init_physical_memory(boot_info);
     init_paging();
@@ -54,6 +56,7 @@ void kernel_main(boot_info_t *boot_info) {
     fat32_init();
     offline_reload_cfg();
     theme_reload_cfg();
+    cursor_reload_cfg();
     gpu_reload_cfg();
     display_reload_cfg();
     driver_manager_init();
