@@ -516,6 +516,29 @@ app.post("/api/telemetry", (req, res) => {
   res.json({ success: true });
 });
 
+let dndEnabled = false;
+let notificationsEnabled = true;
+
+app.get("/api/dnd", (req, res) => {
+  res.json({ dnd: dndEnabled });
+});
+
+app.post("/api/dnd", (req, res) => {
+  const { dnd } = req.body || {};
+  dndEnabled = !!dnd;
+  res.json({ success: true });
+});
+
+app.get("/api/notifications/prefs", (req, res) => {
+  res.json({ enabled: notificationsEnabled });
+});
+
+app.post("/api/notifications/prefs", (req, res) => {
+  const { enabled } = req.body || {};
+  notificationsEnabled = !!enabled;
+  res.json({ success: true });
+});
+
 app.get("/api/cursor", async (req, res) => {
   res.json({ cursor: await loadCursor() });
 });
