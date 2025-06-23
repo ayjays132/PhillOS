@@ -37,6 +37,7 @@ export const SettingsLayout: React.FC = () => {
       if (result && filtered.length) {
         navigate(`/settings/${filtered[0].id}`);
       }
+      setText('');
     }
   };
 

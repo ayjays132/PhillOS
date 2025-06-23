@@ -34,6 +34,7 @@ describe('SettingsLayout', () => {
     await new Promise(r => setTimeout(r, 0));
     expect(execute).toHaveBeenCalledWith('toggle dark mode');
     expect(navigate).toHaveBeenCalled();
+    expect(input.value).toBe('');
   });
 
   it('filters categories based on input', async () => {
