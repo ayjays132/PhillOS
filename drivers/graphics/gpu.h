@@ -7,8 +7,8 @@
 
 typedef struct {
     gpu_vendor_t vendor;
-    void (*init)(void);
-    void (*set_mode)(uint32_t width, uint32_t height);
+    int  (*init)(void);
+    int  (*set_mode)(uint32_t width, uint32_t height);
     int  (*enable_vulkan)(void);
 } gpu_driver_t;
 

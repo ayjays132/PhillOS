@@ -3,6 +3,7 @@
 #include "amd.h"
 #include "intel.h"
 #include "vkd3d.h"
+#include "framebuffer.h"
 #include "../../kernel/debug.h"
 #include "../../kernel/boot_info.h"
 #include "../../kernel/fs/fat32.h"
@@ -143,17 +144,29 @@ void init_gpu_driver(void)
     debug_puts(name);
     debug_putc('\n');
 
+    int ok = 0;
     if (drv && drv->init) {
         active_driver = drv;
-        drv->init();
-        if (drv->set_mode) {
-            boot_info_t *info = boot_info_get();
-            uint32_t w = info ? info->display_width : 0;
-            uint32_t h = info ? info->display_height : 0;
-            drv->set_mode(w, h);
+        if (drv->init() == 0) {
+            if (drv->set_mode) {
+                boot_info_t *info = boot_info_get();
+                uint32_t w = info ? info->display_width : 0;
+                uint32_t h = info ? info->display_height : 0;
+                if (drv->set_mode(w, h) == 0)
+                    ok = 1;
+            } else {
+                ok = 1;
+            }
+            if (ok && drv->enable_vulkan)
+                drv->enable_vulkan();
         }
-        if (drv->enable_vulkan)
-            drv->enable_vulkan();
+    }
+
+    if (!ok) {
+        debug_puts("GPU init failed, using framebuffer only\n");
+        init_framebuffer(&boot_info_get()->fb);
+        gpu_set_active_gfx_device(framebuffer_get_gfx_device());
+        active_driver = NULL;
     }
 
     if (init_vkd3d(vendor))
