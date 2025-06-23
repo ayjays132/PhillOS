@@ -121,4 +121,85 @@ describe('LockScreen biometrics and offline login', () => {
     await new Promise(r => setTimeout(r, 0));
     expect(div.textContent).toContain('Wi-Fi');
   });
+
+  it('shows error when face login fails', async () => {
+    const credMock = vi.fn(async () => {
+      throw new Error('fail');
+    });
+    (globalThis as any).navigator = { credentials: { get: credMock } };
+    vi.mock('../../services/visionVaultService', () => ({
+      visionVaultService: { search: vi.fn(async () => { throw new Error('x'); }) },
+    }));
+    const { AuthProvider } = await import('../../src/contexts/AuthContext');
+    const { LockScreen } = await import('../../src/components/LockScreen');
+    const div = document.createElement('div');
+    document.body.appendChild(div);
+    const root = createRoot(div);
+    root.render(
+      <AuthProvider>
+        <LockScreen />
+      </AuthProvider>
+    );
+    await new Promise(r => setTimeout(r, 0));
+    const btn = Array.from(div.querySelectorAll('button')).find(b =>
+      b.textContent?.includes('Use Face Login')
+    ) as HTMLButtonElement;
+    btn.click();
+    await new Promise(r => setTimeout(r, 0));
+    expect(div.textContent).toContain('Authentication failed');
+  });
+
+  it('shows error when fingerprint login fails', async () => {
+    const credMock = vi.fn(async () => {
+      throw new Error('fail');
+    });
+    (globalThis as any).navigator = { credentials: { get: credMock } };
+    vi.mock('../../services/faceAuthService', () => ({
+      faceAuthService: { authenticateFingerprint: vi.fn(async () => { throw new Error('x'); }) },
+    }));
+    const { AuthProvider } = await import('../../src/contexts/AuthContext');
+    const { LockScreen } = await import('../../src/components/LockScreen');
+    const div = document.createElement('div');
+    document.body.appendChild(div);
+    const root = createRoot(div);
+    root.render(
+      <AuthProvider>
+        <LockScreen />
+      </AuthProvider>
+    );
+    await new Promise(r => setTimeout(r, 0));
+    const btn = Array.from(div.querySelectorAll('button')).find(b =>
+      b.textContent?.includes('Use Fingerprint')
+    ) as HTMLButtonElement;
+    btn.click();
+    await new Promise(r => setTimeout(r, 0));
+    expect(div.textContent).toContain('Authentication failed');
+  });
+
+  it('shows error when voice login fails', async () => {
+    const credMock = vi.fn(async () => {
+      throw new Error('fail');
+    });
+    (globalThis as any).navigator = { credentials: { get: credMock } };
+    vi.mock('../../services/faceAuthService', () => ({
+      faceAuthService: { authenticateVoice: vi.fn(async () => { throw new Error('x'); }) },
+    }));
+    const { AuthProvider } = await import('../../src/contexts/AuthContext');
+    const { LockScreen } = await import('../../src/components/LockScreen');
+    const div = document.createElement('div');
+    document.body.appendChild(div);
+    const root = createRoot(div);
+    root.render(
+      <AuthProvider>
+        <LockScreen />
+      </AuthProvider>
+    );
+    await new Promise(r => setTimeout(r, 0));
+    const btn = Array.from(div.querySelectorAll('button')).find(b =>
+      b.textContent?.includes('Use Voice Login')
+    ) as HTMLButtonElement;
+    btn.click();
+    await new Promise(r => setTimeout(r, 0));
+    expect(div.textContent).toContain('Authentication failed');
+  });
 });
