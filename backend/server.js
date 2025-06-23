@@ -542,6 +542,23 @@ app.post("/api/aiconfig", async (req, res) => {
   res.json({ success: true });
 });
 
+app.get("/api/settings", (req, res) => {
+  res.json({ settings: loadSettings() });
+});
+
+app.post("/api/settings", (req, res) => {
+  const { settings } = req.body || {};
+  if (!settings || typeof settings !== "object") {
+    return res.status(400).json({ error: "invalid settings" });
+  }
+  try {
+    saveSettings(settings);
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: "failed" });
+  }
+});
+
 // --- ConverseAI ---
 let converseSession = null;
 app.post("/api/converseai", async (req, res) => {
@@ -1113,6 +1130,13 @@ app.post("/api/spacemanager/switch", (req, res) => {
 app.get("/api/pulsemonitor/status", (req, res) => {
   const bpm = Math.round(os.loadavg()[0] * 10 + 70);
   res.json({ bpm });
+});
+
+app.get("/api/diagnostics", (req, res) => {
+  const cpu = os.loadavg()[0];
+  const memory = 1 - os.freemem() / os.totalmem();
+  const uptime = os.uptime();
+  res.json({ cpu, memory, uptime });
 });
 
 const wss = new WebSocketServer({ server, path: "/ws/pulse" });

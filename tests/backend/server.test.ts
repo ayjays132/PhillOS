@@ -212,4 +212,30 @@ describe('new system endpoints', () => {
     const res = await request(app).get('/api/storage/usage');
     expect(res.body.usage).toBeDefined();
   });
+
+  it('returns diagnostics info', async () => {
+    vi.doMock('os', () => ({
+      default: { loadavg: () => [0.5], freemem: () => 50, totalmem: () => 100, uptime: () => 42 }
+    }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).get('/api/diagnostics');
+    expect(res.body.cpu).toBe(0.5);
+    expect(res.body.memory).toBeCloseTo(0.5);
+    expect(res.body.uptime).toBe(42);
+  });
+
+  it('exports and imports settings', async () => {
+    const fsMock = {
+      readFileSync: vi.fn(() => '{"a":1}'),
+      writeFileSync: vi.fn(),
+      mkdirSync: vi.fn()
+    };
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    let res = await request(app).get('/api/settings');
+    expect(res.body.settings.a).toBe(1);
+    res = await request(app).post('/api/settings').send({ settings: { b: 2 } });
+    expect(res.body).toEqual({ success: true });
+    expect(fsMock.writeFileSync).toHaveBeenCalled();
+  });
 });

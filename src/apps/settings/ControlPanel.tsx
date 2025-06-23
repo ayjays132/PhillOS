@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
 import { storageService } from '../../../services/storageService';
 import { settingsService } from '../../../services/settingsService';
+import { backupService } from '../../../services/backupService';
+import { diagnosticService } from '../../../services/diagnosticService';
 import { FileDown, FileUp, Settings2 } from 'lucide-react';
 import { SettingChange } from '../../types';
 
@@ -39,11 +41,13 @@ export const ControlPanel: React.FC = () => {
     storageService.getTelemetry() ?? true
   );
   const [history, setHistory] = useState<SettingChange[]>([]);
+  const [diag, setDiag] = useState<{ cpu: number; memory: number; uptime: number } | null>(null);
 
   useEffect(() => {
     setHistory(storageService.getSettingsHistory());
     settingsService.fetchDevMode().then(v => v !== null && setDevMode(v));
     settingsService.fetchTelemetry().then(v => v !== null && setTelemetry(v));
+    diagnosticService.getStatus().then(setDiag);
   }, []);
 
   const toggleNode = (id: string) => {
@@ -82,6 +86,28 @@ export const ControlPanel: React.FC = () => {
     a.download = 'phillos-settings.json';
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportFull = async () => {
+    const data = await backupService.exportSettings();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'phillos-full-settings.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importFull = async (file: File) => {
+    const text = await file.text();
+    try {
+      const obj = JSON.parse(text);
+      await backupService.importSettings(obj);
+      recordChange('settings.full_import', null, obj);
+    } catch {
+      // ignore
+    }
   };
 
   const importSettings = (file: File) => {
@@ -145,7 +171,21 @@ export const ControlPanel: React.FC = () => {
           <FileUp size={16} /> Import
           <input type="file" accept="application/json" onChange={e => e.target.files && importSettings(e.target.files[0])} className="hidden" />
         </label>
+        <button onClick={exportFull} className="flex items-center gap-1 bg-cyan-700/60 hover:bg-cyan-600/60 px-2 py-1 rounded">
+          <FileDown size={16} /> Full Export
+        </button>
+        <label className="flex items-center gap-1 bg-cyan-700/60 hover:bg-cyan-600/60 px-2 py-1 rounded cursor-pointer">
+          <FileUp size={16} /> Full Import
+          <input type="file" accept="application/json" onChange={e => e.target.files && importFull(e.target.files[0])} className="hidden" />
+        </label>
       </div>
+      {diag && (
+        <div className="text-xs mt-2 space-y-1">
+          <div>CPU Load: {(diag.cpu * 100).toFixed(1)}%</div>
+          <div>Memory Usage: {(diag.memory * 100).toFixed(1)}%</div>
+          <div>Uptime: {Math.round(diag.uptime / 60)}m</div>
+        </div>
+      )}
       <div className="mt-4">
         <h2 className="font-semibold mb-1">History</h2>
         <ul className="text-xs space-y-1 max-h-32 overflow-auto">
