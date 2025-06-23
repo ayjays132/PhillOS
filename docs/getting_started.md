@@ -35,7 +35,10 @@ PhillOS bundles two small native backends. Build them once before running the se
 cd src-tauri
 cargo build --release
 cd ../src/backend
-go build -o ../../dist/phillos-server
+# build the Go module
+go build -o ../../dist/phillos-server github.com/phillos/backend
+# or run the server directly
+go run github.com/phillos/backend
 cd ..
 ```
 
