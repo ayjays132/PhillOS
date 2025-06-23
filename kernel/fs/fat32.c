@@ -217,7 +217,7 @@ void *fat32_load_file(const char *path, uint32_t *size)
     }
     if (!cluster)
         return NULL;
-    uint32_t remaining = *size;
+    uint32_t remaining = size ? *size : fsize;
     uint8_t *buffer = kmalloc(remaining);
     if (!buffer) return NULL;
     uint8_t *ptr = buffer;
