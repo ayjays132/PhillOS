@@ -9,6 +9,10 @@ beforeEach(() => {
     getItem: vi.fn(() => null),
     setItem: vi.fn(),
   };
+  (globalThis as any).fetch = vi.fn(async () => ({
+    ok: true,
+    json: async () => ({ success: true }),
+  }));
 });
 
 describe('LockScreen integration', () => {

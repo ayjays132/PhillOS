@@ -8,7 +8,7 @@ import { URL } from "url";
 import { spawn } from "child_process";
 import { createProtonLauncher } from "./protonLauncher.js";
 import { scoreExecutable, RISK_THRESHOLD } from "./sandboxShield.js";
-import { initDb, query, execute } from "./db.js";
+import { initDb, query, execute, getUserHash, verifyPassword } from "./db.js";
 import ffi from "ffi-napi";
 import { patternAlertService } from "../services/patternAlertService";
 import { researchMate } from "../services/researchMate";
@@ -990,6 +990,22 @@ app.post("/api/wifi/connect", (req, res) => {
     }
     res.json({ success: true });
   });
+});
+
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password)
+    return res.status(400).json({ error: "username and password required" });
+  try {
+    const hash = getUserHash(String(username));
+    if (verifyPassword(String(password), hash)) {
+      return res.json({ success: true });
+    }
+    return res.status(401).json({ success: false });
+  } catch (err) {
+    console.error("login failed", err);
+    res.status(500).json({ error: "login failed" });
+  }
 });
 
 // --- BrainPad ---

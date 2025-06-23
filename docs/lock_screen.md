@@ -21,11 +21,12 @@ before you sign in.
 
 ## Setup
 
-1. Ensure a webcam or compatible biometric device is connected if you wish to use
+1. Run `npm run setup-db` to migrate the database and create the new `users`
+   table.
+2. Add at least one account with `node scripts/add-user.js <name> <password>`.
+3. Ensure a webcam or compatible biometric device is connected if you wish to use
    facial recognition. The browser must support WebAuthn for the built‑in face
    login method or PhillOS' `visionVaultService` will be used as a fallback.
-2. No backend setup is required. User credentials are verified locally in this
-   prototype.
 
 ## Hardware Requirements
 

@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEX
 CREATE TABLE IF NOT EXISTS tags(path TEXT PRIMARY KEY, tags TEXT);
 CREATE TABLE IF NOT EXISTS preferences(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS profiles(name TEXT PRIMARY KEY, data TEXT);
+CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY, password TEXT);
 `);
   const count = db.prepare('SELECT COUNT(*) as c FROM emails').get().c || 0;
   if (count === 0) {
@@ -50,4 +52,32 @@ export async function saveProfile(name, data) {
   db.prepare(
     'INSERT INTO profiles(name,data) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET data=?'
   ).run(name, text, text);
+}
+
+export function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
+  const hash = crypto
+    .pbkdf2Sync(password, salt, 100000, 64, 'sha512')
+    .toString('hex');
+  return `${salt}:${hash}`;
+}
+
+export function verifyPassword(password, stored) {
+  if (!stored) return false;
+  const [salt, hash] = stored.split(':');
+  const hashed = crypto
+    .pbkdf2Sync(password, salt, 100000, 64, 'sha512')
+    .toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(hashed, 'hex'));
+}
+
+export function createUser(username, password) {
+  const stored = hashPassword(password);
+  db.prepare(
+    'INSERT INTO users(username,password) VALUES(?,?) ON CONFLICT(username) DO UPDATE SET password=?'
+  ).run(username, stored, stored);
+}
+
+export function getUserHash(username) {
+  const row = db.prepare('SELECT password FROM users WHERE username=?').get(username);
+  return row && row.password;
 }

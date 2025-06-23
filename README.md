@@ -584,7 +584,12 @@ Some widgets store data in a small SQLite database. Initialize it once before ru
 npm run setup-db
 ```
 
-This creates `storage/phillos.db` with tables for emails, notes, tasks, tags and preferences.
+This creates `storage/phillos.db` with tables for emails, notes, tasks, tags,
+preferences and users. Add accounts with:
+
+```bash
+node scripts/add-user.js <name> <password>
+```
 
 ### Built-In Apps
 
