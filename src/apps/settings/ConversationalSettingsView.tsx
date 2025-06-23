@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Settings, Send, MessageSquare, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { GlassCard } from '../GlassCard';
+import { GlassCard } from '../../components/GlassCard';
 import { CloudSyncToggle } from "./CloudSyncToggle";
 
 interface SettingsMessage {

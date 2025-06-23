@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GlassCard } from '../GlassCard';
+import { GlassCard } from '../../components/GlassCard';
 import { Palette } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { settingsService } from '../../../services/settingsService';

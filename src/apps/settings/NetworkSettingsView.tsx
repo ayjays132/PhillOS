@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../GlassCard';
-import NetworkSetup from '../NetworkSetup';
+import { GlassCard } from '../../components/GlassCard';
+import NetworkSetup from '../../components/NetworkSetup';
 import { Wifi, Bluetooth } from 'lucide-react';
 import { systemSettingsService } from '../../services/systemSettingsService';
 

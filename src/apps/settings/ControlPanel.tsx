@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../GlassCard';
+import { GlassCard } from '../../components/GlassCard';
 import { storageService } from '../../../services/storageService';
 import { FileDown, FileUp, Settings2 } from 'lucide-react';
 import { SettingChange } from '../../types';

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../GlassCard';
+import { GlassCard } from '../../components/GlassCard';
 import { Cpu } from 'lucide-react';
-import MemorySettings from '../MemorySettings';
+import MemorySettings from '../../components/MemorySettings';
 import { settingsService } from '../../../services/settingsService';
 import { storageService } from '../../../services/storageService';
 import { systemSettingsService } from '../../../services/systemSettingsService';

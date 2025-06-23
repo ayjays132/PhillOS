@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../GlassCard';
+import { GlassCard } from '../../components/GlassCard';
 import { Shield } from 'lucide-react';
 import { systemSettingsService } from '../../services/systemSettingsService';
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GlassCard } from '../GlassCard';
+import { GlassCard } from '../../components/GlassCard';
 import { storageService } from '../../../services/storageService';
 import { Phone } from 'lucide-react';
 import { VoiceMode } from '../../../services/voiceService';
