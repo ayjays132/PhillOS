@@ -12,6 +12,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { CursorProvider } from './contexts/CursorContext';
 import Cursor from './components/Cursor';
 import { PhoneProvider } from './contexts/PhoneContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { MemoryHubProvider } from './contexts/MemoryHubContext';
 import { BrainPadProvider } from './contexts/BrainPadContext';
 
@@ -63,8 +64,10 @@ const renderApp = () => (
               <PhoneProvider>
                 <MemoryHubProvider>
                   <BrainPadProvider>
-                    <App />
-                    <Cursor />
+                    <AuthProvider>
+                      <App />
+                      <Cursor />
+                    </AuthProvider>
                   </BrainPadProvider>
                 </MemoryHubProvider>
               </PhoneProvider>

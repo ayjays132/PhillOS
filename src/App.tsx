@@ -37,6 +37,8 @@ import { useOnboarding } from './hooks/useOnboarding';
 import { useDock } from './hooks/useDock';
 import { useTheme } from './contexts/ThemeContext';
 import { useTrainingScheduler } from './hooks/useTrainingScheduler';
+import { useAuth } from './contexts/AuthContext';
+import LockScreen from './components/LockScreen';
 
 
 const App: React.FC = () => {
@@ -46,6 +48,7 @@ const App: React.FC = () => {
   const { navItems } = useDock();
   const { theme } = useTheme();
   const location = useLocation();
+  const { authenticated } = useAuth();
 
   const trainingEnabled = import.meta.env.VITE_TRAINING_ENABLED !== 'false';
   const trainingFreq = parseInt(import.meta.env.VITE_TRAINING_FREQUENCY_MS || '3600000', 10);
@@ -61,6 +64,10 @@ const App: React.FC = () => {
       }
     }
   }, []);
+
+  if (!authenticated) {
+    return <LockScreen />;
+  }
 
 
   if (!isOnboardingComplete && location.pathname !== '/onboarding') {
