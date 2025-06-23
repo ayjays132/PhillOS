@@ -50,6 +50,43 @@ function isOffline() {
   return offline;
 }
 
+function saveOffline(state) {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(STORAGE_DIR, "offline.cfg"), state ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+  offline = !!state;
+}
+
+const GPU_FILES = [
+  path.resolve(__dirname, "../gpu.cfg"),
+  path.join(STORAGE_DIR, "gpu.cfg"),
+];
+
+function loadGpuOverride() {
+  for (const p of GPU_FILES) {
+    try {
+      const data = fs.readFileSync(p, "utf8").trim().toLowerCase();
+      if (data)
+        return data;
+    } catch {
+      /* ignore */
+    }
+  }
+  return "auto";
+}
+
+function saveGpuOverride(vendor) {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(STORAGE_DIR, "gpu.cfg"), vendor);
+  } catch {
+    /* ignore */
+  }
+}
+
 function sanitizeStoragePath(name) {
   const base = path.basename(name);
   if (!ALLOWED_FILES.has(base)) throw new Error("invalid filename");
@@ -323,6 +360,30 @@ app.post("/api/theme", async (req, res) => {
     return res.status(400).json({ error: "invalid theme" });
   }
   await saveTheme(theme);
+  res.json({ success: true });
+});
+
+app.get("/api/offline", (req, res) => {
+  res.json({ offline: isOffline() });
+});
+
+app.post("/api/offline", (req, res) => {
+  const { offline: state } = req.body || {};
+  saveOffline(!!state);
+  res.json({ success: true });
+});
+
+app.get("/api/gpu", (req, res) => {
+  res.json({ gpu: loadGpuOverride() });
+});
+
+app.post("/api/gpu", (req, res) => {
+  const { gpu } = req.body || {};
+  const valid = ["nvidia", "amd", "intel", "none", "auto"];
+  if (!valid.includes(String(gpu))) {
+    return res.status(400).json({ error: "invalid gpu" });
+  }
+  saveGpuOverride(String(gpu));
   res.json({ success: true });
 });
 

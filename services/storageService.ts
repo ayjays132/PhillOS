@@ -9,6 +9,8 @@ const THEME_KEY = 'phillos-theme';
 const VOICE_ENGINE_KEY = 'phillos_voice_engine_v1';
 const CURSOR_STYLE_KEY = 'phillos_cursor_style';
 const SETTINGS_HISTORY_KEY = 'phillos_settings_history_v1';
+const OFFLINE_MODE_KEY = 'phillos_offline_mode';
+const GPU_OVERRIDE_KEY = 'phillos_gpu_override';
 
 class StorageService {
   init() {
@@ -168,6 +170,43 @@ class StorageService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme }),
       });
+    } catch {
+      // ignore
+    }
+  }
+
+  getOfflineMode(): boolean | null {
+    try {
+      const v = localStorage.getItem(OFFLINE_MODE_KEY);
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  setOfflineMode(state: boolean) {
+    try {
+      localStorage.setItem(OFFLINE_MODE_KEY, String(state));
+    } catch {
+      // ignore
+    }
+  }
+
+  getGpuOverride(): string | null {
+    try {
+      const v = localStorage.getItem(GPU_OVERRIDE_KEY);
+      if (v) return v;
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  setGpuOverride(vendor: string) {
+    try {
+      localStorage.setItem(GPU_OVERRIDE_KEY, vendor);
     } catch {
       // ignore
     }
