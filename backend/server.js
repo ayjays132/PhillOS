@@ -960,6 +960,38 @@ setInterval(() => {
   });
 }, 1000);
 
+// --- Wi-Fi Management ---
+app.get("/api/wifi/networks", (req, res) => {
+  exec("nmcli -t -f SSID dev wifi", (err, stdout) => {
+    if (err) {
+      console.error("wifi scan failed", err);
+      return res.json({ networks: [] });
+    }
+    const networks = stdout
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    res.json({ networks });
+  });
+});
+
+app.post("/api/wifi/connect", (req, res) => {
+  const { ssid, password } = req.body || {};
+  if (!ssid) return res.status(400).json({ error: "ssid required" });
+  const safeSsid = String(ssid).replace(/"/g, "\\\"");
+  const safePass = password ? String(password).replace(/"/g, "\\\"") : "";
+  const cmd = password
+    ? `nmcli dev wifi connect "${safeSsid}" password "${safePass}"`
+    : `nmcli dev wifi connect "${safeSsid}"`;
+  exec(cmd, (err) => {
+    if (err) {
+      console.error("wifi connect failed", err);
+      return res.status(500).json({ success: false });
+    }
+    res.json({ success: true });
+  });
+});
+
 // --- BrainPad ---
 app.get("/api/brainpad/entries", async (req, res) => {
   const entries = await query(

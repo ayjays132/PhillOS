@@ -1,28 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GlassCard } from './GlassCard';
 import { useAuth } from '../contexts/AuthContext';
-
-const networks = ['Home Wi-Fi', 'Office Wi-Fi', 'Public Wi-Fi'];
-
-const NetworkWidget: React.FC = () => {
-  const [selected, setSelected] = useState(networks[0]);
-  return (
-    <GlassCard className="mt-4 w-60 text-sm text-center">
-      <div className="font-semibold mb-2">Wi-Fi Networks</div>
-      <select
-        className="w-full rounded bg-transparent border border-white/20 p-1"
-        value={selected}
-        onChange={e => setSelected(e.target.value)}
-      >
-        {networks.map(n => (
-          <option key={n} value={n} className="text-gray-900">
-            {n}
-          </option>
-        ))}
-      </select>
-    </GlassCard>
-  );
-};
+import NetworkSetup from './NetworkSetup';
 
 const MediaWidget: React.FC = () => {
   const [state, setState] = useState<'playing' | 'paused' | null>(null);
@@ -97,7 +76,7 @@ export const LockScreen: React.FC = () => {
           Use Face Login
         </button>
       </GlassCard>
-      <NetworkWidget />
+      <NetworkSetup />
       <MediaWidget />
     </div>
   );
