@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GlassCard } from '../GlassCard';
 import { Palette } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { settingsService } from '../../../services/settingsService';
 
 export const PersonalizationSettingsView: React.FC = () => {
   const [wallpaper, setWallpaper] = useState('');
@@ -26,7 +27,11 @@ export const PersonalizationSettingsView: React.FC = () => {
         <span>Theme</span>
         <select
           value={theme}
-          onChange={e => setTheme(e.target.value as any)}
+          onChange={e => {
+            const val = e.target.value as 'light' | 'dark';
+            setTheme(val);
+            settingsService.setTheme(val);
+          }}
           className="bg-transparent border border-white/20 rounded px-2 py-1"
         >
           <option value="light">Light</option>
