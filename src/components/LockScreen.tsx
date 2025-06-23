@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GlassCard } from './GlassCard';
 import { useAuth } from '../contexts/AuthContext';
+import { useDeviceType } from '../hooks/useDeviceType';
 import NetworkSetup from './NetworkSetup';
 import LockScreenMedia from './LockScreenMedia';
 import LockScreenNotifications from './LockScreenNotifications';
@@ -19,6 +20,9 @@ export const LockScreen: React.FC = () => {
     }
   });
   const [offline, setOffline] = useState(offlineService.isOffline());
+  const { deviceType, orientation } = useDeviceType();
+
+  const sideBySide = orientation === 'landscape' && deviceType !== 'desktop';
 
   useEffect(() => offlineService.subscribe(setOffline), []);
 
@@ -49,66 +53,75 @@ export const LockScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white">
-      <GlassCard className="w-60 text-center">
-        <form onSubmit={handleLogin} className="flex flex-col gap-2">
-          <input
-            className="rounded p-1 text-gray-900"
-            placeholder="Username"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-          />
-          <input
-            className="rounded p-1 text-gray-900"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          />
-          {pinEnabled && (
-            <>
-              <input
-                className="rounded p-1 text-gray-900"
-                type="password"
-                placeholder="PIN"
-                value={pin}
-                onChange={e => setPin(e.target.value)}
-              />
+    <div
+      className={`flex h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white ${sideBySide ? 'flex-row justify-center items-center gap-8' : 'flex-col items-center justify-center'}`}
+    >
+      <div className="flex flex-col items-center">
+        <GlassCard className="w-60 text-center">
+          <form onSubmit={handleLogin} className="flex flex-col gap-2">
+            <input
+              className="rounded p-1 text-gray-900"
+              placeholder="Username"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+            />
+            <input
+              className="rounded p-1 text-gray-900"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+            {pinEnabled && (
+              <>
+                <input
+                  className="rounded p-1 text-gray-900"
+                  type="password"
+                  placeholder="PIN"
+                  value={pin}
+                  onChange={e => setPin(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={handlePin}
+                  className="bg-white/20 rounded py-1 hover:bg-white/30"
+                >
+                  PIN Login
+                </button>
+              </>
+            )}
+            <button
+              type="submit"
+              className="bg-white/20 rounded py-1 mt-1 hover:bg-white/30"
+            >
+              Login
+            </button>
+            {offline && (
               <button
                 type="button"
-                onClick={handlePin}
-                className="bg-white/20 rounded py-1 hover:bg-white/30"
+                className="bg-white/20 rounded py-1 mt-1 hover:bg-white/30"
+                onClick={handleGuest}
               >
-                PIN Login
+                Guest Login
               </button>
-            </>
-          )}
-        <button type="submit" className="bg-white/20 rounded py-1 mt-1 hover:bg-white/30">
-          Login
-        </button>
-        {offline && (
-          <button
-            type="button"
-            className="bg-white/20 rounded py-1 mt-1 hover:bg-white/30"
-            onClick={handleGuest}
-          >
-            Guest Login
+            )}
+          </form>
+          <button className="mt-3 text-sm underline" onClick={handleFace}>
+            Use Face Login
           </button>
-        )}
-      </form>
-      <button className="mt-3 text-sm underline" onClick={handleFace}>
-        Use Face Login
-      </button>
-      <button className="mt-1 text-sm underline" onClick={handleFingerprint}>
-        Use Fingerprint
-      </button>
-      <button className="mt-1 text-sm underline" onClick={handleVoice}>
-        Use Voice Login
-      </button>
-      </GlassCard>
-      <NetworkSetup />
-      <LockScreenNotifications />
-      <LockScreenMedia />
+          <button className="mt-1 text-sm underline" onClick={handleFingerprint}>
+            Use Fingerprint
+          </button>
+          <button className="mt-1 text-sm underline" onClick={handleVoice}>
+            Use Voice Login
+          </button>
+        </GlassCard>
+      </div>
+      <div className={`${sideBySide ? '' : 'mt-4'} flex flex-col items-center`}>
+        <NetworkSetup />
+        <LockScreenNotifications />
+        <LockScreenMedia />
+      </div>
     </div>
   );
 };
