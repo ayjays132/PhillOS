@@ -11,6 +11,7 @@ before you sign in.
 - Fallback visionVaultService when the browser lacks WebAuthn
 - Quick Wi‑Fi selection before login
 - Optional media widget to pause or resume playback
+- Optional PIN entry for quick unlock
 
 ## Supported Cameras and Sensors
 
@@ -23,7 +24,7 @@ before you sign in.
 
 1. Run `npm run setup-db` to migrate the database and create the new `users`
    table.
-2. Add at least one account with `node scripts/add-user.js <name> <password>`.
+2. Add at least one account with `node scripts/add-user.js <name> <password> [pin]`.
 3. Ensure a webcam or compatible biometric device is connected if you wish to use
    facial recognition. The browser must support WebAuthn for the built‑in face
    login method or PhillOS' `visionVaultService` will be used as a fallback.
@@ -36,8 +37,10 @@ before you sign in.
 
 ## Configuration
 
-Enable or disable face, fingerprint, or voice login from **Settings → Security → Lock Screen**. This
-panel also lets you choose which camera or sensor should be used.
+Enable or disable face, fingerprint, voice, or PIN login from **Settings → Security → Lock Screen**. This
+panel also lets you choose which camera or sensor should be used and whether a PIN should be accepted.
+
+When a PIN is entered the value is hashed with SHA‑256 and stored locally so PIN login continues to work offline.
 
 ## Fallback Authentication and Privacy
 

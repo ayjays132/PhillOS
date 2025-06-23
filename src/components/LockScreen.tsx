@@ -7,9 +7,17 @@ import LockScreenNotifications from './LockScreenNotifications';
 import { offlineService } from '../../services/offlineService';
 
 export const LockScreen: React.FC = () => {
-  const { login, faceLogin, fingerprintLogin, voiceLogin } = useAuth();
+  const { login, pinLogin, faceLogin, fingerprintLogin, voiceLogin } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [pin, setPin] = useState('');
+  const [pinEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('phillos_pin_enabled') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [offline, setOffline] = useState(offlineService.isOffline());
 
   useEffect(() => offlineService.subscribe(setOffline), []);
@@ -35,6 +43,11 @@ export const LockScreen: React.FC = () => {
     await login('', '');
   };
 
+  const handlePin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await pinLogin(pin);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 text-white">
       <GlassCard className="w-60 text-center">
@@ -52,6 +65,24 @@ export const LockScreen: React.FC = () => {
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
+          {pinEnabled && (
+            <>
+              <input
+                className="rounded p-1 text-gray-900"
+                type="password"
+                placeholder="PIN"
+                value={pin}
+                onChange={e => setPin(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handlePin}
+                className="bg-white/20 rounded py-1 hover:bg-white/30"
+              >
+                PIN Login
+              </button>
+            </>
+          )}
         <button type="submit" className="bg-white/20 rounded py-1 mt-1 hover:bg-white/30">
           Login
         </button>

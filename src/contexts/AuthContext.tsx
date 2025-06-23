@@ -3,9 +3,20 @@ import { visionVaultService } from '../../services/visionVaultService';
 import { faceAuthService } from '../../services/faceAuthService';
 import { offlineService } from '../../services/offlineService';
 
+const PIN_HASH_KEY = 'phillos_pin_hash';
+
+async function hashPin(pin: string): Promise<string> {
+  const buf = new TextEncoder().encode(pin);
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 interface AuthContextProps {
   authenticated: boolean;
   login: (username: string, password: string) => Promise<boolean>;
+  pinLogin: (pin: string) => Promise<boolean>;
   faceLogin: () => Promise<boolean>;
   fingerprintLogin: () => Promise<boolean>;
   voiceLogin: () => Promise<boolean>;
@@ -53,6 +64,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
+  const pinLogin = async (pin: string) => {
+    if (!pin) return false;
+    const hashed = await hashPin(pin);
+    const stored = localStorage.getItem(PIN_HASH_KEY);
+    if (stored && stored === hashed) {
+      persist(true);
+      return true;
+    }
+    if (offlineService.isOffline()) return false;
+    try {
+      const res = await fetch('/api/pinlogin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem(PIN_HASH_KEY, hashed);
+        persist(true);
+        return true;
+      }
+    } catch {}
+    return false;
+  };
+
   const faceLogin = async () => {
     try {
       if (navigator.credentials && (navigator.credentials as any).get) {
@@ -94,6 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         authenticated,
         login,
+        pinLogin,
         faceLogin,
         fingerprintLogin,
         voiceLogin,
