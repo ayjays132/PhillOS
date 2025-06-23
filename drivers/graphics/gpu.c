@@ -49,15 +49,21 @@ gpu_vendor_t detect_gpu_vendor(void)
 }
 
 static gpu_driver_t *active_driver = NULL;
+static gfx_device_t *active_gfx = NULL;
 
-gpu_driver_t *gpu_get_active_driver(void)
+gfx_device_t *gpu_get_active_driver(void)
 {
-    return active_driver;
+    return active_gfx;
 }
 
 void gpu_set_active_driver(gpu_driver_t *drv)
 {
     active_driver = drv;
+}
+
+void gpu_set_active_gfx_device(gfx_device_t *dev)
+{
+    active_gfx = dev;
 }
 
 static int str_eq(const char *a, const char *b)

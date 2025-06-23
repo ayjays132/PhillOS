@@ -49,6 +49,13 @@ let listeners: IHotSwapListener[] = [];
 export let pciDevices: PciDevice[] = [];
 export let moduleLoad = (path: string): Module | null => null;
 export let moduleUnload = (m: Module): void => {};
+let activeGfx: any = null;
+export function gpu_set_active_driver(dev: any) {
+  activeGfx = dev;
+}
+export function gpu_get_active_driver() {
+  return activeGfx;
+}
 export function setModuleLoad(fn: (path: string) => Module | null) {
   moduleLoad = fn;
 }

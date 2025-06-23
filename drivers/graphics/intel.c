@@ -1,5 +1,7 @@
 #include "intel.h"
 #include "framebuffer.h"
+#include "gfx.h"
+#include "gpu.h"
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
 #include "../../kernel/init.h"
@@ -44,6 +46,7 @@ static void intel_hw_init(const pci_device_t *dev)
     debug_putc('\n');
 
     init_framebuffer(&boot_info_get()->fb);
+    gpu_set_active_gfx_device(framebuffer_get_gfx_device());
     intel_program_regs();
     gpu_set_active_driver(&intel_driver);
 }
