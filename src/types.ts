@@ -104,3 +104,10 @@ export interface CalendarEvent {
   end: string;
   tasks?: string;
 }
+
+export interface SettingChange {
+  path: string;
+  oldValue: unknown;
+  newValue: unknown;
+  timestamp: number;
+}

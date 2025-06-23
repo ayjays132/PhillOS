@@ -31,6 +31,7 @@ import MemorySettings from './components/MemorySettings';
 import MemoryHub from './components/MemoryHub';
 import SettingsApp from './src/apps/settings';
 import CursorSettingsView from './components/settings/CursorSettingsView';
+import ControlPanel from './components/settings/ControlPanel';
 import SettingsLayout from './components/settings/SettingsLayout';
 import SettingsHome from './src/apps/settings/SettingsHome';
 import { useResponsive } from './hooks/useResponsive';
@@ -120,6 +121,7 @@ const App: React.FC = () => {
             <Route path="memory" element={<MemorySettings />} />
             <Route path="ai" element={<SettingsApp />} />
             <Route path="cursor" element={<CursorSettingsView />} />
+            <Route path="control-panel" element={<ControlPanel />} />
           </Route>
           <Route path="/memory-hub" element={<MemoryHub />} />
           <Route path="*" element={isOnboardingComplete ? <Navigate to="/home" replace /> : <Navigate to="/onboarding" replace />} />
