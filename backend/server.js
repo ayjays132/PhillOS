@@ -13,6 +13,7 @@ import ffi from "ffi-napi";
 import { patternAlertService } from "../services/patternAlertService";
 import { researchMate } from "../services/researchMate";
 import { exec } from "child_process";
+import util from "util";
 
 const STORAGE_DIR = path.resolve(
   process.env.PHILLOS_STORAGE_DIR || path.join(__dirname, "../storage"),
@@ -97,6 +98,8 @@ const SETTINGS_FILE = sanitizeStoragePath("protonSettings.json");
 const THEME_FILE = sanitizeStoragePath("theme.cfg");
 const CURSOR_FILE = sanitizeStoragePath("cursor.cfg");
 const WORKSPACE_FILE = sanitizeStoragePath("workspaceSnaps.json");
+const LOCALE_FILE = sanitizeStoragePath("locale.json");
+const PERMISSIONS_FILE = sanitizeStoragePath("permissions.json");
 
 async function loadAIConfig() {
   try {
@@ -226,6 +229,34 @@ function loadWorkspaces() {
   } catch {
     return {};
   }
+}
+
+function loadLocale() {
+  try {
+    const data = fs.readFileSync(LOCALE_FILE, "utf8");
+    return JSON.parse(data);
+  } catch {
+    return { region: "US", language: "en" };
+  }
+}
+
+function saveLocale(data) {
+  fs.mkdirSync(STORAGE_DIR, { recursive: true });
+  fs.writeFileSync(LOCALE_FILE, JSON.stringify(data));
+}
+
+function loadPermissions() {
+  try {
+    const data = fs.readFileSync(PERMISSIONS_FILE, "utf8");
+    return JSON.parse(data);
+  } catch {
+    return {};
+  }
+}
+
+function savePermissions(data) {
+  fs.mkdirSync(STORAGE_DIR, { recursive: true });
+  fs.writeFileSync(PERMISSIONS_FILE, JSON.stringify(data, null, 2));
 }
 
 function saveWorkspaces() {
@@ -1053,6 +1084,107 @@ app.post("/api/wifi/connect", (req, res) => {
   });
 });
 
+// --- Bluetooth Management ---
+app.get("/api/bluetooth/devices", (req, res) => {
+  exec("bluetoothctl devices", (err, stdout) => {
+    if (err) {
+      console.error("bluetooth scan failed", err);
+      return res.json({ devices: [] });
+    }
+    const devices = stdout
+      .split("\n")
+      .map((l) => l.trim().split(" "))
+      .filter((p) => p.length >= 2)
+      .map((p) => ({ mac: p[1], name: p.slice(2).join(" ") }));
+    res.json({ devices });
+  });
+});
+
+app.post("/api/bluetooth/pair", (req, res) => {
+  const { mac } = req.body || {};
+  if (!mac) return res.status(400).json({ error: "mac required" });
+  exec(`bluetoothctl pair ${mac}`, (err) => {
+    if (err) {
+      console.error("bluetooth pair failed", err);
+      return res.status(500).json({ success: false });
+    }
+    res.json({ success: true });
+  });
+});
+
+// --- System Time ---
+app.get("/api/time", (req, res) => {
+  res.json({ time: new Date().toISOString() });
+});
+
+const execAsync = util.promisify(exec);
+app.post("/api/time", async (req, res) => {
+  const { time } = req.body || {};
+  if (!time) return res.status(400).json({ error: "time required" });
+  try {
+    await execAsync(`date -s '${String(time)}'`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("set time failed", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// --- Locale Settings ---
+app.get("/api/locale", (req, res) => {
+  res.json({ locale: loadLocale() });
+});
+
+app.post("/api/locale", (req, res) => {
+  const { locale } = req.body || {};
+  if (!locale || typeof locale !== "object")
+    return res.status(400).json({ error: "invalid locale" });
+  saveLocale(locale);
+  res.json({ success: true });
+});
+
+// --- Storage Usage ---
+function getDirSize(dir) {
+  let total = 0;
+  for (const entry of fs.readdirSync(dir)) {
+    const p = path.join(dir, entry);
+    const st = fs.statSync(p);
+    if (st.isDirectory()) total += getDirSize(p);
+    else total += st.size;
+  }
+  return total;
+}
+
+app.get("/api/storage/usage", (req, res) => {
+  try {
+    const usage = {};
+    for (const entry of fs.readdirSync(STORAGE_DIR)) {
+      const p = path.join(STORAGE_DIR, entry);
+      const st = fs.statSync(p);
+      if (st.isDirectory()) usage[entry] = getDirSize(p);
+      else usage[entry] = st.size;
+    }
+    res.json({ usage });
+  } catch (err) {
+    console.error("storage usage error", err);
+    res.status(500).json({ error: "failed" });
+  }
+});
+
+// --- Permissions ---
+app.get("/api/permissions", (req, res) => {
+  res.json({ permissions: loadPermissions() });
+});
+
+app.post("/api/permissions", (req, res) => {
+  const { app: appId, granted } = req.body || {};
+  if (!appId) return res.status(400).json({ error: "app required" });
+  const perms = loadPermissions();
+  perms[appId] = !!granted;
+  savePermissions(perms);
+  res.json({ success: true });
+});
+
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password)
@@ -1185,4 +1317,8 @@ export {
   loadAIConfig,
   saveAIConfig,
   isOffline,
+  loadLocale,
+  saveLocale,
+  loadPermissions,
+  savePermissions,
 };

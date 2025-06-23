@@ -6,6 +6,8 @@ import { settingsService } from '../../../services/settingsService';
 
 export const PersonalizationSettingsView: React.FC = () => {
   const [wallpaper, setWallpaper] = useState('');
+  const [accent, setAccent] = useState('#00ffff');
+  const [pointerSpeed, setPointerSpeed] = useState(50);
   const { theme, setTheme } = useTheme();
 
   return (
@@ -37,6 +39,25 @@ export const PersonalizationSettingsView: React.FC = () => {
           <option value="light">Light</option>
           <option value="dark">Dark</option>
         </select>
+      </label>
+      <label className="text-sm flex flex-col gap-1">
+        <span>Accent Color</span>
+        <input
+          type="color"
+          value={accent}
+          onChange={e => setAccent(e.target.value)}
+          className="bg-transparent border border-white/20 rounded h-8 w-20 p-1"
+        />
+      </label>
+      <label className="text-sm flex flex-col gap-1">
+        <span>Pointer Speed ({pointerSpeed})</span>
+        <input
+          type="range"
+          min="1"
+          max="100"
+          value={pointerSpeed}
+          onChange={e => setPointerSpeed(Number(e.target.value))}
+        />
       </label>
     </GlassCard>
   );
