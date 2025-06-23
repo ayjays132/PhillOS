@@ -238,4 +238,49 @@ describe('new system endpoints', () => {
     expect(res.body).toEqual({ success: true });
     expect(fsMock.writeFileSync).toHaveBeenCalled();
   });
+
+  it('returns storage stats', async () => {
+    const fsMock = {
+      readdirSync: vi.fn(() => ['dir']),
+      statSync: vi.fn(() => ({ isDirectory: () => true, size: 0 })),
+      statfsSync: vi.fn(() => ({ bsize: 100, blocks: 1000, bavail: 500 })),
+    } as any;
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).get('/api/storage/stats');
+    expect(res.body.stats.total).toBe(100000);
+    expect(res.body.stats.free).toBe(50000);
+  });
+
+  it('returns battery info', async () => {
+    const fsMock = {
+      readFileSync: vi.fn((p: string) => (p.includes('capacity') ? '50' : 'Charging')),
+      statfsSync: vi.fn(() => ({ bsize: 100, blocks: 1000, bavail: 500 })),
+      readdirSync: vi.fn(() => []),
+      statSync: vi.fn(),
+    } as any;
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).get('/api/power/battery');
+    expect(res.body.battery.level).toBeCloseTo(0.5);
+    expect(res.body.battery.charging).toBe(true);
+  });
+
+  it('reads and writes power profile', async () => {
+    const fsMock = {
+      readFileSync: vi.fn(() => 'performance'),
+      writeFileSync: vi.fn(),
+      mkdirSync: vi.fn(),
+      statfsSync: vi.fn(() => ({ bsize: 100, blocks: 1000, bavail: 500 })),
+      readdirSync: vi.fn(() => []),
+      statSync: vi.fn(),
+    } as any;
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    let res = await request(app).get('/api/power/profile');
+    expect(res.body.profile).toBe('performance');
+    res = await request(app).post('/api/power/profile').send({ profile: 'balanced' });
+    expect(res.body).toEqual({ success: true });
+    expect(fsMock.writeFileSync).toHaveBeenCalled();
+  });
 });
