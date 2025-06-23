@@ -16,7 +16,8 @@ before you sign in.
 
 - Any webcam accessible through the browser's `getUserMedia` API
 - Dedicated IR or depth cameras for improved accuracy
-- Other biometrics like fingerprint readers are planned
+- Fingerprint readers via WebAuthn
+- Microphones for voice authentication
 
 ## Setup
 
@@ -34,7 +35,7 @@ before you sign in.
 
 ## Configuration
 
-Enable or disable face login from **Settings → Security → Lock Screen**. This
+Enable or disable face, fingerprint, or voice login from **Settings → Security → Lock Screen**. This
 panel also lets you choose which camera or sensor should be used.
 
 ## Fallback Authentication and Privacy

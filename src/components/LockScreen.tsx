@@ -5,7 +5,7 @@ import NetworkSetup from './NetworkSetup';
 import LockScreenMedia from './LockScreenMedia';
 
 export const LockScreen: React.FC = () => {
-  const { login, faceLogin } = useAuth();
+  const { login, faceLogin, fingerprintLogin, voiceLogin } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -16,6 +16,14 @@ export const LockScreen: React.FC = () => {
 
   const handleFace = async () => {
     await faceLogin();
+  };
+
+  const handleFingerprint = async () => {
+    await fingerprintLogin();
+  };
+
+  const handleVoice = async () => {
+    await voiceLogin();
   };
 
   return (
@@ -35,13 +43,19 @@ export const LockScreen: React.FC = () => {
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
-          <button type="submit" className="bg-white/20 rounded py-1 mt-1 hover:bg-white/30">
-            Login
-          </button>
-        </form>
-        <button className="mt-3 text-sm underline" onClick={handleFace}>
-          Use Face Login
+        <button type="submit" className="bg-white/20 rounded py-1 mt-1 hover:bg-white/30">
+          Login
         </button>
+      </form>
+      <button className="mt-3 text-sm underline" onClick={handleFace}>
+        Use Face Login
+      </button>
+      <button className="mt-1 text-sm underline" onClick={handleFingerprint}>
+        Use Fingerprint
+      </button>
+      <button className="mt-1 text-sm underline" onClick={handleVoice}>
+        Use Voice Login
+      </button>
       </GlassCard>
       <NetworkSetup />
       <LockScreenMedia />

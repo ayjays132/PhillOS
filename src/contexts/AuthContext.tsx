@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { visionVaultService } from '../../services/visionVaultService';
+import { faceAuthService } from '../../services/faceAuthService';
 
 interface AuthContextProps {
   authenticated: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   faceLogin: () => Promise<boolean>;
+  fingerprintLogin: () => Promise<boolean>;
+  voiceLogin: () => Promise<boolean>;
   logout: () => void;
 }
 
@@ -51,10 +54,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
+  const fingerprintLogin = async () => {
+    try {
+      await faceAuthService.authenticateFingerprint('self', 'scan');
+      persist(true);
+      return true;
+    } catch {}
+    return false;
+  };
+
+  const voiceLogin = async () => {
+    try {
+      await faceAuthService.authenticateVoice('self', 'audio');
+      persist(true);
+      return true;
+    } catch {}
+    return false;
+  };
+
   const logout = () => persist(false);
 
   return (
-    <AuthContext.Provider value={{ authenticated, login, faceLogin, logout }}>
+    <AuthContext.Provider
+      value={{
+        authenticated,
+        login,
+        faceLogin,
+        fingerprintLogin,
+        voiceLogin,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

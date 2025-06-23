@@ -32,6 +32,8 @@ function similarity(a: Feature, b: Feature): number {
 
 class FaceAuthService {
   private faces: Record<string, Feature[]> = {};
+  private fingerprints: Record<string, Feature[]> = {};
+  private voices: Record<string, Feature[]> = {};
   private modelPromise: Promise<(src: string) => Promise<Feature>> | null = null;
 
   private async ensureModel() {
@@ -55,6 +57,48 @@ class FaceAuthService {
     }
     return false;
   }
+
+  async enrollFingerprint(userId: string, src: string) {
+    const model = await this.ensureModel();
+    const vec = await model(src);
+    (this.fingerprints[userId] ||= []).push(vec);
+  }
+
+  async authenticateFingerprint(
+    userId: string,
+    src: string,
+    threshold = -5
+  ): Promise<boolean> {
+    const entries = this.fingerprints[userId];
+    if (!entries || entries.length === 0) return false;
+    const model = await this.ensureModel();
+    const vec = await model(src);
+    for (const ref of entries) {
+      if (similarity(ref, vec) >= threshold) return true;
+    }
+    return false;
+  }
+
+  async enrollVoice(userId: string, src: string) {
+    const model = await this.ensureModel();
+    const vec = await model(src);
+    (this.voices[userId] ||= []).push(vec);
+  }
+
+  async authenticateVoice(
+    userId: string,
+    src: string,
+    threshold = -5
+  ): Promise<boolean> {
+    const entries = this.voices[userId];
+    if (!entries || entries.length === 0) return false;
+    const model = await this.ensureModel();
+    const vec = await model(src);
+    for (const ref of entries) {
+      if (similarity(ref, vec) >= threshold) return true;
+    }
+    return false;
+  }
 }
 
 export const faceAuthService = new FaceAuthService();
@@ -67,6 +111,30 @@ agentOrchestrator.registerAction('faceauth.authenticate', params =>
   faceAuthService.authenticateFace(
     String(params?.userId || ''),
     String(params?.image || ''),
+    Number(params?.threshold) || -5
+  )
+);
+
+agentOrchestrator.registerAction('fingerprint.enroll', params =>
+  faceAuthService.enrollFingerprint(String(params?.userId || ''), String(params?.image || ''))
+);
+
+agentOrchestrator.registerAction('fingerprint.authenticate', params =>
+  faceAuthService.authenticateFingerprint(
+    String(params?.userId || ''),
+    String(params?.image || ''),
+    Number(params?.threshold) || -5
+  )
+);
+
+agentOrchestrator.registerAction('voice.enroll', params =>
+  faceAuthService.enrollVoice(String(params?.userId || ''), String(params?.audio || ''))
+);
+
+agentOrchestrator.registerAction('voice.authenticate', params =>
+  faceAuthService.authenticateVoice(
+    String(params?.userId || ''),
+    String(params?.audio || ''),
     Number(params?.threshold) || -5
   )
 );
