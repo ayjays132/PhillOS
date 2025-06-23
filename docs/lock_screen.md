@@ -1,10 +1,22 @@
 # Lock Screen
 
-The Living Glass lock screen provides a secure gateway into PhillOS. It features
-username and password authentication with optional facial recognition. A simple
-Wi-Fi selector allows network configuration before logging in and an optional
-media widget exposes basic playback controls so you can pause or resume audio
-without unlocking.
+The Living Glass lock screen provides a secure gateway into PhillOS. It supports
+traditional credentials and optional biometrics while surfacing useful widgets
+before you sign in.
+
+## Features
+
+- Username and password entry
+- Facial recognition via WebAuthn
+- Fallback visionVaultService when the browser lacks WebAuthn
+- Quick Wi‑Fi selection before login
+- Optional media widget to pause or resume playback
+
+## Supported Cameras and Sensors
+
+- Any webcam accessible through the browser's `getUserMedia` API
+- Dedicated IR or depth cameras for improved accuracy
+- Other biometrics like fingerprint readers are planned
 
 ## Setup
 
@@ -19,3 +31,15 @@ without unlocking.
 - A modern browser supporting WebAuthn (for face login)
 - Optional webcam for the `visionVaultService` fallback
 - Standard input devices to enter credentials
+
+## Configuration
+
+Enable or disable face login from **Settings → Security → Lock Screen**. This
+panel also lets you choose which camera or sensor should be used.
+
+## Fallback Authentication and Privacy
+
+If no supported camera is available or recognition fails, you can always log in
+with your password or a configured PIN. The optional `visionVaultService` runs
+entirely on device and stores biometric templates locally, never sending raw
+images to the cloud.
