@@ -87,6 +87,7 @@ This prototype implements the following features from the PhillOS vision:
 -   **Placeholder App Views**: For conceptual applications like Files, Mail, Gaming, ConverseAI, InBoxAI and WebLens, indicating future development areas.
 -   **API Key Handling**: Users provide their own API keys for Gemini or ChatGPT directly in the UI.
 -   **Cursor Customization**: Choose between different cursor themes (Default or Mac) under **Settings → Cursor**.
+-   **Comprehensive System Settings**: Detailed overview of all configuration options is documented in [docs/settings.md](docs/settings.md).
 
 ## Using Cloud AI Providers
 
