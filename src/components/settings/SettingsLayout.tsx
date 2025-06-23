@@ -1,6 +1,12 @@
 import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, Routes, Route } from 'react-router-dom';
 import { GlassCard } from '../GlassCard';
+import GeneralSettingsView from './GeneralSettingsView';
+import PersonalizationSettingsView from './PersonalizationSettingsView';
+import NetworkSettingsView from './NetworkSettingsView';
+import PrivacySecuritySettingsView from './PrivacySecuritySettingsView';
+import ApplicationsSettingsView from './ApplicationsSettingsView';
+import SystemSettingsView from './SystemSettingsView';
 
 const categories = [
   { id: 'general', name: 'General' },
@@ -38,7 +44,15 @@ export const SettingsLayout: React.FC = () => {
           />
         </GlassCard>
         <div className="flex-1 overflow-auto">
-          <Outlet />
+          <Routes>
+            <Route path="general" element={<GeneralSettingsView />} />
+            <Route path="personalization" element={<PersonalizationSettingsView />} />
+            <Route path="network" element={<NetworkSettingsView />} />
+            <Route path="privacy" element={<PrivacySecuritySettingsView />} />
+            <Route path="applications" element={<ApplicationsSettingsView />} />
+            <Route path="system" element={<SystemSettingsView />} />
+            <Route path="*" element={<Outlet />} />
+          </Routes>
         </div>
       </div>
     </div>
