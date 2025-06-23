@@ -6,7 +6,7 @@ PhillOS offers an advanced configuration experience that draws inspiration from 
 
 - **Cross-Platform Familiarity**: A unified layout that feels comfortable to users coming from Android, macOS, or Windows.
 - **Granular Control**: Every system component exposes detailed toggles so power users can fine‑tune behavior.
-- **Conversational Configuration**: A chat-like interface lets users search and modify settings in natural language.
+- **Conversational Configuration**: A chat-like interface powered by `settingsCommandService` lets users modify settings in natural language with clear feedback on unrecognized commands.
 - **Dedicated Control Panel**: Advanced options live in a desktop-style control panel reminiscent of Windows and macOS System Settings.
 
 ## Main Layout

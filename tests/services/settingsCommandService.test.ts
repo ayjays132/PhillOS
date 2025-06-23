@@ -36,7 +36,7 @@ describe('settingsCommandService', () => {
 
     const result = await settingsCommandService.execute('toggle dark mode');
 
-    expect(result).toBe(true);
+    expect(result).toBe('Theme set to dark.');
     expect(storageMock.setTheme).toHaveBeenCalledWith('dark');
     expect(addSpy).toHaveBeenCalled();
   });
@@ -48,7 +48,7 @@ describe('settingsCommandService', () => {
 
     const result = await settingsCommandService.execute('auto connect on');
 
-    expect(result).toBe(true);
+    expect(result).toBe('Auto-connect enabled.');
     expect(storageMock.setPhoneSettings).toHaveBeenCalledWith(
       expect.objectContaining({ autoConnect: true })
     );

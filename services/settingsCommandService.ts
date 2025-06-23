@@ -36,9 +36,9 @@ class SettingsCommandService {
     ];
   }
 
-  async execute(text: string): Promise<boolean> {
+  async execute(text: string): Promise<string | null> {
     const trimmed = text.trim();
-    if (!trimmed) return false;
+    if (!trimmed) return null;
     for (const { regex, handler } of this.patterns) {
       const match = trimmed.match(regex);
       if (match) {
@@ -49,10 +49,10 @@ class SettingsCommandService {
           text: result,
           timestamp: new Date(),
         });
-        return true;
+        return result;
       }
     }
-    return false;
+    return null;
   }
 
   private async setTheme(theme: 'light' | 'dark'): Promise<string> {

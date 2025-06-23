@@ -9,7 +9,7 @@ beforeEach(() => {
 
 describe('SettingsLayout', () => {
   it('executes command on Enter key press', async () => {
-    const execute = vi.fn(async () => true);
+    const execute = vi.fn(async () => 'Theme set to dark.');
     const navigate = vi.fn();
     vi.mock('../../services/settingsCommandService', () => ({
       settingsCommandService: { execute },
@@ -38,7 +38,7 @@ describe('SettingsLayout', () => {
 
   it('filters categories based on input', async () => {
     vi.mock('../../services/settingsCommandService', () => ({
-      settingsCommandService: { execute: vi.fn(async () => false) },
+      settingsCommandService: { execute: vi.fn(async () => null) },
     }));
     vi.mock('react-router-dom', () => ({
       NavLink: (p: any) => <a data-nav={p.to}>{p.children}</a>,

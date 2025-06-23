@@ -33,8 +33,8 @@ export const SettingsLayout: React.FC = () => {
   const onKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       const { settingsCommandService } = await import('../../services/settingsCommandService');
-      const ok = await settingsCommandService.execute(text);
-      if (ok && filtered.length) {
+      const result = await settingsCommandService.execute(text);
+      if (result && filtered.length) {
         navigate(`/settings/${filtered[0].id}`);
       }
     }

@@ -4,6 +4,7 @@ import { Settings, Send, MessageSquare, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { GlassCard } from '../../components/GlassCard';
 import { CloudSyncToggle } from "./CloudSyncToggle";
+import { settingsCommandService } from '../../services/settingsCommandService';
 
 interface SettingsMessage {
   id: string;
@@ -24,7 +25,7 @@ export const ConversationalSettingsView: React.FC = () => {
 
   useEffect(scrollToBottom, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
@@ -38,17 +39,15 @@ export const ConversationalSettingsView: React.FC = () => {
     setInput('');
     setIsLoading(true);
 
-    // Mock AI response
-    setTimeout(() => {
-      const aiResponse: SettingsMessage = {
-        id: (Date.now() + 1).toString(),
-        text: `PhillOS is processing your settings query: "${userMessage.text}". This feature is currently a conceptual demonstration. In a full implementation, I would adjust settings or provide information based on your request. For now, imagine I've understood and acted upon it!`,
-        sender: 'ai',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, aiResponse]);
-      setIsLoading(false);
-    }, 1200);
+    const result = await settingsCommandService.execute(userMessage.text);
+    const aiResponse: SettingsMessage = {
+      id: (Date.now() + 1).toString(),
+      text: result ?? "Sorry, I didn't understand that command.",
+      sender: 'ai',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setMessages(prev => [...prev, aiResponse]);
+    setIsLoading(false);
   };
 
   return (
