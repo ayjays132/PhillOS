@@ -13,6 +13,8 @@ beforeEach(() => {
 
 describe('LockScreen biometrics and offline login', () => {
   it('logs in with fingerprint', async () => {
+    const fpMock = vi.fn(async () => ({}));
+    (globalThis as any).navigator = { credentials: { get: fpMock } };
     vi.mock('../../services/faceAuthService', () => ({
       faceAuthService: { authenticateFingerprint: vi.fn(async () => true) },
     }));
@@ -33,10 +35,13 @@ describe('LockScreen biometrics and offline login', () => {
       </AuthProvider>
     );
     await new Promise(r => setTimeout(r, 0));
+    expect(fpMock).toHaveBeenCalled();
     expect(div.querySelector('span')?.getAttribute('data-auth')).toBe('y');
   });
 
   it('logs in with voice', async () => {
+    const voiceMock = vi.fn(async () => ({}));
+    (globalThis as any).navigator = { credentials: { get: voiceMock } };
     vi.mock('../../services/faceAuthService', () => ({
       faceAuthService: { authenticateVoice: vi.fn(async () => true) },
     }));
@@ -57,6 +62,7 @@ describe('LockScreen biometrics and offline login', () => {
       </AuthProvider>
     );
     await new Promise(r => setTimeout(r, 0));
+    expect(voiceMock).toHaveBeenCalled();
     expect(div.querySelector('span')?.getAttribute('data-auth')).toBe('y');
   });
 
