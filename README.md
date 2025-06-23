@@ -20,6 +20,7 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [Agent Mode Walkthrough](docs/agent_mode_walkthrough.md)
 - [Kernel and Agent Integration](#kernel-and-agent-integration)
 - [Getting Started](docs/getting_started.md)
+- [OS Installation Guide](docs/install.md)
 - [Building the Bootloader & Kernel](#building-the-bootloader--kernel)
 - [Project Structure](#project-structure)
 - [Key Architectural Components](#key-architectural-components)
@@ -208,7 +209,7 @@ Start the agent with `npx phillos agent start` to enable these features.
 
 ## Getting Started
 
-For a step-by-step setup guide covering the bootloader, backend services, Tauri shell and Agent Mode, see [docs/getting_started.md](docs/getting_started.md).
+For a step-by-step setup guide covering the bootloader, backend services, Tauri shell and Agent Mode, see [docs/getting_started.md](docs/getting_started.md). If you are installing the OS on hardware or preparing offline assets, consult [docs/install.md](docs/install.md).
 
 ## Building the Bootloader & Kernel
 
