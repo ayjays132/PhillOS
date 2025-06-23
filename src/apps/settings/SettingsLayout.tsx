@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, Routes, Route } from 'react-router-dom';
-import { GlassCard } from '../GlassCard';
+import { GlassCard } from '../../components/GlassCard';
 import GeneralSettingsView from './GeneralSettingsView';
 import PersonalizationSettingsView from './PersonalizationSettingsView';
 import NetworkSettingsView from './NetworkSettingsView';

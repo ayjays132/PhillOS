@@ -1,5 +1,5 @@
 import React from "react";
-import { GlassCard } from "../GlassCard";
+import { GlassCard } from "../../components/GlassCard";
 import { useCursor } from "../../contexts/CursorContext";
 import { MousePointer } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
