@@ -3,14 +3,27 @@ import { GlassCard } from '../../components/GlassCard';
 import NetworkSetup from '../../components/NetworkSetup';
 import { Wifi, Bluetooth } from 'lucide-react';
 import { systemSettingsService } from '../../services/systemSettingsService';
+import { useDeviceType } from '../../hooks/useDeviceType';
 
 export const NetworkSettingsView: React.FC = () => {
   const [devices, setDevices] = useState<{ mac: string; name: string }[]>([]);
   const [pairMac, setPairMac] = useState('');
+  const [stats, setStats] = useState<{ name: string; rx: number; tx: number }[]>([]);
+  const [tethering, setTethering] = useState(false);
+  const { deviceType } = useDeviceType();
 
   useEffect(() => {
     fetchDevices();
-  }, []);
+    if (deviceType === 'mobile') {
+      systemSettingsService.getNetworkStats().then(s => {
+        if (s) setStats(s);
+      });
+      fetch('/api/network/tethering')
+        .then(res => res.json())
+        .then(d => setTethering(!!d.tethering))
+        .catch(() => {});
+    }
+  }, [deviceType]);
 
   const fetchDevices = async () => {
     try {
@@ -29,6 +42,12 @@ export const NetworkSettingsView: React.FC = () => {
       body: JSON.stringify({ mac: pairMac }),
     });
     setPairMac('');
+  };
+
+  const toggleTethering = async () => {
+    const next = !tethering;
+    setTethering(next);
+    await systemSettingsService.setTethering(next);
   };
 
   return (
@@ -64,6 +83,24 @@ export const NetworkSettingsView: React.FC = () => {
           </button>
         </div>
       </div>
+      {deviceType === 'mobile' && (
+        <div className="mt-4 text-sm">
+          <div className="mb-2 font-semibold">Connection Statistics</div>
+          <ul className="mb-2 pl-2 list-disc">
+            {stats.map(s => (
+              <li key={s.name}>{s.name}: {s.rx} RX / {s.tx} TX</li>
+            ))}
+          </ul>
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={tethering}
+              onChange={toggleTethering}
+            />
+            <span>Tethering</span>
+          </label>
+        </div>
+      )}
     </GlassCard>
   );
 };

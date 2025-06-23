@@ -104,4 +104,26 @@ describe('systemSettingsService', () => {
       body: JSON.stringify({ profile: 'balanced' }),
     });
   });
+
+  it('fetches network stats', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ stats: [{ name: 'eth0', rx: 1, tx: 2 }] })
+    })) as any);
+    const { systemSettingsService } = await import('../../services/systemSettingsService');
+    const stats = await systemSettingsService.getNetworkStats();
+    expect(fetch).toHaveBeenCalledWith('/api/network/stats');
+    expect(stats?.[0].name).toBe('eth0');
+  });
+
+  it('sets tethering', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: true })) as any);
+    const { systemSettingsService } = await import('../../services/systemSettingsService');
+    await systemSettingsService.setTethering(true);
+    expect(fetch).toHaveBeenCalledWith('/api/network/tethering', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tethering: true }),
+    });
+  });
 });

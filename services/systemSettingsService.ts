@@ -117,6 +117,27 @@ class SystemSettingsService {
       });
     } catch {}
   }
+
+  async getNetworkStats(): Promise<{ name: string; rx: number; tx: number }[] | null> {
+    try {
+      const res = await fetch('/api/network/stats');
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.stats;
+    } catch {
+      return null;
+    }
+  }
+
+  async setTethering(state: boolean) {
+    try {
+      await fetch('/api/network/tethering', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tethering: state }),
+      });
+    } catch {}
+  }
 }
 
 export const systemSettingsService = new SystemSettingsService();
