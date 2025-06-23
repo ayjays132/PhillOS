@@ -1,41 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { GlassCard } from './GlassCard';
 import { useAuth } from '../contexts/AuthContext';
 import NetworkSetup from './NetworkSetup';
-
-const MediaWidget: React.FC = () => {
-  const [state, setState] = useState<'playing' | 'paused' | null>(null);
-  useEffect(() => {
-    const audio = document.querySelector('audio');
-    if (audio) setState(!audio.paused ? 'playing' : 'paused');
-  }, []);
-
-  const toggle = () => {
-    const audio = document.querySelector('audio') as HTMLMediaElement | null;
-    if (!audio) return;
-    if (audio.paused) {
-      audio.play();
-      setState('playing');
-    } else {
-      audio.pause();
-      setState('paused');
-    }
-  };
-
-  if (state === null) return null;
-
-  return (
-    <GlassCard className="mt-4 w-60 text-sm text-center">
-      <div className="font-semibold mb-2">Media Controls</div>
-      <button
-        className="px-3 py-1 rounded bg-white/20 hover:bg-white/30"
-        onClick={toggle}
-      >
-        {state === 'playing' ? 'Pause' : 'Play'}
-      </button>
-    </GlassCard>
-  );
-};
+import LockScreenMedia from './LockScreenMedia';
 
 export const LockScreen: React.FC = () => {
   const { login, faceLogin } = useAuth();
@@ -77,7 +44,7 @@ export const LockScreen: React.FC = () => {
         </button>
       </GlassCard>
       <NetworkSetup />
-      <MediaWidget />
+      <LockScreenMedia />
     </div>
   );
 };
