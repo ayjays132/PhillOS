@@ -11,6 +11,7 @@
 #include "../drivers/register.h"
 #include "offline.h"
 #include "theme.h"
+#include "display.h"
 #include "scheduler/uhs.h"
 #include "scheduler/chaos_sched.h"
 
@@ -54,6 +55,7 @@ void kernel_main(boot_info_t *boot_info) {
     offline_reload_cfg();
     theme_reload_cfg();
     gpu_reload_cfg();
+    display_reload_cfg();
     driver_manager_init();
     init_framebuffer(&boot_info->fb);
     fb_clear(theme_is_dark() ? 0x00000000 : 0x00FFFFFF);
