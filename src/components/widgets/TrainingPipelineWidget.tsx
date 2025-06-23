@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { offlineService } from '../../../services/offlineService';
 import { WidgetCard } from '../layout/WidgetCard';
 
 export const TrainingPipelineWidget: React.FC = () => {
@@ -6,6 +7,7 @@ export const TrainingPipelineWidget: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const fetchStatus = async () => {
+    if (offlineService.isOffline()) return;
     try {
       const res = await fetch('/training/status');
       if (res.ok) {
@@ -22,6 +24,7 @@ export const TrainingPipelineWidget: React.FC = () => {
   const start = async () => {
     setLoading(true);
     try {
+      if (offlineService.isOffline()) return;
       await fetch('/training/start', { method: 'POST' });
       setRunning(true);
     } catch {
@@ -34,6 +37,7 @@ export const TrainingPipelineWidget: React.FC = () => {
   const stop = async () => {
     setLoading(true);
     try {
+      if (offlineService.isOffline()) return;
       await fetch('/training/stop', { method: 'POST' });
       setRunning(false);
     } catch {

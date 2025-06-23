@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { offlineService } from '../../services/offlineService';
 
 interface SyncData {
   [key: string]: string | null;
@@ -146,7 +147,7 @@ export function useCloudSync(enabled: boolean) {
     if (!enabled) return;
 
     const flushQueue = async () => {
-      if (!navigator.onLine) return;
+      if (!navigator.onLine || offlineService.isOffline()) return;
       const queue = loadQueue();
       while (queue.length) {
         const item = queue[0];
@@ -163,7 +164,7 @@ export function useCloudSync(enabled: boolean) {
     const sync = async () => {
       const current = JSON.stringify(getLocalData());
       if (current !== lastData.current) {
-        if (navigator.onLine) {
+        if (navigator.onLine && !offlineService.isOffline()) {
           try {
             await upload(current);
             lastData.current = current;
@@ -193,9 +194,13 @@ export function useCloudSync(enabled: boolean) {
     init();
     const interval = setInterval(sync, 5000);
     window.addEventListener('online', flushQueue);
+    const unsub = offlineService.subscribe(o => {
+      if (!o) flushQueue();
+    });
     return () => {
       clearInterval(interval);
       window.removeEventListener('online', flushQueue);
+      unsub();
     };
   }, [enabled]);
 }

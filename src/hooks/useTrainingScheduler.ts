@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { offlineService } from '../../services/offlineService';
 
 export function useTrainingScheduler(enabled: boolean, frequencyMs: number) {
   useEffect(() => {
@@ -6,6 +7,7 @@ export function useTrainingScheduler(enabled: boolean, frequencyMs: number) {
     let timer: number;
 
     const run = async () => {
+      if (offlineService.isOffline()) return;
       try {
         await fetch('/training/start', { method: 'POST' });
       } catch {
