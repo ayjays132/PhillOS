@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
 import { Cog } from 'lucide-react';
 import { systemSettingsService } from '../../services/systemSettingsService';
+import { settingsService } from '../../../services/settingsService';
 
 export const GeneralSettingsView: React.FC = () => {
   const [time, setTime] = useState('');
@@ -17,6 +18,9 @@ export const GeneralSettingsView: React.FC = () => {
         setLanguage(loc.language);
       }
     });
+    settingsService
+      .fetchDoNotDisturb()
+      .then(v => v !== null && setDnd(v));
   }, []);
 
   const applyTime = () => {
@@ -67,7 +71,11 @@ export const GeneralSettingsView: React.FC = () => {
         <input
           type="checkbox"
           checked={dnd}
-          onChange={e => setDnd(e.target.checked)}
+          onChange={e => {
+            const v = e.target.checked;
+            setDnd(v);
+            settingsService.setDoNotDisturb(v);
+          }}
         />
         <span>Do Not Disturb</span>
       </label>
