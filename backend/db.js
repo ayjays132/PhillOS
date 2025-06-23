@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEX
 CREATE TABLE IF NOT EXISTS tags(path TEXT PRIMARY KEY, tags TEXT);
 CREATE TABLE IF NOT EXISTS preferences(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS profiles(name TEXT PRIMARY KEY, data TEXT);
-CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY, password TEXT);
+CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY, password TEXT, pin TEXT);
 `);
   const count = db.prepare('SELECT COUNT(*) as c FROM emails').get().c || 0;
   if (count === 0) {
@@ -70,14 +70,23 @@ export function verifyPassword(password, stored) {
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(hashed, 'hex'));
 }
 
-export function createUser(username, password) {
+export function createUser(username, password, pin = null) {
   const stored = hashPassword(password);
+  const pinHash = pin ? hashPassword(pin) : null;
   db.prepare(
-    'INSERT INTO users(username,password) VALUES(?,?) ON CONFLICT(username) DO UPDATE SET password=?'
-  ).run(username, stored, stored);
+    'INSERT INTO users(username,password,pin) VALUES(?,?,?) ON CONFLICT(username) DO UPDATE SET password=?, pin=?'
+  ).run(username, stored, pinHash, stored, pinHash);
 }
 
 export function getUserHash(username) {
   const row = db.prepare('SELECT password FROM users WHERE username=?').get(username);
   return row && row.password;
+}
+
+export function verifyPin(pin) {
+  const rows = db.prepare('SELECT pin FROM users WHERE pin IS NOT NULL').all();
+  for (const row of rows) {
+    if (verifyPassword(pin, row.pin)) return true;
+  }
+  return false;
 }
