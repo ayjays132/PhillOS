@@ -5,14 +5,13 @@ import os from "os";
 import { request, createServer } from "http";
 import { WebSocketServer } from "ws";
 import { URL } from "url";
-import { spawn } from "child_process";
+import { spawn, exec, execFile } from "child_process";
 import { createProtonLauncher } from "./protonLauncher.js";
 import { scoreExecutable, RISK_THRESHOLD } from "./sandboxShield.js";
 import { initDb, query, execute, getUserHash, verifyPassword, verifyPin } from "./db.js";
 import ffi from "ffi-napi";
 import { patternAlertService } from "../services/patternAlertService";
 import { researchMate } from "../services/researchMate";
-import { exec } from "child_process";
 import util from "util";
 
 const STORAGE_DIR = path.resolve(
@@ -23,7 +22,13 @@ const ALLOWED_FILES = new Set([
   "theme.cfg",
   "cursor.cfg",
   "workspaceSnaps.json",
+  "locale.json",
+  "permissions.json",
 ]);
+
+const SSID_REGEX = /^[\w .-]{1,32}$/;
+const PASS_REGEX = /^[\x20-\x7E]{0,64}$/;
+const MAC_REGEX = /^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/;
 
 const OFFLINE_FILES = [
   path.resolve(__dirname, "../offline.cfg"),
@@ -1335,13 +1340,18 @@ app.get("/api/wifi/networks", (req, res) => {
 
 app.post("/api/wifi/connect", (req, res) => {
   const { ssid, password } = req.body || {};
-  if (!ssid) return res.status(400).json({ error: "ssid required" });
-  const safeSsid = String(ssid).replace(/"/g, "\\\"");
-  const safePass = password ? String(password).replace(/"/g, "\\\"") : "";
-  const cmd = password
-    ? `nmcli dev wifi connect "${safeSsid}" password "${safePass}"`
-    : `nmcli dev wifi connect "${safeSsid}"`;
-  exec(cmd, (err) => {
+  if (typeof ssid !== "string" || !SSID_REGEX.test(ssid))
+    return res.status(400).json({ error: "invalid ssid" });
+  if (
+    password &&
+    (typeof password !== "string" || !PASS_REGEX.test(password))
+  )
+    return res.status(400).json({ error: "invalid password" });
+  const args = ["dev", "wifi", "connect", ssid];
+  if (password) {
+    args.push("password", password);
+  }
+  execFile("nmcli", args, (err) => {
     if (err) {
       console.error("wifi connect failed", err);
       return res.status(500).json({ success: false });
@@ -1368,8 +1378,9 @@ app.get("/api/bluetooth/devices", (req, res) => {
 
 app.post("/api/bluetooth/pair", (req, res) => {
   const { mac } = req.body || {};
-  if (!mac) return res.status(400).json({ error: "mac required" });
-  exec(`bluetoothctl pair ${mac}`, (err) => {
+  if (typeof mac !== "string" || !MAC_REGEX.test(mac))
+    return res.status(400).json({ error: "invalid mac" });
+  execFile("bluetoothctl", ["pair", mac], (err) => {
     if (err) {
       console.error("bluetooth pair failed", err);
       return res.status(500).json({ success: false });
