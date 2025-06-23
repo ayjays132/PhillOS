@@ -170,3 +170,22 @@ void fb_draw_text(uint32_t x, uint32_t y, const char *s,
         x += 8;
     }
 }
+
+void fb_update_pointer_sprite(uint32_t x, uint32_t y,
+                              const uint32_t *sprite,
+                              uint32_t w, uint32_t h)
+{
+    if (!fb_ptr || !sprite)
+        return;
+    for (uint32_t j = 0; j < h; j++) {
+        if (y + j >= fb_height)
+            break;
+        uint32_t *dst = (uint32_t *)(fb_ptr + ((y + j) * fb_pitch + x) * 4);
+        const uint32_t *src = sprite + j * w;
+        for (uint32_t i = 0; i < w && x + i < fb_width; i++) {
+            uint32_t pix = src[i];
+            if ((pix >> 24) != 0)
+                dst[i] = pix;
+        }
+    }
+}
