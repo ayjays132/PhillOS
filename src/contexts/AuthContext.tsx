@@ -92,7 +92,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const faceLogin = async () => {
     try {
       if (navigator.credentials && (navigator.credentials as any).get) {
-        await (navigator.credentials as any).get({ publicKey: { challenge: new Uint8Array([0]) } });
+        await (navigator.credentials as any).get({
+          publicKey: {
+            challenge: new Uint8Array([0]),
+            userVerification: 'required',
+            authenticatorSelection: {
+              authenticatorAttachment: 'platform',
+              userVerification: 'required',
+            },
+            extensions: { uvm: true },
+          },
+        });
         persist(true);
         return true;
       }
@@ -107,6 +117,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fingerprintLogin = async () => {
     try {
+      if (navigator.credentials && (navigator.credentials as any).get) {
+        await (navigator.credentials as any).get({
+          publicKey: {
+            challenge: new Uint8Array([0]),
+            userVerification: 'required',
+            authenticatorSelection: { authenticatorAttachment: 'platform' },
+          },
+        });
+        persist(true);
+        return true;
+      }
+    } catch {}
+    try {
       await faceAuthService.authenticateFingerprint('self', 'scan');
       persist(true);
       return true;
@@ -115,6 +138,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const voiceLogin = async () => {
+    try {
+      if (navigator.credentials && (navigator.credentials as any).get) {
+        await (navigator.credentials as any).get({
+          publicKey: {
+            challenge: new Uint8Array([0]),
+            userVerification: 'required',
+            authenticatorSelection: { authenticatorAttachment: 'platform' },
+          },
+        });
+        persist(true);
+        return true;
+      }
+    } catch {}
     try {
       await faceAuthService.authenticateVoice('self', 'audio');
       persist(true);

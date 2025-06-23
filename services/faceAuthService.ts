@@ -3,18 +3,31 @@ import { agentOrchestrator } from './agentOrchestrator';
 // Simple numeric feature vector type
 type Feature = number[];
 
-// Load the WASM vision model if available, otherwise fall back to a hash based placeholder
+// Load the WASM vision model if available, otherwise fall back to
+// small recognition libraries for faces, fingerprints, and voice.
 async function loadModel(): Promise<(src: string) => Promise<Feature>> {
   try {
     const mod = await import('../src/wasm/vision');
     return await mod.loadVisionModel();
   } catch {
+    const faceapi = await import('@vladmandic/face-api');
+    const meyda = await import('meyda');
+    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
     return async (src: string): Promise<Feature> => {
-      let hash = 0;
-      for (let i = 0; i < src.length; i++) {
-        hash = (hash * 31 + src.charCodeAt(i)) >>> 0;
+      if (src.startsWith('data:audio') || src.endsWith('.wav')) {
+        const arrayBuf = await (await fetch(src)).arrayBuffer();
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const buf = await ctx.decodeAudioData(arrayBuf);
+        const features = meyda.extract('mfcc', buf.getChannelData(0));
+        return Array.isArray(features) ? features : [];
       }
-      return [hash & 0xff, (hash >> 8) & 0xff, (hash >> 16) & 0xff, (hash >> 24) & 0xff];
+      const img = await faceapi.fetchImage(src);
+      const detection = await faceapi
+        .detectSingleFace(img)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      return Array.from(detection?.descriptor || []);
     };
   }
 }
