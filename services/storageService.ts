@@ -13,6 +13,8 @@ const OFFLINE_MODE_KEY = 'phillos_offline_mode';
 const GPU_OVERRIDE_KEY = 'phillos_gpu_override';
 const DEV_MODE_KEY = 'phillos_dev_mode';
 const TELEMETRY_KEY = 'phillos_telemetry';
+const DND_KEY = 'phillos_dnd';
+const NOTIFICATION_PREF_KEY = 'phillos_notify_enabled';
 
 class StorageService {
   init() {
@@ -247,6 +249,44 @@ class StorageService {
   setTelemetry(state: boolean) {
     try {
       localStorage.setItem(TELEMETRY_KEY, String(state));
+    } catch {
+      // ignore
+    }
+  }
+
+  getDoNotDisturb(): boolean | null {
+    try {
+      const v = localStorage.getItem(DND_KEY);
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  setDoNotDisturb(state: boolean) {
+    try {
+      localStorage.setItem(DND_KEY, String(state));
+    } catch {
+      // ignore
+    }
+  }
+
+  getNotificationsEnabled(): boolean | null {
+    try {
+      const v = localStorage.getItem(NOTIFICATION_PREF_KEY);
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  setNotificationsEnabled(state: boolean) {
+    try {
+      localStorage.setItem(NOTIFICATION_PREF_KEY, String(state));
     } catch {
       // ignore
     }

@@ -120,6 +120,54 @@ class SettingsService {
       });
     } catch {}
   }
+
+  async fetchDoNotDisturb(): Promise<boolean | null> {
+    try {
+      const res = await fetch('/api/dnd');
+      if (!res.ok) return storageService.getDoNotDisturb();
+      const data = await res.json();
+      if (typeof data.dnd === 'boolean') {
+        storageService.setDoNotDisturb(data.dnd);
+        return data.dnd;
+      }
+    } catch {}
+    return storageService.getDoNotDisturb();
+  }
+
+  async setDoNotDisturb(state: boolean) {
+    storageService.setDoNotDisturb(state);
+    try {
+      await fetch('/api/dnd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dnd: state }),
+      });
+    } catch {}
+  }
+
+  async fetchNotificationsEnabled(): Promise<boolean | null> {
+    try {
+      const res = await fetch('/api/notifications/prefs');
+      if (!res.ok) return storageService.getNotificationsEnabled();
+      const data = await res.json();
+      if (typeof data.enabled === 'boolean') {
+        storageService.setNotificationsEnabled(data.enabled);
+        return data.enabled;
+      }
+    } catch {}
+    return storageService.getNotificationsEnabled();
+  }
+
+  async setNotificationsEnabled(state: boolean) {
+    storageService.setNotificationsEnabled(state);
+    try {
+      await fetch('/api/notifications/prefs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: state }),
+      });
+    } catch {}
+  }
 }
 
 export const settingsService = new SettingsService();

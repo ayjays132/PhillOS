@@ -8,10 +8,12 @@ import PrivacySecuritySettingsView from './PrivacySecuritySettingsView';
 import ApplicationsSettingsView from './ApplicationsSettingsView';
 import SystemSettingsView from './SystemSettingsView';
 import ControlPanel from './ControlPanel';
+import NotificationSettingsView from './NotificationSettingsView';
 
 const categories = [
   { id: 'general', name: 'General' },
   { id: 'personalization', name: 'Personalization' },
+  { id: 'notifications', name: 'Notifications' },
   { id: 'network', name: 'Network & Connectivity' },
   { id: 'privacy', name: 'Privacy & Security' },
   { id: 'applications', name: 'Applications' },
@@ -49,6 +51,7 @@ export const SettingsLayout: React.FC = () => {
           <Routes>
             <Route path="general" element={<GeneralSettingsView />} />
             <Route path="personalization" element={<PersonalizationSettingsView />} />
+            <Route path="notifications" element={<NotificationSettingsView />} />
             <Route path="network" element={<NetworkSettingsView />} />
             <Route path="privacy" element={<PrivacySecuritySettingsView />} />
             <Route path="applications" element={<ApplicationsSettingsView />} />
