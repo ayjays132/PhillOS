@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink, Outlet, Routes, Route } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, Outlet, Routes, Route, useNavigate } from 'react-router-dom';
 import { GlassCard } from '../../components/GlassCard';
 import GeneralSettingsView from './GeneralSettingsView';
 import PersonalizationSettingsView from './PersonalizationSettingsView';
@@ -22,11 +22,29 @@ const categories = [
 ];
 
 export const SettingsLayout: React.FC = () => {
+  const [text, setText] = useState('');
+  const navigate = useNavigate();
+
+  const filtered = categories.filter(c =>
+    c.name.toLowerCase().includes(text.toLowerCase()) ||
+    c.id.toLowerCase().includes(text.toLowerCase())
+  );
+
+  const onKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const { settingsCommandService } = await import('../../services/settingsCommandService');
+      const ok = await settingsCommandService.execute(text);
+      if (ok && filtered.length) {
+        navigate(`/settings/${filtered[0].id}`);
+      }
+    }
+  };
+
   return (
     <div className="flex h-full gap-4">
       <aside className="w-48 flex-shrink-0">
         <GlassCard className="h-full flex flex-col p-2 sm:p-4 gap-1">
-          {categories.map(cat => (
+          {filtered.map(cat => (
             <NavLink
               key={cat.id}
               to={`/settings/${cat.id}`}
@@ -45,6 +63,9 @@ export const SettingsLayout: React.FC = () => {
             type="text"
             placeholder="Search settings or type a command..."
             className="w-full bg-transparent focus:outline-none text-sm placeholder-white/60"
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={onKeyDown}
           />
         </GlassCard>
         <div className="flex-1 overflow-auto">
