@@ -42,6 +42,7 @@ export const ControlPanel: React.FC = () => {
   );
   const [history, setHistory] = useState<SettingChange[]>([]);
   const [diag, setDiag] = useState<{ cpu: number; memory: number; uptime: number } | null>(null);
+  const [selfTestResult, setSelfTestResult] = useState<string | null>(null);
 
   useEffect(() => {
     setHistory(storageService.getSettingsHistory());
@@ -128,6 +129,11 @@ export const ControlPanel: React.FC = () => {
     reader.readAsText(file);
   };
 
+  const runSelfTest = async () => {
+    const res = await diagnosticService.runSelfTest();
+    setSelfTestResult(res.success ? 'Self test passed' : 'Self test failed');
+  };
+
   const renderTree = (nodes: TreeNode[], level = 0) => (
     <ul className={level ? `ml-${level * 4}` : undefined}>
       {nodes.map(n => (
@@ -185,6 +191,12 @@ export const ControlPanel: React.FC = () => {
           <div>Memory Usage: {(diag.memory * 100).toFixed(1)}%</div>
           <div>Uptime: {Math.round(diag.uptime / 60)}m</div>
         </div>
+      )}
+      <button onClick={runSelfTest} className="mt-2 bg-cyan-700/60 hover:bg-cyan-600/60 px-2 py-1 rounded text-sm">
+        Run Self Test
+      </button>
+      {selfTestResult && (
+        <div className="text-xs mt-1">{selfTestResult}</div>
       )}
       <div className="mt-4">
         <h2 className="font-semibold mb-1">History</h2>

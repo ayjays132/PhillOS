@@ -224,6 +224,20 @@ describe('new system endpoints', () => {
     expect(res.body.uptime).toBe(42);
   });
 
+  it('performs self test', async () => {
+    const fsMock = {
+      writeFileSync: vi.fn(),
+      readFileSync: vi.fn(() => 'test'),
+      unlinkSync: vi.fn()
+    } as any;
+    vi.doMock('fs', () => ({ default: fsMock }));
+    vi.doMock('os', () => ({ default: { tmpdir: () => '/tmp' } }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).get('/api/diagnostics/selftest');
+    expect(res.body.success).toBe(true);
+    expect(fsMock.writeFileSync).toHaveBeenCalled();
+  });
+
   it('exports and imports settings', async () => {
     const fsMock = {
       readFileSync: vi.fn(() => '{"a":1}'),
