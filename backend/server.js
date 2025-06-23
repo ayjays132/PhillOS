@@ -1049,6 +1049,15 @@ app.post("/api/tasks/:id/toggle", async (req, res) => {
   res.json({ success: true });
 });
 
+const pendingNotifications = [
+  { id: 1, text: "Welcome to PhillOS" },
+  { id: 2, text: "System update available" },
+];
+
+app.get("/api/notifications", (req, res) => {
+  res.json({ notifications: pendingNotifications });
+});
+
 app.get("/api/filetags", async (req, res) => {
   const p = req.query.path;
   if (!p) return res.status(400).json({ error: "path required" });
