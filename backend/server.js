@@ -232,6 +232,49 @@ function getBatteryInfo() {
   }
 }
 
+function getNetworkStats() {
+  try {
+    const ifaces = fs.readdirSync('/sys/class/net');
+    return ifaces.map((name) => {
+      let rx = 0;
+      let tx = 0;
+      try {
+        rx = Number(
+          fs.readFileSync(`/sys/class/net/${name}/statistics/rx_bytes`, 'utf8')
+        );
+        tx = Number(
+          fs.readFileSync(`/sys/class/net/${name}/statistics/tx_bytes`, 'utf8')
+        );
+      } catch {}
+      return { name, rx, tx };
+    });
+  } catch (err) {
+    console.error('network stats error', err);
+    return [];
+  }
+}
+
+const TETHER_FILE = path.join(STORAGE_DIR, 'tethering.cfg');
+let tetheringEnabled = false;
+function loadTethering() {
+  try {
+    const data = fs.readFileSync(TETHER_FILE, 'utf8').trim();
+    tetheringEnabled = /^(1|on|yes|true)$/i.test(data);
+  } catch {
+    tetheringEnabled = false;
+  }
+}
+
+function saveTethering(state) {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    fs.writeFileSync(TETHER_FILE, state ? '1' : '0');
+  } catch {}
+  tetheringEnabled = !!state;
+}
+
+loadTethering();
+
 function sanitizeStoragePath(name) {
   const base = path.basename(name);
   if (!ALLOWED_FILES.has(base)) throw new Error("invalid filename");
@@ -1321,6 +1364,21 @@ app.post("/api/bluetooth/pair", (req, res) => {
     }
     res.json({ success: true });
   });
+});
+
+// --- Network Stats & Tethering ---
+app.get("/api/network/stats", (req, res) => {
+  res.json({ stats: getNetworkStats() });
+});
+
+app.get("/api/network/tethering", (req, res) => {
+  res.json({ tethering: tetheringEnabled });
+});
+
+app.post("/api/network/tethering", (req, res) => {
+  const { tethering } = req.body || {};
+  saveTethering(!!tethering);
+  res.json({ success: true });
 });
 
 // --- System Time ---

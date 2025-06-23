@@ -283,4 +283,42 @@ describe('new system endpoints', () => {
     expect(res.body).toEqual({ success: true });
     expect(fsMock.writeFileSync).toHaveBeenCalled();
   });
+
+  it('returns network stats', async () => {
+    const fsMock = {
+      readFileSync: vi.fn((p: string) => {
+        if (p.includes('rx_bytes')) return '100';
+        if (p.includes('tx_bytes')) return '200';
+        return '0';
+      }),
+      readdirSync: vi.fn((p: string) => (p === '/sys/class/net' ? ['eth0'] : [])),
+      statSync: vi.fn(() => ({ isDirectory: () => true, size: 0 })),
+      statfsSync: vi.fn(() => ({ bsize: 100, blocks: 1000, bavail: 500 })),
+      writeFileSync: vi.fn(),
+      mkdirSync: vi.fn(),
+    } as any;
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).get('/api/network/stats');
+    expect(res.body.stats[0].rx).toBe(100);
+    expect(res.body.stats[0].tx).toBe(200);
+  });
+
+  it('reads and writes tethering state', async () => {
+    const fsMock = {
+      readFileSync: vi.fn(() => '1'),
+      writeFileSync: vi.fn(),
+      mkdirSync: vi.fn(),
+      readdirSync: vi.fn(() => []),
+      statSync: vi.fn(() => ({ isDirectory: () => true, size: 0 })),
+      statfsSync: vi.fn(() => ({ bsize: 100, blocks: 1000, bavail: 500 })),
+    } as any;
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    let res = await request(app).get('/api/network/tethering');
+    expect(res.body.tethering).toBe(true);
+    res = await request(app).post('/api/network/tethering').send({ tethering: false });
+    expect(res.body).toEqual({ success: true });
+    expect(fsMock.writeFileSync).toHaveBeenCalled();
+  });
 });
