@@ -31,6 +31,7 @@ import MemorySettings from './components/MemorySettings';
 import MemoryHub from './components/MemoryHub';
 import SettingsApp from './src/apps/settings';
 import CursorSettingsView from './components/settings/CursorSettingsView';
+import SettingsLayout from './components/settings/SettingsLayout';
 import SettingsHome from './src/apps/settings/SettingsHome';
 import GeneralSettings from './src/apps/settings/GeneralSettings';
 import PersonalizationSettings from './src/apps/settings/PersonalizationSettings';
@@ -118,18 +119,20 @@ const App: React.FC = () => {
           <Route path="/inboxai" element={<InBoxAI />} />
           <Route path="/weblens" element={<WebLens />} />
           <Route path="/phone" element={<PhoneApp />} />
-          <Route path="/settings" element={<SettingsHome />} />
-          <Route path="/settings/conversational" element={<ConversationalSettingsView />} />
-          <Route path="/settings/phone" element={<PhoneSettingsView />} />
-          <Route path="/settings/memory" element={<MemorySettings />} />
-          <Route path="/settings/ai" element={<SettingsApp />} />
-          <Route path="/settings/cursor" element={<CursorSettingsView />} />
-          <Route path="/settings/general" element={<GeneralSettings />} />
-          <Route path="/settings/personalization" element={<PersonalizationSettings />} />
-          <Route path="/settings/network" element={<NetworkSettings />} />
-          <Route path="/settings/privacy" element={<PrivacySettings />} />
-          <Route path="/settings/applications" element={<ApplicationSettings />} />
-          <Route path="/settings/system" element={<SystemSettings />} />
+          <Route path="/settings" element={<SettingsLayout />}> 
+            <Route index element={<SettingsHome />} />
+            <Route path="conversational" element={<ConversationalSettingsView />} />
+            <Route path="phone" element={<PhoneSettingsView />} />
+            <Route path="memory" element={<MemorySettings />} />
+            <Route path="ai" element={<SettingsApp />} />
+            <Route path="cursor" element={<CursorSettingsView />} />
+            <Route path="general" element={<GeneralSettings />} />
+            <Route path="personalization" element={<PersonalizationSettings />} />
+            <Route path="network" element={<NetworkSettings />} />
+            <Route path="privacy" element={<PrivacySettings />} />
+            <Route path="applications" element={<ApplicationSettings />} />
+            <Route path="system" element={<SystemSettings />} />
+          </Route>
           <Route path="/memory-hub" element={<MemoryHub />} />
           <Route path="*" element={isOnboardingComplete ? <Navigate to="/home" replace /> : <Navigate to="/onboarding" replace />} />
         </Routes>
