@@ -45,4 +45,63 @@ describe('systemSettingsService', () => {
       body: JSON.stringify({ app: 'camera', granted: false }),
     });
   });
+
+  it('fetches storage stats', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ stats: { total: 1000, free: 500 } }),
+        })
+      ) as any,
+    );
+    const { systemSettingsService } = await import('../../services/systemSettingsService');
+    const stats = await systemSettingsService.getStorageStats();
+    expect(fetch).toHaveBeenCalledWith('/api/storage/stats');
+    expect(stats).toEqual({ total: 1000, free: 500 });
+  });
+
+  it('fetches battery info', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ battery: { level: 0.4, charging: false } }),
+        })
+      ) as any,
+    );
+    const { systemSettingsService } = await import('../../services/systemSettingsService');
+    const info = await systemSettingsService.getBatteryInfo();
+    expect(fetch).toHaveBeenCalledWith('/api/power/battery');
+    expect(info).toEqual({ level: 0.4, charging: false });
+  });
+
+  it('fetches power profile', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ profile: 'performance' }),
+        })
+      ) as any,
+    );
+    const { systemSettingsService } = await import('../../services/systemSettingsService');
+    const profile = await systemSettingsService.getPowerProfile();
+    expect(fetch).toHaveBeenCalledWith('/api/power/profile');
+    expect(profile).toBe('performance');
+  });
+
+  it('updates power profile', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: true })) as any);
+    const { systemSettingsService } = await import('../../services/systemSettingsService');
+    await systemSettingsService.setPowerProfile('balanced');
+    expect(fetch).toHaveBeenCalledWith('/api/power/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profile: 'balanced' }),
+    });
+  });
 });

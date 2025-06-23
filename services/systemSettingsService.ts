@@ -54,6 +54,49 @@ class SystemSettingsService {
     }
   }
 
+  async getStorageStats(): Promise<{ total: number; free: number } | null> {
+    try {
+      const res = await fetch('/api/storage/stats');
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.stats;
+    } catch {
+      return null;
+    }
+  }
+
+  async getBatteryInfo(): Promise<{ level: number; charging: boolean } | null> {
+    try {
+      const res = await fetch('/api/power/battery');
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.battery;
+    } catch {
+      return null;
+    }
+  }
+
+  async getPowerProfile(): Promise<string | null> {
+    try {
+      const res = await fetch('/api/power/profile');
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.profile;
+    } catch {
+      return null;
+    }
+  }
+
+  async setPowerProfile(profile: string) {
+    try {
+      await fetch('/api/power/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile }),
+      });
+    } catch {}
+  }
+
   async getPermissions(): Promise<Record<string, boolean>> {
     try {
       const res = await fetch('/api/permissions');

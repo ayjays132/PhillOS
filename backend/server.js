@@ -166,6 +166,72 @@ function saveTelemetry(state) {
   telemetryEnabled = !!state;
 }
 
+const POWER_PROFILE_FILES = [
+  path.resolve(__dirname, "../power_profile.cfg"),
+  path.join(STORAGE_DIR, "power_profile.cfg"),
+];
+
+let powerProfile = "balanced";
+function loadPowerProfile() {
+  powerProfile = "balanced";
+  for (const p of POWER_PROFILE_FILES) {
+    try {
+      const data = fs.readFileSync(p, "utf8").trim();
+      if (data) {
+        powerProfile = data;
+        break;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+loadPowerProfile();
+
+function getPowerProfile() {
+  return powerProfile;
+}
+
+function savePowerProfile(profile) {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(STORAGE_DIR, "power_profile.cfg"), profile);
+  } catch {
+    /* ignore */
+  }
+  powerProfile = profile;
+}
+
+function getStorageStats() {
+  try {
+    const st = fs.statfsSync(STORAGE_DIR);
+    return { total: st.blocks * st.bsize, free: st.bavail * st.bsize };
+  } catch (err) {
+    console.error("storage stats error", err);
+    return { total: 0, free: 0 };
+  }
+}
+
+function getBatteryInfo() {
+  try {
+    const cap = fs.readFileSync(
+      "/sys/class/power_supply/BAT0/capacity",
+      "utf8",
+    );
+    const status = fs.readFileSync(
+      "/sys/class/power_supply/BAT0/status",
+      "utf8",
+    );
+    return {
+      level: Number(cap.trim()) / 100,
+      charging: /^charging$/i.test(status.trim()),
+    };
+  } catch {
+    return { level: 1, charging: true };
+  }
+}
+
 function sanitizeStoragePath(name) {
   const base = path.basename(name);
   if (!ALLOWED_FILES.has(base)) throw new Error("invalid filename");
@@ -1314,6 +1380,29 @@ app.get("/api/storage/usage", (req, res) => {
     console.error("storage usage error", err);
     res.status(500).json({ error: "failed" });
   }
+});
+
+app.get("/api/storage/stats", (req, res) => {
+  const stats = getStorageStats();
+  res.json({ stats });
+});
+
+app.get("/api/power/battery", (req, res) => {
+  res.json({ battery: getBatteryInfo() });
+});
+
+app.get("/api/power/profile", (req, res) => {
+  res.json({ profile: getPowerProfile() });
+});
+
+app.post("/api/power/profile", (req, res) => {
+  const { profile } = req.body || {};
+  const valid = ["balanced", "performance", "powersave"];
+  if (!valid.includes(String(profile))) {
+    return res.status(400).json({ error: "invalid profile" });
+  }
+  savePowerProfile(String(profile));
+  res.json({ success: true });
 });
 
 // --- Permissions ---
