@@ -83,7 +83,7 @@ This prototype implements the following features from the PhillOS vision:
 -   **In-depth Onboarding Experience**:
     -   Multi-step guided setup: Welcome, AI Model Choice (Local-First vs. Cloud-Enhanced), Privacy Overview, User Profile creation (username, avatar selection), AI Preferences & Data Import simulation, and a PhillOS Core Concepts Tour.
     -   Persistence of onboarding choices in `localStorage`.
--   **Conversational Settings Interface**: A chat-like UI for settings, currently with mocked AI responses to demonstrate the interaction pattern.
+  -   **Conversational Settings Interface**: A chat-like UI powered by `settingsCommandService` that executes recognized commands and informs you when a phrase isn't understood.
 -   **Placeholder App Views**: For conceptual applications like Files, Mail, Gaming, ConverseAI, InBoxAI and WebLens, indicating future development areas.
 -   **API Key Handling**: Users provide their own API keys for Gemini or ChatGPT directly in the UI.
 -   **Cursor Customization**: Choose between different cursor themes (Default or Mac) under **Settings → Cursor**.
