@@ -1271,6 +1271,18 @@ app.get("/api/diagnostics", (req, res) => {
   res.json({ cpu, memory, uptime });
 });
 
+app.get("/api/diagnostics/selftest", (req, res) => {
+  try {
+    const tmp = path.join(os.tmpdir(), "phillos_selftest.tmp");
+    fs.writeFileSync(tmp, "test");
+    const data = fs.readFileSync(tmp, "utf8");
+    fs.unlinkSync(tmp);
+    res.json({ success: data === "test" });
+  } catch {
+    res.status(500).json({ success: false });
+  }
+});
+
 const wss = new WebSocketServer({ server, path: "/ws/pulse" });
 const insightsWss = new WebSocketServer({ server, path: "/ws/insights" });
 

@@ -17,4 +17,15 @@ describe('diagnosticService', () => {
     expect(status.memory).toBe(0.25);
     expect(status.uptime).toBe(60);
   });
+
+  it('runs self test', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ success: true })
+    })) as any);
+    const { diagnosticService } = await import('../../services/diagnosticService');
+    const res = await diagnosticService.runSelfTest();
+    expect(fetch).toHaveBeenCalledWith('/api/diagnostics/selftest');
+    expect(res.success).toBe(true);
+  });
 });

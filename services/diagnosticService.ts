@@ -16,8 +16,19 @@ class DiagnosticService {
       return { cpu: 0, memory: 0, uptime: 0 };
     }
   }
+
+  async runSelfTest(): Promise<{ success: boolean }> {
+    try {
+      const res = await fetch('/api/diagnostics/selftest');
+      if (!res.ok) return { success: false };
+      return (await res.json()) as { success: boolean };
+    } catch {
+      return { success: false };
+    }
+  }
 }
 
 export const diagnosticService = new DiagnosticService();
 
 agentOrchestrator.registerAction('diagnostics.status', () => diagnosticService.getStatus());
+agentOrchestrator.registerAction('diagnostics.selftest', () => diagnosticService.runSelfTest());
