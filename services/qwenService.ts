@@ -4,7 +4,7 @@ import { agentOrchestrator } from './agentOrchestrator';
 
 // Allow overriding the local model via Vite env variable.
 // Default path can be changed via aiConfig as well.
-import { getAIConfig } from '../config/aiConfig';
+import { getAIConfig } from '../src/config/aiConfig';
 const MODEL = import.meta.env.VITE_LOCAL_AI_MODEL || getAIConfig().localModel;
 const OLLAMA_URL = 'http://localhost:11434';
 

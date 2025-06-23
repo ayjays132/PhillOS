@@ -1,7 +1,7 @@
 import { createCloudChatSession, sendMessageStream as sendCloudStream, CloudProvider, CloudChatSession } from './cloudAIService';
 import { createQwenChatSession, QwenChatSession } from './qwenService';
 import { AIModelPreference, ChatMessage } from '../types';
-import { getAIConfig } from '../config/aiConfig';
+import { getAIConfig } from '../src/config/aiConfig';
 import { memoryHubService } from './memoryHubService';
 import { agentOrchestrator } from './agentOrchestrator';
 import { pipeline } from '@xenova/transformers';

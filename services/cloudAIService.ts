@@ -1,7 +1,7 @@
 import type { GoogleGenAI, Chat, GenerateContentResponse, Part, Content } from "@google/genai";
 import type OpenAI from 'openai';
 import { ChatMessage } from '../types';
-import { getAIConfig } from '../config/aiConfig';
+import { getAIConfig } from '../src/config/aiConfig';
 
 export type CloudProvider = 'gemini' | 'openai';
 
