@@ -1,4 +1,5 @@
 import { agentOrchestrator } from './agentOrchestrator';
+import { streamBus } from './streamBus';
 
 interface Route {
   from: string;
@@ -8,6 +9,7 @@ interface Route {
 
 class AgentRouter {
   private routes = new Map<string, Route>();
+  private lastSent = new Map<string, number>();
 
   constructor() {
     agentOrchestrator.on('launch', e => {
@@ -15,11 +17,17 @@ class AgentRouter {
       console.log('launch', e.app);
     });
     agentOrchestrator.on('data', e => {
-      // placeholder for streaming data between apps
       const route = this.routes.get(`data:${e.taskId}`);
-      if (route) {
-        const params = route.transform ? route.transform(e.data) : { data: e.data };
-        agentOrchestrator.processIntent(JSON.stringify({ action: route.to, parameters: params }));
+      if (!route) return;
+      const now = Date.now();
+      const last = this.lastSent.get(route.to) || 0;
+      if (now - last < 100) return;
+      this.lastSent.set(route.to, now);
+      try {
+        const payload = route.transform ? route.transform(e.data) : e.data;
+        streamBus.publish({ from: route.from, to: route.to, payload });
+      } catch (err) {
+        console.error('agentRouter stream error', err);
       }
     });
     agentOrchestrator.on('complete', e => {
