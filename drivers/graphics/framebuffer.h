@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "../../kernel/boot_info.h"
+#include "gfx.h"
 
 void init_framebuffer(framebuffer_info_t *info);
 void fb_draw_pixel(uint32_t x, uint32_t y, uint32_t color);
@@ -28,5 +29,7 @@ uint64_t fb_get_size(void);
 uint32_t fb_get_width(void);
 uint32_t fb_get_height(void);
 uint32_t fb_get_pitch(void);
+
+gfx_device_t *framebuffer_get_gfx_device(void);
 
 #endif // PHILLOS_FRAMEBUFFER_H

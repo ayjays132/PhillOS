@@ -1,8 +1,12 @@
 #include "framebuffer.h"
+#include "gfx.h"
+#include "gpu.h"
 #include "../../kernel/boot_info.h"
 #include "../../kernel/memory/paging.h"
+#include "../../kernel/memory/heap.h"
 #include "../../kernel/debug.h"
 #include "font8x8_basic.h"
+#include <string.h>
 
 static uint8_t *fb_ptr = NULL;
 static uint64_t fb_base = 0;
@@ -10,6 +14,7 @@ static uint64_t fb_size = 0;
 static uint32_t fb_width = 0;
 static uint32_t fb_height = 0;
 static uint32_t fb_pitch = 0;
+static gfx_device_t fb_gfx_device;
 
 void init_framebuffer(framebuffer_info_t *info)
 {
@@ -39,6 +44,8 @@ void init_framebuffer(framebuffer_info_t *info)
     debug_putc('x');
     debug_puthex(fb_height);
     debug_putc('\n');
+
+    gpu_set_active_gfx_device(&fb_gfx_device);
 }
 
 void fb_draw_pixel(uint32_t x, uint32_t y, uint32_t color)
@@ -188,4 +195,61 @@ void fb_update_pointer_sprite(uint32_t x, uint32_t y,
                 dst[i] = pix;
         }
     }
+}
+
+/* --- gfx_device_t fallback implementation --- */
+
+static gfx_surface_t *fb_create_surface(uint32_t w, uint32_t h)
+{
+    gfx_surface_t *surf = kmalloc(sizeof(gfx_surface_t));
+    if (!surf)
+        return NULL;
+    surf->width = w;
+    surf->height = h;
+    surf->pitch = w;
+    surf->pixels = kmalloc((size_t)w * h * 4);
+    if (!surf->pixels) {
+        kfree(surf);
+        return NULL;
+    }
+    memset(surf->pixels, 0, (size_t)w * h * 4);
+    return surf;
+}
+
+static void fb_surface_draw_rect(gfx_surface_t *surf,
+                                 uint32_t x, uint32_t y,
+                                 uint32_t w, uint32_t h,
+                                 uint32_t color)
+{
+    if (!surf || !surf->pixels)
+        return;
+    for (uint32_t j = 0; j < h && y + j < surf->height; j++) {
+        uint32_t *row = surf->pixels + (y + j) * surf->pitch + x;
+        for (uint32_t i = 0; i < w && x + i < surf->width; i++)
+            row[i] = color;
+    }
+}
+
+static void fb_present_frame(gfx_surface_t *surf)
+{
+    if (!surf || !surf->pixels || !fb_ptr)
+        return;
+    uint32_t copy_w = surf->width < fb_width ? surf->width : fb_width;
+    uint32_t copy_h = surf->height < fb_height ? surf->height : fb_height;
+    for (uint32_t j = 0; j < copy_h; j++) {
+        memcpy(fb_ptr + j * fb_pitch * 4,
+               surf->pixels + j * surf->pitch,
+               copy_w * 4);
+    }
+}
+
+static gfx_device_t fb_gfx_device = {
+    .present_frame = fb_present_frame,
+    .create_surface = fb_create_surface,
+    .draw_rect = fb_surface_draw_rect,
+};
+
+gfx_device_t *framebuffer_get_gfx_device(void)
+{
+    return &fb_gfx_device;
 }

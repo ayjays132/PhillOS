@@ -1,5 +1,7 @@
 #include "nvidia.h"
 #include "framebuffer.h"
+#include "gfx.h"
+#include "gpu.h"
 #include "../../kernel/memory/paging.h"
 #include "../../kernel/debug.h"
 #include "../../kernel/init.h"
@@ -92,6 +94,7 @@ static void nvidia_hw_init(const pci_device_t *dev)
     nvidia_mmio_base = (uintptr_t)bar0_phys;
 
     init_framebuffer(&boot_info_get()->fb);
+    gpu_set_active_gfx_device(framebuffer_get_gfx_device());
     nvidia_program_regs();
     gpu_set_active_driver(&nvidia_driver);
 }
