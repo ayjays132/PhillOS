@@ -314,6 +314,26 @@ class StorageService {
     }
   }
 
+  applySettingChange(change: SettingChange) {
+    switch (change.path) {
+      case 'developer.devMode':
+        this.setDevMode(change.oldValue as boolean);
+        break;
+      case 'system.telemetry':
+        this.setTelemetry(change.oldValue as boolean);
+        break;
+      default:
+        return;
+    }
+
+    this.addSettingChange({
+      path: change.path,
+      oldValue: change.newValue,
+      newValue: change.oldValue,
+      timestamp: Date.now(),
+    });
+  }
+
   clearSettingsHistory() {
     try {
       localStorage.removeItem(SETTINGS_HISTORY_KEY);

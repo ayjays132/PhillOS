@@ -190,7 +190,20 @@ export const ControlPanel: React.FC = () => {
         <h2 className="font-semibold mb-1">History</h2>
         <ul className="text-xs space-y-1 max-h-32 overflow-auto">
           {history.map((h, i) => (
-            <li key={i}>{new Date(h.timestamp).toLocaleString()} - {h.path}</li>
+            <li key={i} className="flex items-center gap-2">
+              <span>
+                {new Date(h.timestamp).toLocaleString()} - {h.path}
+              </span>
+              <button
+                onClick={() => {
+                  storageService.applySettingChange(h);
+                  setHistory(storageService.getSettingsHistory());
+                }}
+                className="bg-cyan-700/60 hover:bg-cyan-600/60 px-1 rounded"
+              >
+                Revert
+              </button>
+            </li>
           ))}
         </ul>
       </div>
