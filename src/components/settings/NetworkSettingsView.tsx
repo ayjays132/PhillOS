@@ -1,16 +1,71 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../GlassCard';
 import NetworkSetup from '../NetworkSetup';
-import { Wifi } from 'lucide-react';
+import { Wifi, Bluetooth } from 'lucide-react';
+import { systemSettingsService } from '../../services/systemSettingsService';
 
-export const NetworkSettingsView: React.FC = () => (
-  <GlassCard className="h-full flex flex-col gap-4">
-    <div className="flex items-center mb-4">
-      <Wifi size={24} className="text-cyan-300 mr-3" />
-      <h1 className="text-xl sm:text-2xl font-bold">Network & Connectivity</h1>
-    </div>
-    <NetworkSetup />
-  </GlassCard>
-);
+export const NetworkSettingsView: React.FC = () => {
+  const [devices, setDevices] = useState<{ mac: string; name: string }[]>([]);
+  const [pairMac, setPairMac] = useState('');
+
+  useEffect(() => {
+    fetchDevices();
+  }, []);
+
+  const fetchDevices = async () => {
+    try {
+      const res = await fetch('/api/bluetooth/devices');
+      const data = await res.json();
+      if (Array.isArray(data.devices)) setDevices(data.devices);
+    } catch {}
+  };
+
+  const pair = async () => {
+    if (!pairMac) return;
+    await systemSettingsService.setPermission('bluetooth', true);
+    await fetch('/api/bluetooth/pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mac: pairMac }),
+    });
+    setPairMac('');
+  };
+
+  return (
+    <GlassCard className="h-full flex flex-col gap-4">
+      <div className="flex items-center mb-4">
+        <Wifi size={24} className="text-cyan-300 mr-3" />
+        <h1 className="text-xl sm:text-2xl font-bold">Network & Connectivity</h1>
+      </div>
+      <NetworkSetup />
+      <div className="mt-4">
+        <div className="flex items-center mb-2 gap-2">
+          <Bluetooth size={20} />
+          <span className="font-semibold text-sm">Bluetooth Devices</span>
+        </div>
+        <ul className="text-sm mb-2 pl-2 list-disc">
+          {devices.map(d => (
+            <li key={d.mac}>{d.name} ({d.mac})</li>
+          ))}
+        </ul>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={pairMac}
+            onChange={e => setPairMac(e.target.value)}
+            placeholder="MAC"
+            className="flex-grow bg-transparent border border-white/20 rounded px-2 py-1 text-sm"
+          />
+          <button
+            className="px-3 rounded bg-white/20 hover:bg-white/30 text-sm"
+            onClick={pair}
+          >
+            Pair
+          </button>
+        </div>
+      </div>
+    </GlassCard>
+  );
+};
 
 export default NetworkSettingsView;

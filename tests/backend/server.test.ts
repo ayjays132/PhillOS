@@ -179,3 +179,37 @@ describe('token auth middleware', () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe('new system endpoints', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    process.env.VITEST = '1';
+    process.env.PHILLOS_STORAGE_DIR = '/tmp/test-storage';
+  });
+
+  it('reads and writes locale', async () => {
+    const fsMock = {
+      readFileSync: vi.fn(() => '{"region":"US","language":"en"}'),
+      writeFileSync: vi.fn(),
+      mkdirSync: vi.fn(),
+    };
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    let res = await request(app).get('/api/locale');
+    expect(res.body.locale.region).toBe('US');
+    res = await request(app).post('/api/locale').send({ locale: { region: 'FR', language: 'fr' } });
+    expect(res.body).toEqual({ success: true });
+    expect(fsMock.writeFileSync).toHaveBeenCalled();
+  });
+
+  it('returns storage usage', async () => {
+    const fsMock = {
+      readdirSync: vi.fn(() => ['dir']),
+      statSync: vi.fn(() => ({ isDirectory: () => true, size: 0 })),
+    } as any;
+    vi.doMock('fs', () => ({ default: fsMock }));
+    const { default: app } = await import('../../backend/server.js');
+    const res = await request(app).get('/api/storage/usage');
+    expect(res.body.usage).toBeDefined();
+  });
+});
