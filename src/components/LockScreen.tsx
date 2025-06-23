@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GlassCard } from './GlassCard';
 import { useAuth } from '../contexts/AuthContext';
 import NetworkSetup from './NetworkSetup';
 import LockScreenMedia from './LockScreenMedia';
+import { offlineService } from '../../services/offlineService';
 
 export const LockScreen: React.FC = () => {
   const { login, faceLogin, fingerprintLogin, voiceLogin } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [offline, setOffline] = useState(offlineService.isOffline());
+
+  useEffect(() => offlineService.subscribe(setOffline), []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +28,10 @@ export const LockScreen: React.FC = () => {
 
   const handleVoice = async () => {
     await voiceLogin();
+  };
+
+  const handleGuest = async () => {
+    await login('', '');
   };
 
   return (
@@ -46,6 +54,15 @@ export const LockScreen: React.FC = () => {
         <button type="submit" className="bg-white/20 rounded py-1 mt-1 hover:bg-white/30">
           Login
         </button>
+        {offline && (
+          <button
+            type="button"
+            className="bg-white/20 rounded py-1 mt-1 hover:bg-white/30"
+            onClick={handleGuest}
+          >
+            Guest Login
+          </button>
+        )}
       </form>
       <button className="mt-3 text-sm underline" onClick={handleFace}>
         Use Face Login

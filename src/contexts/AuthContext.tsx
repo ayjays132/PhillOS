@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { visionVaultService } from '../../services/visionVaultService';
 import { faceAuthService } from '../../services/faceAuthService';
+import { offlineService } from '../../services/offlineService';
 
 interface AuthContextProps {
   authenticated: boolean;
@@ -31,6 +32,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (username: string, password: string) => {
+    if (offlineService.isOffline()) {
+      persist(true);
+      return true;
+    }
     if (!username || !password) return false;
     try {
       const res = await fetch('/api/login', {

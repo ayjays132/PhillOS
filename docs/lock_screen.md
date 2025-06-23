@@ -45,3 +45,10 @@ If no supported camera is available or recognition fails, you can always log in
 with your password or a configured PIN. The optional `visionVaultService` runs
 entirely on device and stores biometric templates locally, never sending raw
 images to the cloud.
+
+## Offline Guest Login
+
+When `offline.cfg` enables offline mode the lock screen detects this using
+`offlineService`. A **Guest Login** button appears and submitting the form with
+empty credentials is permitted. In this mode no request is sent to the backend
+and the session is unlocked immediately.
