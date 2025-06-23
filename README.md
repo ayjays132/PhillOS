@@ -417,7 +417,7 @@ This prototype serves as a visual and interactive demonstration of the PhillOS c
 -   **Deep OS-level AI integration** across all applications and system functions, enabling true ambient intelligence.
 -   **Advanced Gaming Optimizations** with AI-managed compatibility layers (Winery, Proton, DX12) for seamless performance.
 -   **Fully functional Smart Core Applications** (Web Browser, Mail, Files, Photos) with deep AI enhancements for summarization, organization, and contextual actions.
--   **Intelligent Lock Screen** with dynamically displayed relevant information, smart notifications, and advanced multi-modal biometrics.
+-   **Intelligent [Lock Screen](docs/lock_screen.md)** with dynamically displayed relevant information, smart notifications, and advanced multi-modal biometrics.
 -   **True Conversational Settings** allowing users to configure the OS using natural language, powered by AI.
 -   Robust **Security AI** with real-time threat detection, adaptive firewalls, and secure enclaves.
 -   And much more, all aiming to create a truly personalized, efficient, and engaging computing experience that learns and adapts to the user.
