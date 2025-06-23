@@ -72,6 +72,54 @@ class SettingsService {
       });
     } catch {}
   }
+
+  async fetchDevMode(): Promise<boolean | null> {
+    try {
+      const res = await fetch('/api/devmode');
+      if (!res.ok) return storageService.getDevMode();
+      const data = await res.json();
+      if (typeof data.devMode === 'boolean') {
+        storageService.setDevMode(data.devMode);
+        return data.devMode;
+      }
+    } catch {}
+    return storageService.getDevMode();
+  }
+
+  async setDevMode(state: boolean) {
+    storageService.setDevMode(state);
+    try {
+      await fetch('/api/devmode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ devMode: state }),
+      });
+    } catch {}
+  }
+
+  async fetchTelemetry(): Promise<boolean | null> {
+    try {
+      const res = await fetch('/api/telemetry');
+      if (!res.ok) return storageService.getTelemetry();
+      const data = await res.json();
+      if (typeof data.telemetry === 'boolean') {
+        storageService.setTelemetry(data.telemetry);
+        return data.telemetry;
+      }
+    } catch {}
+    return storageService.getTelemetry();
+  }
+
+  async setTelemetry(state: boolean) {
+    storageService.setTelemetry(state);
+    try {
+      await fetch('/api/telemetry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telemetry: state }),
+      });
+    } catch {}
+  }
 }
 
 export const settingsService = new SettingsService();

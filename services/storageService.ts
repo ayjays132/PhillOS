@@ -11,6 +11,8 @@ const CURSOR_STYLE_KEY = 'phillos_cursor_style';
 const SETTINGS_HISTORY_KEY = 'phillos_settings_history_v1';
 const OFFLINE_MODE_KEY = 'phillos_offline_mode';
 const GPU_OVERRIDE_KEY = 'phillos_gpu_override';
+const DEV_MODE_KEY = 'phillos_dev_mode';
+const TELEMETRY_KEY = 'phillos_telemetry';
 
 class StorageService {
   init() {
@@ -207,6 +209,44 @@ class StorageService {
   setGpuOverride(vendor: string) {
     try {
       localStorage.setItem(GPU_OVERRIDE_KEY, vendor);
+    } catch {
+      // ignore
+    }
+  }
+
+  getDevMode(): boolean | null {
+    try {
+      const v = localStorage.getItem(DEV_MODE_KEY);
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  setDevMode(state: boolean) {
+    try {
+      localStorage.setItem(DEV_MODE_KEY, String(state));
+    } catch {
+      // ignore
+    }
+  }
+
+  getTelemetry(): boolean | null {
+    try {
+      const v = localStorage.getItem(TELEMETRY_KEY);
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  setTelemetry(state: boolean) {
+    try {
+      localStorage.setItem(TELEMETRY_KEY, String(state));
     } catch {
       // ignore
     }

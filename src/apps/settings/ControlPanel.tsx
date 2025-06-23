@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
 import { storageService } from '../../../services/storageService';
+import { settingsService } from '../../../services/settingsService';
 import { FileDown, FileUp, Settings2 } from 'lucide-react';
 import { SettingChange } from '../../types';
 
@@ -32,15 +33,17 @@ const treeData: TreeNode[] = [
 export const ControlPanel: React.FC = () => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [devMode, setDevMode] = useState(
-    localStorage.getItem('phillos_dev_mode') === 'true'
+    storageService.getDevMode() ?? false
   );
   const [telemetry, setTelemetry] = useState(
-    localStorage.getItem('phillos_telemetry') !== 'false'
+    storageService.getTelemetry() ?? true
   );
   const [history, setHistory] = useState<SettingChange[]>([]);
 
   useEffect(() => {
     setHistory(storageService.getSettingsHistory());
+    settingsService.fetchDevMode().then(v => v !== null && setDevMode(v));
+    settingsService.fetchTelemetry().then(v => v !== null && setTelemetry(v));
   }, []);
 
   const toggleNode = (id: string) => {
@@ -53,13 +56,13 @@ export const ControlPanel: React.FC = () => {
   };
 
   const toggleDevMode = (v: boolean) => {
-    localStorage.setItem('phillos_dev_mode', String(v));
+    settingsService.setDevMode(v);
     recordChange('developer.devMode', devMode, v);
     setDevMode(v);
   };
 
   const toggleTelemetry = (v: boolean) => {
-    localStorage.setItem('phillos_telemetry', String(v));
+    settingsService.setTelemetry(v);
     recordChange('system.telemetry', telemetry, v);
     setTelemetry(v);
   };
@@ -90,8 +93,8 @@ export const ControlPanel: React.FC = () => {
           localStorage.setItem(k, obj[k]);
         });
         recordChange('import', null, obj);
-        setDevMode(localStorage.getItem('phillos_dev_mode') === 'true');
-        setTelemetry(localStorage.getItem('phillos_telemetry') !== 'false');
+        setDevMode(storageService.getDevMode() ?? false);
+        setTelemetry(storageService.getTelemetry() ?? true);
       } catch {
         // ignore
       }
