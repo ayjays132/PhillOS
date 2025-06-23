@@ -1,4 +1,4 @@
-import { NavItem, WidgetOrder, PhoneSettings } from '../types';
+import { NavItem, WidgetOrder, PhoneSettings, SettingChange } from '../types';
 import { agentOrchestrator } from './agentOrchestrator';
 
 const WIDGET_ORDER_KEY = 'phillos_widget_order';
@@ -8,6 +8,7 @@ const MEMORY_WINDOWS_KEY = 'phillos_memory_windows_v1';
 const THEME_KEY = 'phillos-theme';
 const VOICE_ENGINE_KEY = 'phillos_voice_engine_v1';
 const CURSOR_STYLE_KEY = 'phillos_cursor_style';
+const SETTINGS_HISTORY_KEY = 'phillos_settings_history_v1';
 
 class StorageService {
   init() {
@@ -167,6 +168,36 @@ class StorageService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme }),
       });
+    } catch {
+      // ignore
+    }
+  }
+
+  getSettingsHistory(): SettingChange[] {
+    try {
+      const raw = localStorage.getItem(SETTINGS_HISTORY_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed as SettingChange[];
+    } catch {
+      // ignore
+    }
+    return [];
+  }
+
+  addSettingChange(change: SettingChange) {
+    const history = this.getSettingsHistory();
+    history.push(change);
+    try {
+      localStorage.setItem(SETTINGS_HISTORY_KEY, JSON.stringify(history));
+    } catch {
+      // ignore
+    }
+  }
+
+  clearSettingsHistory() {
+    try {
+      localStorage.removeItem(SETTINGS_HISTORY_KEY);
     } catch {
       // ignore
     }

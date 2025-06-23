@@ -7,6 +7,7 @@ import NetworkSettingsView from './NetworkSettingsView';
 import PrivacySecuritySettingsView from './PrivacySecuritySettingsView';
 import ApplicationsSettingsView from './ApplicationsSettingsView';
 import SystemSettingsView from './SystemSettingsView';
+import ControlPanel from './ControlPanel';
 
 const categories = [
   { id: 'general', name: 'General' },
@@ -15,6 +16,7 @@ const categories = [
   { id: 'privacy', name: 'Privacy & Security' },
   { id: 'applications', name: 'Applications' },
   { id: 'system', name: 'System' },
+  { id: 'control-panel', name: 'Control Panel' },
 ];
 
 export const SettingsLayout: React.FC = () => {
@@ -51,6 +53,7 @@ export const SettingsLayout: React.FC = () => {
             <Route path="privacy" element={<PrivacySecuritySettingsView />} />
             <Route path="applications" element={<ApplicationsSettingsView />} />
             <Route path="system" element={<SystemSettingsView />} />
+            <Route path="control-panel" element={<ControlPanel />} />
             <Route path="*" element={<Outlet />} />
           </Routes>
         </div>
