@@ -3,12 +3,14 @@ import { invoke } from '@tauri-apps/api/tauri';
 type Handler = (offline: boolean) => void;
 
 class OfflineService {
-  private offline = false;
+  private offline = !navigator.onLine;
   private handlers = new Set<Handler>();
   private pollId: number | null = null;
 
   constructor() {
     this.init();
+    window.addEventListener('online', this.handleNetworkChange);
+    window.addEventListener('offline', this.handleNetworkChange);
   }
 
   private async init() {
@@ -16,9 +18,14 @@ class OfflineService {
     this.startPolling();
   }
 
+  private handleNetworkChange = () => {
+    this.updateState();
+  };
+
   private async updateState() {
     try {
-      const state = await invoke<boolean>('system.offline_state');
+      const state =
+        (await invoke<boolean>('system.offline_state')) || !navigator.onLine;
       if (state !== this.offline) {
         this.offline = state;
         this.handlers.forEach(h => h(state));
@@ -29,7 +36,9 @@ class OfflineService {
   }
 
   private startPolling() {
-    this.pollId = window.setInterval(() => this.updateState(), 10000);
+    if (this.pollId === null) {
+      this.pollId = window.setInterval(() => this.updateState(), 10000);
+    }
   }
 
   subscribe(handler: Handler) {
