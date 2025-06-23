@@ -37,13 +37,23 @@ static inline uint32_t nv_readl(uint32_t reg)
     return *addr;
 }
 
+#define NV50_PDISPLAY_CRTC_CONTROL          0x00610080
+#define NV50_PDISPLAY_CRTC_CONTROL_ENABLE   0x00000001
+#define NV50_PDISPLAY_CRTC_FB_ADDR          0x00610b10
+
 static void nvidia_program_regs(void)
 {
     debug_puts("Nvidia: programming registers\n");
-    /* Placeholder for register setup */
+    extern boot_info_t *boot_info_get(void);
+    framebuffer_info_t *fb = &boot_info_get()->fb;
+
+    nv_writel(NV50_PDISPLAY_CRTC_FB_ADDR,
+              (uint32_t)(fb->base & 0xFFFFFFFF));
+    nv_writel(NV50_PDISPLAY_CRTC_CONTROL,
+              NV50_PDISPLAY_CRTC_CONTROL_ENABLE);
 }
 
-static void nvidia_set_mode(uint32_t w, uint32_t h)
+static int nvidia_set_mode(uint32_t w, uint32_t h)
 {
     debug_puts("Nvidia: set display mode ");
     debug_puthex(w);
@@ -72,6 +82,8 @@ static void nvidia_set_mode(uint32_t w, uint32_t h)
     while (nv_readl(NV50_PDISPLAY_UNK30_CTRL) &
            NV50_PDISPLAY_UNK30_CTRL_PENDING)
         ;
+
+    return 0;
 }
 
 static int nvidia_enable_vulkan(void)
@@ -99,10 +111,12 @@ static void nvidia_hw_init(const pci_device_t *dev)
     gpu_set_active_driver(&nvidia_driver);
 }
 
-static void nvidia_init(void)
+static int nvidia_init(void)
 {
-    if (nvidia_dev)
-        nvidia_hw_init(nvidia_dev);
+    if (!nvidia_dev)
+        return -1;
+    nvidia_hw_init(nvidia_dev);
+    return 0;
 }
 
 static void nvidia_pnp_init(const pci_device_t *dev)
