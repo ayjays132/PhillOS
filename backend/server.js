@@ -24,13 +24,14 @@ const ALLOWED_FILES = new Set([
   "workspaceSnaps.json",
 ]);
 
+const OFFLINE_FILES = [
+  path.resolve(__dirname, "../offline.cfg"),
+  path.join(STORAGE_DIR, "offline.cfg"),
+];
 let offline = false;
 function loadOffline() {
-  const locations = [
-    "/EFI/PHILLOS/offline.cfg",
-    path.resolve(__dirname, "../storage/offline.cfg"),
-  ];
-  for (const p of locations) {
+  offline = false;
+  for (const p of OFFLINE_FILES) {
     try {
       const data = fs.readFileSync(p, "utf8").trim();
       if (/^(1|on|yes|true)$/i.test(data)) {
@@ -44,6 +45,10 @@ function loadOffline() {
 }
 
 loadOffline();
+setInterval(loadOffline, 10000);
+function isOffline() {
+  return offline;
+}
 
 function sanitizeStoragePath(name) {
   const base = path.basename(name);
@@ -223,7 +228,7 @@ const PROXY_TIMEOUT = Number(process.env.PHONE_BRIDGE_TIMEOUT || 2000);
 const MAX_RETRIES = 2;
 
 app.use("/phonebridge", checkToken, (req, res) => {
-  if (offline) {
+  if (isOffline()) {
     return res.status(503).json({ error: "offline" });
   }
   const target = new URL(
@@ -350,7 +355,7 @@ app.post("/api/aiconfig", async (req, res) => {
 // --- ConverseAI ---
 let converseSession = null;
 app.post("/api/converseai", async (req, res) => {
-  if (offline) {
+  if (isOffline()) {
     return res.status(503).json({ error: "offline" });
   }
   const { message, toneMatch } = req.body || {};
@@ -383,7 +388,7 @@ app.post("/api/converseai", async (req, res) => {
 });
 
 app.post("/api/converseai/digest", async (req, res) => {
-  if (offline) {
+  if (isOffline()) {
     return res.status(503).json({ error: "offline" });
   }
   const { messages } = req.body || {};
@@ -446,7 +451,7 @@ app.post("/api/inboxai/reply", async (req, res) => {
 
 // --- WebLens ---
 app.get("/api/weblens/summarize", async (req, res) => {
-  if (offline) {
+  if (isOffline()) {
     return res.status(503).json({ error: "offline" });
   }
   const url = req.query.url || "";
@@ -508,6 +513,9 @@ app.get("/api/mediasphere/media", (req, res) => {
 });
 
 app.post("/api/mediasphere/analyze", (req, res) => {
+  if (isOffline()) {
+    return res.status(503).json({ error: "offline" });
+  }
   const { id } = req.body || {};
   const dir = path.join(STORAGE_DIR, "media");
   try {
@@ -618,6 +626,9 @@ async function createRecap(file) {
 }
 
 app.post("/api/mediasphere/chapters", async (req, res) => {
+  if (isOffline()) {
+    return res.status(503).json({ error: "offline" });
+  }
   const { id } = req.body || {};
   const dir = path.join(STORAGE_DIR, "media");
   try {
@@ -637,6 +648,9 @@ app.post("/api/mediasphere/chapters", async (req, res) => {
 });
 
 app.post("/api/mediasphere/bitrate", async (req, res) => {
+  if (isOffline()) {
+    return res.status(503).json({ error: "offline" });
+  }
   const { id } = req.body || {};
   const dir = path.join(STORAGE_DIR, "media");
   try {
@@ -656,6 +670,9 @@ app.post("/api/mediasphere/bitrate", async (req, res) => {
 });
 
 app.post("/api/mediasphere/recap", async (req, res) => {
+  if (isOffline()) {
+    return res.status(503).json({ error: "offline" });
+  }
   const { id } = req.body || {};
   const dir = path.join(STORAGE_DIR, "media");
   try {
@@ -1035,4 +1052,5 @@ export {
   STORAGE_DIR,
   loadAIConfig,
   saveAIConfig,
+  isOffline,
 };
