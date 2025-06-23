@@ -11,11 +11,12 @@ export const SystemSettingsView: React.FC = () => {
   const [gpu, setGpu] = useState<string>(storageService.getGpuOverride() || 'auto');
   const [usage, setUsage] = useState<Record<string, number>>({});
   const [profile, setProfile] = useState('balanced');
-  const [devMode, setDevMode] = useState(false);
+  const [devMode, setDevMode] = useState(storageService.getDevMode() ?? false);
 
   useEffect(() => {
     settingsService.fetchOfflineMode().then(v => v !== null && setOffline(v));
     settingsService.fetchGpuOverride().then(v => v && setGpu(v));
+    settingsService.fetchDevMode().then(v => v !== null && setDevMode(v));
     systemSettingsService.getStorageUsage().then(u => u && setUsage(u));
   }, []);
 
@@ -69,7 +70,10 @@ export const SystemSettingsView: React.FC = () => {
         <input
           type="checkbox"
           checked={devMode}
-          onChange={e => setDevMode(e.target.checked)}
+          onChange={e => {
+            setDevMode(e.target.checked);
+            settingsService.setDevMode(e.target.checked);
+          }}
         />
         <span>Developer Mode</span>
       </label>

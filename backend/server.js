@@ -66,6 +66,16 @@ const GPU_FILES = [
   path.join(STORAGE_DIR, "gpu.cfg"),
 ];
 
+const DEV_MODE_FILES = [
+  path.resolve(__dirname, "../dev_mode.cfg"),
+  path.join(STORAGE_DIR, "dev_mode.cfg"),
+];
+
+const TELEMETRY_FILES = [
+  path.resolve(__dirname, "../telemetry.cfg"),
+  path.join(STORAGE_DIR, "telemetry.cfg"),
+];
+
 function loadGpuOverride() {
   for (const p of GPU_FILES) {
     try {
@@ -86,6 +96,74 @@ function saveGpuOverride(vendor) {
   } catch {
     /* ignore */
   }
+}
+
+let devMode = false;
+function loadDevMode() {
+  devMode = false;
+  for (const p of DEV_MODE_FILES) {
+    try {
+      const data = fs.readFileSync(p, "utf8").trim();
+      if (/^(1|on|yes|true)$/i.test(data)) {
+        devMode = true;
+        break;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+loadDevMode();
+
+function isDevMode() {
+  return devMode;
+}
+
+function saveDevMode(state) {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(STORAGE_DIR, "dev_mode.cfg"), state ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+  devMode = !!state;
+}
+
+let telemetryEnabled = true;
+function loadTelemetry() {
+  telemetryEnabled = true;
+  for (const p of TELEMETRY_FILES) {
+    try {
+      const data = fs.readFileSync(p, "utf8").trim();
+      if (/^(0|off|no|false)$/i.test(data)) {
+        telemetryEnabled = false;
+        break;
+      }
+      if (/^(1|on|yes|true)$/i.test(data)) {
+        telemetryEnabled = true;
+        break;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+loadTelemetry();
+
+function isTelemetryEnabled() {
+  return telemetryEnabled;
+}
+
+function saveTelemetry(state) {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(STORAGE_DIR, "telemetry.cfg"), state ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+  telemetryEnabled = !!state;
 }
 
 function sanitizeStoragePath(name) {
@@ -415,6 +493,26 @@ app.post("/api/gpu", (req, res) => {
     return res.status(400).json({ error: "invalid gpu" });
   }
   saveGpuOverride(String(gpu));
+  res.json({ success: true });
+});
+
+app.get("/api/devmode", (req, res) => {
+  res.json({ devMode: isDevMode() });
+});
+
+app.post("/api/devmode", (req, res) => {
+  const { devMode: state } = req.body || {};
+  saveDevMode(!!state);
+  res.json({ success: true });
+});
+
+app.get("/api/telemetry", (req, res) => {
+  res.json({ telemetry: isTelemetryEnabled() });
+});
+
+app.post("/api/telemetry", (req, res) => {
+  const { telemetry: state } = req.body || {};
+  saveTelemetry(!!state);
   res.json({ success: true });
 });
 
@@ -1317,6 +1415,8 @@ export {
   loadAIConfig,
   saveAIConfig,
   isOffline,
+  isDevMode,
+  isTelemetryEnabled,
   loadLocale,
   saveLocale,
   loadPermissions,
