@@ -55,3 +55,7 @@ When `offline.cfg` enables offline mode the lock screen detects this using
 `offlineService`. A **Guest Login** button appears and submitting the form with
 empty credentials is permitted. In this mode no request is sent to the backend
 and the session is unlocked immediately.
+
+`offlineService` now listens for browser `online` and `offline` events to update
+its state immediately when connectivity changes. This allows the lock screen to
+show or hide the Guest Login option without delay.
