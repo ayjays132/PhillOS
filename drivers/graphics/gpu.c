@@ -141,8 +141,10 @@ void init_gpu_driver(void)
         active_driver = drv;
         drv->init();
         if (drv->set_mode) {
-            framebuffer_info_t *fb = &boot_info_get()->fb;
-            drv->set_mode(fb->width, fb->height);
+            boot_info_t *info = boot_info_get();
+            uint32_t w = info ? info->display_width : 0;
+            uint32_t h = info ? info->display_height : 0;
+            drv->set_mode(w, h);
         }
         if (drv->enable_vulkan)
             drv->enable_vulkan();

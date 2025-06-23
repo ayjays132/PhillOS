@@ -43,6 +43,9 @@ typedef struct {
     uint8_t  theme_dark; // 1 = dark, 0 = light
     uint8_t  offline;    // 1 = offline mode
     uint8_t  gpu_override; // GPU_VENDOR_* value or GPU_VENDOR_UNKNOWN for auto
+    uint32_t display_width;  // 0 = use GOP mode
+    uint32_t display_height; // 0 = use GOP mode
+    uint32_t display_refresh; // Hz, 0 = default
     char cmdline[128];
 } boot_info_t;
 

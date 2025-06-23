@@ -337,6 +337,83 @@ static void load_gpu_cfg(EFI_HANDLE image, boot_info_t *info)
     else
         info->gpu_override = GPU_VENDOR_UNKNOWN;
 }
+
+static void load_display_cfg(EFI_HANDLE image, boot_info_t *info)
+{
+    EFI_STATUS status;
+    EFI_LOADED_IMAGE *li;
+    EFI_GUID li_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+    status = uefi_call_wrapper(BS->HandleProtocol, 3, image, &li_guid, (void**)&li);
+    if (EFI_ERROR(status)) {
+        info->display_width = 0;
+        info->display_height = 0;
+        info->display_refresh = 0;
+        return;
+    }
+
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *fs;
+    EFI_GUID fs_guid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
+    status = uefi_call_wrapper(BS->HandleProtocol, 3, li->DeviceHandle, &fs_guid, (void**)&fs);
+    if (EFI_ERROR(status)) {
+        info->display_width = 0;
+        info->display_height = 0;
+        info->display_refresh = 0;
+        return;
+    }
+
+    EFI_FILE_PROTOCOL *root;
+    status = uefi_call_wrapper(fs->OpenVolume, 2, fs, &root);
+    if (EFI_ERROR(status)) {
+        info->display_width = 0;
+        info->display_height = 0;
+        info->display_refresh = 0;
+        return;
+    }
+
+    EFI_FILE_PROTOCOL *file;
+    status = uefi_call_wrapper(root->Open, 5, root,
+                               L"\\EFI\\PHILLOS\\display.cfg", EFI_FILE_MODE_READ, 0);
+    if (EFI_ERROR(status)) {
+        info->display_width = 0;
+        info->display_height = 0;
+        info->display_refresh = 0;
+        return;
+    }
+
+    CHAR8 buf[32];
+    UINTN size = sizeof(buf)-1;
+    status = uefi_call_wrapper(file->Read, 3, file, &size, buf);
+    file->Close(file);
+    if (EFI_ERROR(status)) {
+        info->display_width = 0;
+        info->display_height = 0;
+        info->display_refresh = 0;
+        return;
+    }
+    buf[size] = '\0';
+
+    UINTN i = 0; UINTN w = 0, h = 0, r = 0; int valid = 0;
+    while (i < size && buf[i] >= '0' && buf[i] <= '9') { w = w*10 + (buf[i]-'0'); i++; }
+    if (i < size && buf[i]=='x') {
+        i++;
+        while (i < size && buf[i] >= '0' && buf[i] <= '9') { h = h*10 + (buf[i]-'0'); i++; }
+        if (h > 0) valid = 1;
+    }
+    if (valid && i < size && buf[i]=='@') {
+        i++;
+        while (i < size && buf[i] >= '0' && buf[i] <= '9') { r = r*10 + (buf[i]-'0'); i++; }
+    }
+
+    if (valid) {
+        info->display_width = (uint32_t)w;
+        info->display_height = (uint32_t)h;
+        info->display_refresh = (uint32_t)r;
+    } else {
+        info->display_width = 0;
+        info->display_height = 0;
+        info->display_refresh = 0;
+    }
+}
 static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
 {
     EFI_STATUS status;
@@ -393,6 +470,7 @@ static EFI_STATUS prepare_boot_info(EFI_HANDLE image, boot_info_t **out_info)
     load_theme_cfg(image, info);
     load_offline_cfg(image, info);
     load_gpu_cfg(image, info);
+    load_display_cfg(image, info);
 
     VOID *svg_data = NULL;
     UINTN svg_size = 0;

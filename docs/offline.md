@@ -94,4 +94,21 @@ gpu_reload_cfg: malformed config
 gpu override NVIDIA
 ```
 
+## Display Configuration
+
+`display.cfg` in the same `EFI/PHILLOS` directory sets the preferred screen
+resolution. Write values like `1920x1080@60` or `1024x768`. The refresh rate
+after `@` is optional. The bootloader stores the parsed width, height and
+refresh in `boot_info_t` and the kernel calls `display_reload_cfg()` after
+mounting so you can update the resolution without rebuilding.
+
+When `display_reload_cfg` runs the kernel prints messages similar to the other
+loaders:
+
+```
+display_reload_cfg: display.cfg missing
+display_reload_cfg: malformed config
+display mode 780x438@3C
+```
+
 
