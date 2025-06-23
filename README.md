@@ -1,7 +1,16 @@
 
-# PhillOS - Living Glass AI-Native OS Concept
+# ✨ PhillOS - Living Glass AI-Native OS Concept ✨
 
 [![PhillOS Concept UI](https://user-images.githubusercontent.com/1234567/200000000-placeholder-image.png)](#)
+
+*A bold experiment in AI-driven computing, blending aesthetics with deep learning power.*
+
+### 🚀 Quick Overview
+
+- **AI-First Architecture** – the OS core is built around intelligent agents.
+- **Living Glass UI** – a translucent, adaptive interface that feels alive.
+- **Proactive Assistance** – get suggestions and automations before you even ask.
+- **Extensible Apps & Widgets** – modular components for infinite customization.
 
 **PhillOS represents a profound paradigm shift in operating system design, moving beyond traditional command-response interfaces to an intelligent, proactive, and deeply personalized user experience. This React-based prototype demonstrates core aspects of the "Living Glass" UI/UX and foundational AI-driven interactions envisioned for PhillOS.**
 
@@ -39,7 +48,7 @@ At its heart, PhillOS aims to be:
 - **Personally Evolving**: Becoming more intuitive and helpful with every interaction.
 - **Privacy-First**: Granting users granular control over their data with a strong emphasis on on-device processing.
 
-## Core Philosophy
+## 🌟 Core Philosophy
 
 PhillOS is guided by several key principles:
 
@@ -49,7 +58,7 @@ PhillOS is guided by several key principles:
 4.  **Personalized Learning**: The AI refines its understanding of the individual user over time, becoming progressively more accurate and helpful.
 5.  **Privacy-First Design**: Users have granular control over data collection and usage, with transparent opt-outs and prioritization of local AI models for sensitive data.
 
-## The "Living Glass" Design
+## 🖼️ The "Living Glass" Design
 
 The "Living Glass" aesthetic is central to PhillOS's identity, emphasizing:
 - **Ethereal Translucency**: Achieved with low-opacity backgrounds and heavy backdrop blurs (`backdrop-blur-3xl`) for a frosted glass effect.
@@ -58,7 +67,7 @@ The "Living Glass" aesthetic is central to PhillOS's identity, emphasizing:
 - **Responsive Adaptation**: The UI seamlessly transitions from mobile to desktop, maintaining clarity and the "Living Glass" hierarchy.
 - **Vibrant Accents**: Lucide React icons with carefully chosen colors enhance visual appeal and clarity.
 
-## Technology Stack
+## 🛠️ Technology Stack
 
 -   **React 19**: For building the dynamic and component-based user interface.
 -   **TypeScript**: For static typing, enhancing code quality and developer experience.
@@ -67,7 +76,7 @@ The "Living Glass" aesthetic is central to PhillOS's identity, emphasizing:
 -   **@google/genai** and **openai**: Cloud AI providers used by the AI CoPilot widget when cloud mode is enabled.
 -   **React Router (v6, HashRouter)**: For client-side navigation within the single-page application.
 
-## Current Prototype Features
+## 🚧 Current Prototype Features
 
 This prototype implements the following features from the PhillOS vision:
 
@@ -90,7 +99,7 @@ This prototype implements the following features from the PhillOS vision:
 -   **Cursor Customization**: Choose between different cursor themes (Default or Mac) under **Settings → Cursor**.
 -   **Comprehensive System Settings**: Detailed overview of all configuration options is documented in [docs/settings.md](docs/settings.md).
 
-## Using Cloud AI Providers
+## ☁️ Using Cloud AI Providers
 
 PhillOS can optionally connect to either Google Gemini or OpenAI's ChatGPT for cloud-enhanced AI features. During use, select your preferred provider and supply the API key when prompted. The key is kept only in memory for the active session and is never stored.
 
@@ -103,7 +112,7 @@ PhillOS can optionally connect to either Google Gemini or OpenAI's ChatGPT for c
 
    **Important:** Never share your API key publicly.
 
-## Using a Local Qwen Model via Ollama
+## 🏠 Using a Local Qwen Model via Ollama
 
 PhillOS supports running the AI CoPilot entirely on-device using the Qwen3‑1.7B model. This requires [Ollama](https://ollama.com/) to be installed locally. By default the UI connects to the `qwen3:1.7b` model, but you can override this by setting the `VITE_LOCAL_AI_MODEL` environment variable when building or running the app.
 
@@ -115,7 +124,7 @@ PhillOS supports running the AI CoPilot entirely on-device using the Qwen3‑1.7
 
 After the initial download PhillOS can function entirely offline. When you choose the *Local-First AI* option during onboarding, the CoPilot widget will use this local model and no API key is required.
 
-## Cloud Sync
+## 🔄 Cloud Sync
 
 PhillOS can keep your settings in sync with a remote service. Select the backend by setting `VITE_CLOUD_SYNC_BACKEND` to `webdav`, `s3`, or `api`. Each backend requires different configuration:
 
@@ -136,14 +145,14 @@ PhillOS can keep your settings in sync with a remote service. Select the backend
 
 Enable or disable Cloud Sync from the Settings panel. Changes are queued locally while offline and pushed automatically once a connection is available.
 
-## Cross‑Device Awareness
+## 📱💻 Cross‑Device Awareness
 
 PhillOS detects whether it is running on a phone, desktop, Steam Deck or a VR capable browser.
 The `useDeviceType` hook now also tracks orientation and basic input capabilities. It inspects the user agent, WebXR support, current screen orientation and connected gamepads to classify the environment.
 Navigation components adjust icon sizes and spacing automatically. When running on a Steam Deck or in VR, the Dock is displayed vertically along the left edge with larger icons. Desktop users see the traditional centered Dock, while mobile devices continue to use the bottom navigation bar.
 Game controllers can navigate these elements with the arrow keys or D‑pad and benefit from increased padding for easier selection.
 
-## Voice Interaction
+## 🎙️ Voice Interaction
 
 PhillOS includes optional voice input and output for the AI CoPilot. The widget features a microphone button that toggles speech recognition. By default it uses the browser's Web Speech API, but if unsupported or if the preference `phillos_voice_engine_v1` is set to `whisper`, recorded audio will be transcribed locally via a Python server running the `openai/whisper-small` model. Spoken phrases are inserted into the chat input and replies are read aloud using speech synthesis.
 
@@ -163,13 +172,13 @@ The `WhisperService` class invokes this script whenever audio is recorded. Most 
 
 The service uses `python3` by default. Set the `WHISPER_PYTHON` environment variable to specify a custom interpreter.
 
-## Theme Switching
+## 🎨 Theme Switching
 
 PhillOS now includes a simple theme system with **light** and **dark** modes. The current theme is saved to `localStorage` so your preference persists across sessions. Components automatically adapt their colors based on this setting.
 
 To toggle the theme, call the `useTheme` hook anywhere in the app or add a small switch component that invokes `toggleTheme()` from the context.
 
-## Agent Mode
+## 🤖 Agent Mode
 
 Agent mode lets PhillOS orchestrate the apps and services automatically. Start the core agent with:
 
@@ -193,7 +202,7 @@ These commands launch the underlying Python and Node helpers while the agent coo
 
 For a step-by-step walkthrough of registering actions and orchestrating multiple apps, see [docs/agent_mode_walkthrough.md](docs/agent_mode_walkthrough.md).
 
-## Kernel and Agent Integration
+## 🧩 Kernel and Agent Integration
 
 The orchestrator communicates with the kernel through Tauri commands. `system.query_scheduler`
 returns scheduler metrics while `system.device_event` streams hot-plug events. Services such as
@@ -207,11 +216,11 @@ AutoClean and PromptCoach register their own actions with the agent:
 
 Start the agent with `npx phillos agent start` to enable these features.
 
-## Getting Started
+## 🏁 Getting Started
 
 For a step-by-step setup guide covering the bootloader, backend services, Tauri shell and Agent Mode, see [docs/getting_started.md](docs/getting_started.md). If you are installing the OS on hardware or preparing offline assets, consult [docs/install.md](docs/install.md).
 
-## Building the Bootloader & Kernel
+## 🛠️ Building the Bootloader & Kernel
 
 PhillOS ships with a minimal bootloader and kernel written in C. Building them
 requires a cross&#8209;compiler and EFI development libraries. See
@@ -337,7 +346,7 @@ See [docs/driver_system.md](docs/driver_system.md) for an overview of the driver
 Development details, including how to build and sign modules, are covered in
 [docs/driver_development.md](docs/driver_development.md).
 
-## Offline Installation and Usage
+## 🔌 Offline Installation and Usage
 
 PhillOS can run without an internet connection once the UI files are cached by the service worker. See [docs/offline.md](docs/offline.md) for a concise guide. Detailed steps for bundling Proton, vkd3d and troubleshooting offline boots are available in [docs/building.md](docs/building.md#preparing-a-self-contained-usb).
 
@@ -352,7 +361,7 @@ npx serve dist
 Visit the local URL on your network once to cache the files. After that the OS continues to function even if the server goes offline. Rebuild the project and replace the files on the USB or server to update.
 The service worker also caches responses from the `/phonebridge/*` endpoint using a Network First strategy so basic phone integration keeps working when temporarily disconnected.
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 /
@@ -401,7 +410,7 @@ The service worker also caches responses from the `/phonebridge/*` endpoint usin
 └── README.md               # This file
 ```
 
-## Key Architectural Components
+## 🧠 Key Architectural Components
 
 -   **`App.tsx`**: The main application component. It handles routing, global layout, and conditionally renders UI chrome (Status Bar, Navigation) based on the onboarding status.
 -   **`useOnboarding.ts`**: A custom React hook responsible for managing the multi-step onboarding process, persisting state to `localStorage`, and providing helper functions.
@@ -411,7 +420,7 @@ The service worker also caches responses from the `/phonebridge/*` endpoint usin
 -   **`AICoPilotWidget.tsx`**: A key interactive widget that integrates with `cloudAIService.ts` to provide chat via Gemini or ChatGPT.
 -   **`cloudAIService.ts`**: Handles communication with the selected cloud AI provider.
 
-## Future Vision (Conceptual)
+## 🔮 Future Vision (Conceptual)
 
 This prototype serves as a visual and interactive demonstration of the PhillOS concept. See [docs/Blueprint.md](docs/Blueprint.md) for the broader roadmap and [docs/building.md](docs/building.md) for toolchain setup. More docs will appear in the `docs/` directory. The file [docs/agent_commands.md](docs/agent_commands.md) lists sample natural‑language phrases and their resulting actions.
 
@@ -424,7 +433,7 @@ This prototype serves as a visual and interactive demonstration of the PhillOS c
 -   Robust **Security AI** with real-time threat detection, adaptive firewalls, and secure enclaves.
 -   And much more, all aiming to create a truly personalized, efficient, and engaging computing experience that learns and adapts to the user.
 
-## Android Container (Experimental)
+## 🤖📱 Android Container (Experimental)
 
 PhillOS can run Android apps inside a [Waydroid](https://waydro.id/) container. The
 `android` directory now includes a functional controller script and a helper
@@ -458,11 +467,11 @@ script for installing **microG** so the Play Store works inside the container.
 
 See [android/README.md](android/README.md) for additional details.
 
-## DirectX 12 on Vulkan
+## 🎮 DirectX 12 on Vulkan
 
 PhillOS uses the open source **vkd3d-proton** layer to translate DirectX 12 calls into Vulkan. During boot the kernel initializes this library after detecting the GPU vendor. A small ELF loader maps `libvkd3d-proton.so` and exposes its symbols so both native applications and Proton/Wine games can run without network access. See [docs/vkd3d.md](docs/vkd3d.md) for setup instructions.
 
-## Proton Launcher
+## 🛫 Proton Launcher
 
 The backend includes a small server that can start Windows executables through Proton. It first looks for a bundled Proton build under `dist/proton/<version>/`. If the directory is missing the launcher will attempt to download the archive defined by the `PROTON_DOWNLOAD_URL` environment variable. When Proton cannot be located, it falls back to using Wine.
 
@@ -479,7 +488,7 @@ npm run server
 
 In the UI open the **Proton Launcher** widget, supply the executable path and Proton version, and optionally check **Use Wine if Proton missing**.
 
-### API Usage
+### 📝 API Usage
 
 The backend exposes a POST `/api/launch-proton` endpoint. Send a JSON body with
 the path to the executable and optional Proton settings:
@@ -498,7 +507,7 @@ The server remembers the last used `version` and `prefix` for each executable in
 `backend/protonSettings.json`. Subsequent requests may omit these fields to reuse
 the stored values.
 
-## PWA Cache Management
+## 💾 PWA Cache Management
 
 PhillOS now ships with a basic service worker. If you make changes to the UI and deploy a new build, your browser may continue using cached files until the service worker updates.
 
@@ -517,7 +526,7 @@ User settings and recent tasks are stored by the service worker so the OS remain
 2. Delete the `settings-cache` and `api-cache` entries.
 3. Reload the page to fetch fresh data from the backend when online.
 
-## Phone Hardware Requirements & Usage
+## 📞 Phone Hardware Requirements & Usage
 
 Basic phone integration requires the following hardware:
 
@@ -554,7 +563,7 @@ Enter your phone's Bluetooth MAC address in the **Phone Status** widget and pres
 
 Open the **Phone** app from the dock to send SMS messages or initiate calls. The app uses the phone bridge behind the scenes and can generate short SMS drafts with the local AI model. Phone settings will be configurable in a future update.
 
-## CLI SDK
+## 💻 CLI SDK
 
 The `cli` directory provides two command line utilities built with the
 `commander` package.  `phillos-cli.ts` exposes the original SDK class while
@@ -578,7 +587,7 @@ npx ts-node cli/phillos.ts launch /games/Game.exe
 npx ts-node cli/phillos.ts agent start --cloud
 ```
 
-### Database Setup
+### 🗄️ Database Setup
 
 Some widgets store data in a small SQLite database. Initialize it once before running the backend:
 
@@ -593,14 +602,14 @@ preferences and users. Add accounts with:
 node scripts/add-user.js <name> <password>
 ```
 
-### Built-In Apps
+### 📦 Built-In Apps
 
 Start the backend with `npm run server` and open any of these paths in the UI:
 
 - `/converseai` – simple chat interface.
 - `/inboxai` – demo email viewer with AI summary.
 - `/weblens` – fetches a summary for a given URL.
-### Preparing the Test Environment
+### 🧪 Preparing the Test Environment
 
 Before running tests, install project dependencies and language toolchains:
 
@@ -617,7 +626,7 @@ pip install -r requirements.txt
 The test suite expects Go, Cargo, and Python 3 with pytest to be installed.
 
 
-### Running Tests and Lint
+### ✅ Running Tests and Lint
 
 ```bash
 npm test       # run vitest unit tests
@@ -625,6 +634,6 @@ npm run lint   # check TypeScript sources with ESLint
 ```
 
 
-## License
+## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
