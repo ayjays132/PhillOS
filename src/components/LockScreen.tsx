@@ -3,6 +3,7 @@ import { GlassCard } from './GlassCard';
 import { useAuth } from '../contexts/AuthContext';
 import NetworkSetup from './NetworkSetup';
 import LockScreenMedia from './LockScreenMedia';
+import LockScreenNotifications from './LockScreenNotifications';
 import { offlineService } from '../../services/offlineService';
 
 export const LockScreen: React.FC = () => {
@@ -75,6 +76,7 @@ export const LockScreen: React.FC = () => {
       </button>
       </GlassCard>
       <NetworkSetup />
+      <LockScreenNotifications />
       <LockScreenMedia />
     </div>
   );
