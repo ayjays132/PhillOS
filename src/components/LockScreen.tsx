@@ -20,6 +20,7 @@ export const LockScreen: React.FC = () => {
     }
   });
   const [offline, setOffline] = useState(offlineService.isOffline());
+  const [error, setError] = useState<string | null>(null);
   const { deviceType, orientation } = useDeviceType();
 
   const sideBySide = orientation === 'landscape' && deviceType !== 'desktop';
@@ -32,15 +33,21 @@ export const LockScreen: React.FC = () => {
   };
 
   const handleFace = async () => {
-    await faceLogin();
+    setError(null);
+    const ok = await faceLogin();
+    if (!ok) setError('Authentication failed');
   };
 
   const handleFingerprint = async () => {
-    await fingerprintLogin();
+    setError(null);
+    const ok = await fingerprintLogin();
+    if (!ok) setError('Authentication failed');
   };
 
   const handleVoice = async () => {
-    await voiceLogin();
+    setError(null);
+    const ok = await voiceLogin();
+    if (!ok) setError('Authentication failed');
   };
 
   const handleGuest = async () => {
@@ -115,6 +122,7 @@ export const LockScreen: React.FC = () => {
           <button className="mt-1 text-sm underline" onClick={handleVoice}>
             Use Voice Login
           </button>
+          {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
         </GlassCard>
       </div>
       <div className={`${sideBySide ? '' : 'mt-4'} flex flex-col items-center`}>
