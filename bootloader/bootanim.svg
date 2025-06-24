@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  ╭────────────────────────────────────────────────────────────────────────────╮
+      │   Phill OS  ▸  “Liquid-Glass Genesis”  v2 – centred-breathing edition    │
+      │   Refined for symmetrical pulse · 24 Jun 2025                            │
+      ╰────────────────────────────────────────────────────────────────────────────╯ -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 400 400" width="400" height="400"
+     preserveAspectRatio="xMidYMid meet">
+
+  <title>Phill OS — centred-breathing boot animation</title>
+  <desc>
+    A perfectly centred, lung-like pulse animates both the background glow
+    and word-mark, eliminating any perceived “offset” irregularities.
+  </desc>
+
+  <!-- ─────────── GLOBAL TOKENS ─────────── -->
+  <style>
+    :root {
+      --bg-deep:#0A0A1A; --bg-mid:#1F2937; --glow:#3F51B5;
+      --bubble-rim:#80DEEA; --text-ink:#E0F2F7;
+
+      --breath-dur:8s;            /* one inhale + exhale */
+      --bubble-fast:8s;           /* path 1 */
+      --bubble-slow:10s;          /* path 2 */
+    }
+    @media (prefers-color-scheme: light) {
+      :root { --bg-deep:#E0F2F7; --bg-mid:#CFD8DC; --glow:#9FA8DA;
+              --bubble-rim:#00BCD4; --text-ink:#263238; }
+    }
+    .bubble, .word { will-change:transform,opacity; }
+  </style>
+
+  <!-- ─────────── PAINTS & FILTERS ─────────── -->
+  <defs>
+    <!-- Liquid-glass interior -->
+    <radialGradient id="lgwash" fx="60%" fy="60%">
+      <stop offset="0%" stop-color="#80DEEA"/>
+      <stop offset="50%" stop-color="#4DD0E1"/>
+      <stop offset="100%" stop-color="#00BCD4"/>
+      <!-- no cx/cy animation → colour swirl stays centred -->
+    </radialGradient>
+
+    <!-- Letter shimmer -->
+    <linearGradient id="txtgrad">
+      <stop offset="0%"   stop-color="#00BCD4"/>
+      <stop offset="50%"  stop-color="#8E24AA"/>
+      <stop offset="100%" stop-color="#FBC02D"/>
+      <animateTransform attributeName="gradientTransform" type="rotate"
+                        from="0 .5 .5" to="360 .5 .5" dur="15s"
+                        repeatCount="indefinite"/>
+    </linearGradient>
+
+    <!-- Glass refraction -->
+    <filter id="glassFX" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="1"
+                    seed="1" result="noise"/>
+      <feDisplacementMap in="blur" in2="noise" scale="3" result="refract"/>
+      <feGaussianBlur in="refract" stdDeviation="4" result="bloom"/>
+      <feMerge><feMergeNode in="bloom"/><feMergeNode in="refract"/></feMerge>
+    </filter>
+
+    <!-- Background ripple -->
+    <filter id="bgRipple" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.003"
+                    numOctaves="2" seed="2" result="rip"/>
+      <feDisplacementMap in="SourceGraphic" in2="rip" scale="10"/>
+    </filter>
+
+    <!-- Bubble glyph -->
+    <symbol id="bubble">
+      <circle r="10" fill="url(#lgwash)" filter="url(#glassFX)">
+        <animate attributeName="r" dur="2s" values="10;10.7;10"
+                 repeatCount="indefinite"/>
+      </circle>
+    </symbol>
+  </defs>
+
+  <!-- ─────────── BREATHING BACKDROP ─────────── -->
+  <!-- background glow that “inhales/exhales” perfectly from centre -->
+  <rect width="400" height="400" fill="url(#bgRad)"/>
+  <radialGradient id="bgRad" cx="50%" cy="50%">
+    <stop offset="0%"  stop-color="var(--glow)"/>
+    <stop offset="100%" stop-color="var(--bg-deep)"/>
+    <animate attributeName="r"
+             dur="var(--breath-dur)"
+             values="45%;60%;45%"
+             calcMode="spline"
+             keySplines=".42 0 .58 1;.42 0 .58 1"
+             repeatCount="indefinite"/>
+  </radialGradient>
+  <!-- subtle texture -->
+  <rect width="400" height="400" fill="var(--bg-mid)" opacity="0.35"
+        filter="url(#bgRipple)"/>
+
+  <!-- Wrap everything that should “breathe” together in one central group -->
+  <g id="breath" transform="translate(200 200)">
+    <!-- scaling from centre -->
+    <animateTransform attributeName="transform" additive="sum"
+                      type="scale"
+                      dur="var(--breath-dur)"
+                      values="1;1.03;1"
+                      calcMode="spline"
+                      keySplines=".42 0 .58 1;.42 0 .58 1"
+                      repeatCount="indefinite"/>
+
+    <!-- ───── BUBBLE EMITTERS (inside breathing group, so they inherit pulse) ───── -->
+    <g id="emit" transform="translate(0 150)">
+      <!-- fast path -->
+      <g class="bubble" opacity="0">
+        <use xlink:href="#bubble"/>
+        <animateTransform attributeName="transform" type="translate"
+                          dur="var(--bubble-fast)"
+                          values="0 0; 0 -450"
+                          begin="0.6s" fill="freeze"/>
+        <animate attributeName="opacity"
+                 dur="var(--bubble-fast)"
+                 values="0;1;0.8;0"
+                 begin="0.6s" fill="freeze"/>
+      </g>
+      <!-- slow path (mirrored) -->
+      <g class="bubble" opacity="0">
+        <use xlink:href="#bubble" transform="scale(1.1)"/>
+        <animateTransform attributeName="transform" type="translate"
+                          dur="var(--bubble-slow)"
+                          values="0 0; -50 -460"
+                          begin="1.6s" fill="freeze"/>
+        <animate attributeName="opacity"
+                 dur="var(--bubble-slow)"
+                 values="0;0.9;0.7;0"
+                 begin="1.6s" fill="freeze"/>
+      </g>
+      <!-- reflected path on right -->
+      <g class="bubble" opacity="0">
+        <use xlink:href="#bubble" transform="scale(0.9)"/>
+        <animateTransform attributeName="transform" type="translate"
+                          dur="var(--bubble-fast)"
+                          values="0 0; 50 -450"
+                          begin="2.4s" fill="freeze"/>
+        <animate attributeName="opacity"
+                 dur="var(--bubble-fast)"
+                 values="0;0.95;0.75;0"
+                 begin="2.4s" fill="freeze"/>
+      </g>
+
+      <!-- repeat burst every 6 s -->
+      <animate id="loop" attributeName="display"
+               to="none" begin="6s" dur="0.01s" fill="freeze"/>
+      <animate xlink:href="#emit" attributeName="display"
+               to="inline" begin="loop.end" dur="0.01s" fill="freeze"/>
+    </g>
+
+    <!-- ───── WORD-MARK ───── -->
+    <text class="word"
+          x="0" y="15"
+          font-family="'Comfortaa',sans-serif"
+          font-size="48" font-weight="700"
+          text-anchor="middle"
+          fill="url(#txtgrad)" opacity="0">
+      Phill OS
+      <animate attributeName="opacity" from="0" to="1"
+               dur="0.7s" begin="2s" fill="freeze"/>
+      <!-- wordmark breath sync (inherits group scale) -->
+    </text>
+  </g>
+</svg>

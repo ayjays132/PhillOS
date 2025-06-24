@@ -1,0 +1,26 @@
+{
+  "F-Droid": {
+    "apk": "org.fdroid.fdroid_1021051.apk",
+    "version": "1.21.1",
+    "url": "https://f-droid.org/repo/org.fdroid.fdroid_1021051.apk",
+    "sha256": "b64651849eceb57459049e7017e043008fce8f146aad1d34d98f0027d87e4eef"
+  },
+  "GmsCore": {
+    "apk": "com.google.android.gms-250932014.apk",
+    "version": "0.3.7.250932",
+    "url": "https://microg.org/fdroid/repo/com.google.android.gms-250932014.apk",
+    "sha256": "2da6fa694634d776242d2e689c0cdebfd6db0ddcde152a7c3bc21621ab0aa682"
+  },
+  "GsfProxy": {
+    "apk": "com.google.android.gsf-8.apk",
+    "version": "v0.1.0",
+    "url": "https://microg.org/fdroid/repo/com.google.android.gsf-8.apk",
+    "sha256": "86891b174301f06a1c84187b545a0a2a57044c6b768f3e84e865908743349692"
+  },
+  "FakeStore": {
+    "apk": "com.android.vending-84022614.apk",
+    "version": "0.3.7.40226",
+    "url": "https://microg.org/fdroid/repo/com.android.vending-84022614.apk",
+    "sha256": "6cd6cf146ecbda90cd3134692f36dbaeaec5d2ea9580e3453ea599209f678450"
+  }
+}

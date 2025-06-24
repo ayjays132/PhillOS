@@ -1,0 +1,221 @@
+# Driver System Overview
+
+PhillOS includes a small plug‑and‑play framework for discovering
+hardware on the PCI bus and attaching drivers.  The core data
+structure is `driver_t` defined in `drivers/driver_manager.h`:
+
+```c
+typedef struct pci_device {
+    uint8_t bus;
+    uint8_t slot;
+    uint8_t func;
+    uint16_t vendor_id;
+    uint16_t device_id;
+    uint8_t class_code;
+    uint8_t subclass;
+} pci_device_t;
+
+typedef struct driver {
+    const char *name;
+    int (*match)(const pci_device_t *dev);
+    void (*init)(const pci_device_t *dev);
+    struct driver *next;
+} driver_t;
+```
+
+Each driver provides a human readable `name`, an optional `match`
+function used during bus scanning and an `init` callback that
+performs hardware setup.  Drivers are linked together at runtime
+via the `next` pointer.
+
+## Registration
+
+Boot code calls `drivers_register_all()` which registers the set of
+built‑in drivers:
+
+```c
+#include "driver_manager.h"
+#include "graphics/nvidia.h"
+#include "graphics/amd.h"
+#include "graphics/intel.h"
+#include "storage/ahci.h"
+
+extern driver_t nvidia_pnp_driver;
+extern driver_t amd_pnp_driver;
+extern driver_t intel_pnp_driver;
+extern driver_t ahci_pnp_driver;
+
+void drivers_register_all(void)
+{
+    driver_manager_register(&nvidia_pnp_driver);
+    driver_manager_register(&amd_pnp_driver);
+    driver_manager_register(&intel_pnp_driver);
+    driver_manager_register(&ahci_pnp_driver);
+}
+```
+
+The registration list currently includes stubs for Nvidia, AMD and
+Intel graphics as well as a simple AHCI storage driver.  Additional
+vendors can be added by defining new `driver_t` instances and adding
+them to this list.
+
+## PCI Scanning
+
+`driver_manager_init()` performs a full PCI scan.  For every detected
+device it loops over the registered drivers and invokes `match`
+followed by `init` when a driver claims the device:
+
+```c
+uint32_t pci_config_read32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
+{
+    uint32_t addr = (uint32_t)(1 << 31) |
+                    ((uint32_t)bus << 16) |
+                    ((uint32_t)slot << 11) |
+                    ((uint32_t)func << 8) |
+                    (offset & 0xfc);
+    __asm__ volatile("outl %0, %1" :: "a"(addr), "d"((uint16_t)0xcf8));
+    uint32_t data;
+    __asm__ volatile("inl %1, %0" : "=a"(data) : "d"((uint16_t)0xcfc));
+    return data;
+}
+
+static void pci_scan(void)
+{
+    for (uint8_t bus = 0; bus < 256; bus++) {
+        for (uint8_t slot = 0; slot < 32; slot++) {
+            for (uint8_t func = 0; func < 8; func++) {
+                uint32_t venddev = pci_config_read32(bus, slot, func, 0);
+                uint16_t vendor = venddev & 0xFFFF;
+                if (vendor == 0xFFFF)
+                    continue;
+                uint16_t device = venddev >> 16;
+                uint32_t classcode = pci_config_read32(bus, slot, func, 8);
+                pci_device_t dev = {
+                    .bus = bus,
+                    .slot = slot,
+                    .func = func,
+                    .vendor_id = vendor,
+                    .device_id = device,
+                    .class_code = (classcode >> 24) & 0xFF,
+                    .subclass = (classcode >> 16) & 0xFF,
+                };
+                for (driver_t *d = driver_list; d; d = d->next) {
+                    if (!d->match || d->match(&dev)) {
+                        debug_puts("PnP init: ");
+                        debug_puts(d->name);
+                        debug_putc('\n');
+                        if (d->init)
+                            d->init(&dev);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void driver_manager_init(void)
+{
+    pci_scan_changes();
+}
+
+void driver_manager_rescan(void)
+{
+    pci_scan_changes();
+}
+
+void driver_manager_unload(uint8_t bus, uint8_t slot, uint8_t func);
+```
+
+The same logic is used by `driver_manager_rescan()` which is exposed
+for future hot‑plug support.
+
+## Vendor Driver Stubs
+
+Under `drivers/graphics/` the repository contains placeholder drivers
+for Nvidia, AMD and Intel GPUs.  They map the framebuffer region and
+fall back to the generic framebuffer helper.  The storage directory
+contains an AHCI driver using the same `driver_t` interface.  These
+stubs establish the pattern for future vendor specific modules.
+
+
+## Kernel Modules
+
+PhillOS now supports loading drivers as ELF modules from the boot partition. Modules are placed under `/modules/` and must export a `driver_entry` symbol of type `driver_t`. When `driver_manager_init()` detects hardware without a built-in driver it calls `module_load()` with a file name like `/modules/<vendor>_<device>.ko`. The returned driver is registered and its `init` callback invoked.
+
+If a device disappears the manager calls `driver_manager_unload()` to unload the module.
+
+## Module Signing
+
+All driver modules must be signed using a private RSA key before they will load.
+The loader expects each `.ko` file to end with a 256‑byte signature generated by
+signing the FNV‑1a 64‑bit digest of the ELF contents with a RSA‑2048 private key.
+The corresponding public key is built into the kernel and verified by
+`verify_module_signature()` inside `kernel/security/signature.c`.
+
+To sign a module run:
+
+```bash
+scripts/sign_module.py privkey.pem module.ko
+```
+
+Unsigned or mismatched modules will be rejected by `module_load()`.
+
+## Platform Examples
+
+Below are minimal sketches showing how a hot swap listener might be used on
+different platforms. These examples assume the interfaces defined in
+`include/phillos/driver/` are available.
+
+### Windows
+
+```c
+#include <phillos/driver/IDriverManager.h>
+
+static void on_add(const IDevice *dev) {
+    printf("Device %04x:%04x added\n", dev->vendor_id, dev->device_id);
+}
+
+static IHotSwapListener listener = { .device_added = on_add };
+
+int main(void) {
+    driver_manager.add_hot_swap_listener(&listener);
+    driver_manager.poll();
+}
+```
+
+### Linux
+
+```c
+#include <phillos/driver/IDriverManager.h>
+
+static void removed(const IDevice *dev) {
+    syslog(LOG_INFO, "removed %04x:%04x", dev->vendor_id, dev->device_id);
+}
+
+static IHotSwapListener l = { .device_removed = removed };
+
+int main(void) {
+    driver_manager.add_hot_swap_listener(&l);
+    while (1) {
+        driver_manager.poll();
+        sleep(1);
+    }
+}
+```
+
+### macOS
+
+```c
+#include <phillos/driver/IDriverManager.h>
+
+static void add_cb(const IDevice *dev) {
+    NSLog(@"device added %04x:%04x", dev->vendor_id, dev->device_id);
+}
+
+static IHotSwapListener l = { .device_added = add_cb };
+
+int main(void) {
+    driver_manager.add_hot_swap_listener(&l);
+    driver_manager_rescan();
+}
+```

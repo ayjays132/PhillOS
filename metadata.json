@@ -1,0 +1,6 @@
+{
+  "name": "PhillOS - Living Glass Concept",
+  "description": "A React and Tailwind CSS prototype demonstrating the PhillOS 'Living Glass' UI/UX concept with AI integration features, including a Gemini-powered AI CoPilot.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

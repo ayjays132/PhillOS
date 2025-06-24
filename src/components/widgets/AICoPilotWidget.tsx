@@ -1,0 +1,340 @@
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { offlineService } from '../../../services/offlineService';
+import { Send, AlertTriangle, Loader2, Mic, MicOff } from 'lucide-react';
+import { ChatMessage } from '../../types';
+import { createModelSession, sendModelMessageStream, ModelSession } from '../../../services/modelManager';
+import { CloudProvider } from '../../../services/cloudAIService';
+import { VoiceService, speakText } from '../../../services/voiceService';
+import { WhisperService } from '../../../services/whisperService';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { useOnboarding } from '../../hooks/useOnboarding';
+import { memoryService } from '../../../services/memoryService';
+import { WidgetCard } from '../layout/WidgetCard';
+
+export const AICoPilotWidget: React.FC = () => {
+  const { modelPreference, voiceModelPreference } = useOnboarding();
+  const [chatSession, setChatSession] = useState<ModelSession | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+  const [cloudProvider, setCloudProvider] = useState<CloudProvider>('gemini');
+  const [apiKey, setApiKey] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const voiceServiceRef = useRef<VoiceService | null>(null);
+  const whisperServiceRef = useRef<WhisperService | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const transcriptRef = useRef('');
+  if (!voiceServiceRef.current && voiceModelPreference === 'browser') {
+    voiceServiceRef.current = new VoiceService('web');
+  }
+
+  // Ensure speech recognition stops when the widget unmounts
+  useEffect(() => {
+    return () => {
+      voiceServiceRef.current?.stop();
+      recorderRef.current?.stop();
+    };
+  }, []);
+
+  useEffect(() => {
+    voiceServiceRef.current?.stop();
+    recorderRef.current?.stop();
+    voiceServiceRef.current = null;
+    whisperServiceRef.current = null;
+    if (voiceModelPreference === 'browser') {
+      voiceServiceRef.current = new VoiceService('web');
+    } else {
+      whisperServiceRef.current = new WhisperService();
+    }
+  }, [voiceModelPreference]);
+
+  useEffect(() => {
+    let mounted = true;
+    const initSession = async () => {
+      if (modelPreference === 'cloud' && offlineService.isOffline()) {
+        setError('Offline mode: cloud AI unavailable.');
+        return;
+      }
+      if (modelPreference === 'cloud' && !apiKey) {
+        setIsApiKeyMissing(true);
+        setError('API key required for cloud AI.');
+        return;
+      }
+      try {
+        const history = memoryService.getMessages();
+        const session = await createModelSession(modelPreference, {
+          provider: cloudProvider,
+          apiKey,
+          history,
+        });
+        if (mounted && session) {
+          setChatSession(session);
+          if (history.length) {
+            setMessages(history);
+          } else {
+            const greeting: ChatMessage = {
+              id: 'initial-greeting',
+              role: 'model',
+              text: 'Hello! I am PhillOS CoPilot. How can I assist you today?',
+              timestamp: new Date(),
+            };
+            setMessages([greeting]);
+            memoryService.addMessage(greeting);
+          }
+          setIsApiKeyMissing(false);
+        } else if (mounted) {
+          setError('Failed to initialize AI CoPilot session.');
+        }
+      } catch (err) {
+        if (mounted) {
+          setError('Ollama server not found. Start `ollama serve`.');
+        }
+      }
+    };
+    initSession();
+    return () => { mounted = false; };
+  }, [modelPreference, apiKey, cloudProvider]);
+
+  useEffect(() => {
+    const unsub = offlineService.subscribe(o => {
+      if (o && modelPreference === 'cloud') {
+        setError('Offline mode: cloud AI unavailable.');
+      }
+    });
+    return () => unsub();
+  }, [modelPreference]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const startListening = () => {
+    if (isListening) return;
+    if (voiceModelPreference === 'browser') {
+      const service = voiceServiceRef.current;
+      if (!service) return;
+      service.start((text, isFinal) => {
+        if (isFinal) {
+          setInput(prev => (prev ? prev + ' ' : '') + text);
+          transcriptRef.current = '';
+        } else {
+          setInput(prev => prev.replace(transcriptRef.current, '') + text);
+          transcriptRef.current = text;
+        }
+      });
+    } else {
+      const whisper = whisperServiceRef.current;
+      if (!whisper) return;
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        recorderRef.current = new MediaRecorder(stream);
+        chunksRef.current = [];
+        recorderRef.current.ondataavailable = async e => {
+          chunksRef.current.push(e.data);
+          if (recorderRef.current && recorderRef.current.state === 'recording') {
+            const text = await whisper.transcribe(e.data);
+            if (text) {
+              setInput(prev => prev.replace(transcriptRef.current, '') + text);
+              transcriptRef.current = text;
+            }
+          }
+        };
+        recorderRef.current.onstop = async () => {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          const text = await whisper.transcribe(blob);
+          if (text) {
+            setInput(prev => (prev ? prev + ' ' : '') + text);
+            memoryService.addMessage({
+              id: Date.now().toString(),
+              role: 'user',
+              text,
+              timestamp: new Date(),
+            });
+          }
+          chunksRef.current = [];
+          transcriptRef.current = '';
+        };
+        recorderRef.current.start(2000);
+      }).catch(() => {});
+    }
+    setIsListening(true);
+  };
+
+  const stopListening = () => {
+    if (voiceModelPreference === 'browser') {
+      voiceServiceRef.current?.stop();
+    } else {
+      recorderRef.current?.stop();
+    }
+    setIsListening(false);
+  };
+
+  const handleSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e) e.preventDefault();
+    if (!input.trim() || isLoading || !chatSession) return;
+    if (modelPreference === 'cloud') {
+      if (offlineService.isOffline()) {
+        setError('Offline mode: cloud AI unavailable.');
+        return;
+      }
+      if (isApiKeyMissing) return;
+    }
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      text: input,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+    memoryService.addMessage(userMessage);
+    setInput('');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const stream = sendModelMessageStream(chatSession as ModelSession, userMessage.text);
+      
+      let modelResponseText = '';
+      const modelMessageId = Date.now().toString() + '-model';
+      
+      // Add a placeholder for the model's response
+      setMessages(prev => [...prev, { id: modelMessageId, role: 'model', text: '', timestamp: new Date() }]);
+
+      for await (const chunk of stream) {
+        const chunkText = chunk as string;
+        if (chunkText) {
+          modelResponseText += chunkText;
+          setMessages(prev => prev.map(msg =>
+            msg.id === modelMessageId ? { ...msg, text: modelResponseText } : msg
+          ));
+        }
+      }
+      // Final update to ensure the message text is complete (though usually handled by loop)
+      setMessages(prev => prev.map(msg =>
+        msg.id === modelMessageId ? { ...msg, text: modelResponseText } : msg
+      ));
+      memoryService.addMessage({
+        id: modelMessageId,
+        role: 'model',
+        text: modelResponseText,
+        timestamp: new Date(),
+      });
+      speakText(modelResponseText);
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+      console.error("AI CoPilot Error:", err);
+      setError(`Error: ${errorMessage}. Please check your API key and network connection.`);
+      const sysMsg: ChatMessage = { id: Date.now().toString() + '-error', role: 'system', text: `Error: ${errorMessage}`, timestamp: new Date() };
+      setMessages(prev => [...prev, sysMsg]);
+      memoryService.addMessage(sysMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [input, isLoading, chatSession, isApiKeyMissing, modelPreference, cloudProvider, apiKey]);
+
+  if (modelPreference === 'cloud' && isApiKeyMissing && !messages.some(msg => msg.id === 'initial-greeting')) {
+    return (
+      <WidgetCard className="items-center justify-center text-center">
+        <AlertTriangle size={48} className="text-red-400 mb-4" />
+        <p className="text-lg font-semibold text-red-300">AI CoPilot Unavailable</p>
+        <p className="text-sm text-white/70">
+          Enter a valid API key to use cloud AI features.
+        </p>
+      </WidgetCard>
+    );
+  }
+
+
+  return (
+    <WidgetCard className="h-[350px] sm:h-[400px] md:h-[450px] !p-0 overflow-hidden">
+      <div className="flex-grow p-3 space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div
+              className={`max-w-[80%] p-2.5 rounded-xl text-sm leading-relaxed ${
+                msg.role === 'user' ? 'bg-purple-600/70 text-white' : 
+                msg.role === 'model' ? 'bg-slate-700/60 text-white/90' : 
+                'bg-red-500/50 text-white' // System/Error message
+              }`}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                p: ({node, ...props}) => <p className="mb-1 last:mb-0" {...props} />,
+                ol: ({node, ...props}) => <ol className="list-decimal list-inside my-1" {...props} />,
+                ul: ({node, ...props}) => <ul className="list-disc list-inside my-1" {...props} />,
+                li: ({node, ...props}) => <li className="mb-0.5" {...props} />,
+                code: ({node, inline, className, children, ...props}) => {
+                  const match = /language-(\w+)/.exec(className || '')
+                  return !inline && match ? (
+                     <pre className="bg-black/30 p-2 rounded-md my-1 overflow-x-auto text-xs"><code className={className} {...props}>{children}</code></pre>
+                  ) : (
+                    <code className="bg-black/30 px-1 py-0.5 rounded text-xs" {...props}>{children}</code>
+                  )
+                },
+                a: ({node, ...props}) => <a className="text-cyan-300 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
+              }}>
+                {msg.text}
+              </ReactMarkdown>
+              <div className={`text-xs mt-1 ${msg.role === 'user' ? 'text-purple-200/70 text-right' : 'text-slate-400/70'}`}>
+                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+      {error && <p className="p-2 text-xs text-red-400 bg-red-900/30 text-center">{error}</p>}
+      {modelPreference === 'cloud' && (
+        <div className="p-3 border-t border-white/10 bg-black/10 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <select
+              value={cloudProvider}
+              onChange={e => setCloudProvider(e.target.value as CloudProvider)}
+              className="bg-white/10 border border-white/20 text-sm text-white p-2 rounded-lg focus:outline-none"
+            >
+              <option value="gemini">Gemini</option>
+              <option value="openai">ChatGPT</option>
+            </select>
+            <input
+              type="password"
+              placeholder="API Key"
+              value={apiKey}
+              onChange={e => setApiKey(e.target.value)}
+              className="flex-grow p-2 bg-white/5 border border-white/10 rounded-lg text-sm placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-cyan-400/80"
+            />
+          </div>
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="p-3 border-t border-white/10 flex items-center gap-2 bg-black/10">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={modelPreference === 'cloud' && isApiKeyMissing ? 'API Key missing...' : 'Ask PhillOS CoPilot...'}
+          className="flex-grow p-2.5 bg-white/5 border border-white/10 rounded-lg text-sm placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-cyan-400/80 transition-shadow duration-200 focus:shadow-[0_0_15px_rgba(56,189,248,0.3)] disabled:opacity-50"
+          disabled={isLoading || (modelPreference === 'cloud' && isApiKeyMissing)}
+        />
+        <button
+          type="button"
+          onClick={isListening ? stopListening : startListening}
+          className={`p-2.5 ${isListening ? 'bg-red-600/80' : 'bg-cyan-600/70 hover:bg-cyan-500/70'} text-white rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/80`}
+        >
+          {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+        </button>
+        <button
+          type="submit"
+          disabled={isLoading || !input.trim() || (modelPreference === 'cloud' && isApiKeyMissing)}
+          className="p-2.5 bg-purple-600/80 hover:bg-purple-500/80 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400/80 hover:scale-105"
+        >
+          {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+        </button>
+      </form>
+    </WidgetCard>
+  );
+};

@@ -1,0 +1,78 @@
+import { agentOrchestrator } from './agentOrchestrator';
+import { workspaceSnapService } from './workspaceSnapService';
+import { VoiceService } from './voiceService';
+import { contextBus } from './contextBus';
+
+export type WorkspaceSwitchListener = (workspace: string) => void;
+
+class GestureService {
+  private listeners = new Set<WorkspaceSwitchListener>();
+  private touchStartX = 0;
+  private voice: VoiceService | null = null;
+  private targets: string[] = [];
+  private current = 0;
+
+  init(targets: string[]) {
+    this.targets = targets;
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', this.onKey);
+      window.addEventListener('touchstart', this.onTouchStart);
+      window.addEventListener('touchend', this.onTouchEnd);
+    }
+    this.voice = new VoiceService('auto');
+    this.voice.start((text, final) => {
+      if (!final) return;
+      if (/next workspace/i.test(text)) this.next();
+      if (/previous workspace/i.test(text)) this.prev();
+    });
+    if (this.targets.length) {
+      contextBus.publish('workspace.active', this.targets[this.current]);
+    }
+  }
+
+  onSwitch(cb: WorkspaceSwitchListener) {
+    this.listeners.add(cb);
+    return () => this.listeners.delete(cb);
+  }
+
+  private emit(id: string) {
+    this.listeners.forEach(l => l(id));
+  }
+
+  private onKey = (e: KeyboardEvent) => {
+    if (e.ctrlKey && e.altKey && e.key === 'ArrowRight') this.next();
+    if (e.ctrlKey && e.altKey && e.key === 'ArrowLeft') this.prev();
+  };
+
+  private onTouchStart = (e: TouchEvent) => {
+    this.touchStartX = e.touches[0].clientX;
+  };
+
+  private onTouchEnd = (e: TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - this.touchStartX;
+    if (dx > 50) this.prev();
+    if (dx < -50) this.next();
+  };
+
+  next() {
+    if (this.targets.length === 0) return;
+    this.current = (this.current + 1) % this.targets.length;
+    const id = this.targets[this.current];
+    this.emit(id);
+    contextBus.publish('workspace.active', id);
+  }
+
+  prev() {
+    if (this.targets.length === 0) return;
+    this.current = (this.current - 1 + this.targets.length) % this.targets.length;
+    const id = this.targets[this.current];
+    this.emit(id);
+    contextBus.publish('workspace.active', id);
+  }
+}
+
+export const gestureService = new GestureService();
+
+agentOrchestrator.registerAction('workspace.next', () => gestureService.next());
+agentOrchestrator.registerAction('workspace.prev', () => gestureService.prev());
+agentOrchestrator.registerAction('workspace.list', () => workspaceSnapService.list());

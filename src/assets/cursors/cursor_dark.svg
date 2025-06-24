@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="phillos-cursor phillos-cursor--dark">
+  <path id="cursorDarkCore" d="M2 2 L18.98 15.26 L13.79 18.28 L10.05 15.82 L10.34 20.29 L5.15 23.31 Z" fill="#1e1e20" stroke="#00d4ff" stroke-width="0.65" stroke-linejoin="round" fill-rule="evenodd"/>
+  <defs>
+    <linearGradient id="darkGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a1b1d"/>
+      <stop offset="45%" stop-color="#282a2f"/>
+      <stop offset="100%" stop-color="#363a46"/>
+      <animateTransform attributeName="gradientTransform" type="translate" dur="4s" repeatCount="indefinite" values="0,0;.15,-.15;0,0"/>
+    </linearGradient>
+    <filter id="fxDark" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.9" result="b"/>
+      <feSpecularLighting in="b" surfaceScale="2.3" specularConstant=".95" specularExponent="25" lighting-color="#00d4ff" result="s"/>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="bev"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="1.3" flood-color="#00d4ff" flood-opacity=".50"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-color="#000" flood-opacity=".25"/>
+      <feMerge><feMergeNode in="bev"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g id="cursorDarkBody" filter="url(#fxDark)">
+    <path id="cursorDarkPath" class="cursor-path" d="M2 2 L18.98 15.26 L13.79 18.28 L10.05 15.82 L10.34 20.29 L5.15 23.31 Z" fill="url(#darkGrad)" stroke="#00d4ff" stroke-width="0.65" stroke-linejoin="round" fill-rule="evenodd"/>
+  </g>
+</svg>

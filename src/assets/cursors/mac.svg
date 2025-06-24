@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 24 24" width="24" height="24"
+     class="phillos-cursor phillos-cursor--macos">
+  <!-- core white fill (fallback) -->
+  <path id="cursorMacCore"
+        d="M2 2 L18.98 15.26 L13.79 18.28 L10.05 15.82 L10.34 20.29 L5.15 23.31 Z"
+        fill="#ffffff" />
+
+  <!-- definitions -->
+  <defs>
+    <!-- gentle macOS-style gradient: light → very-light grey -->
+    <linearGradient id="macGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e6e6e6"/>
+    </linearGradient>
+
+    <!-- softer drop-shadow -->
+    <filter id="fxMac" x="-40%" y="-40%" width="180%" height="180%">
+      <!-- blur alpha for shadow spread -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.7" result="blur"/>
+      <!-- subtle offset & opacity -->
+      <feOffset in="blur" dx="0" dy="1" result="off"/>
+      <feComponentTransfer in="off" result="shadow">
+        <feFuncA type="linear" slope="0.2"/>
+      </feComponentTransfer>
+      <!-- merge shadow with original graphic -->
+      <feMerge>
+        <feMergeNode in="shadow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- rendered cursor -->
+  <g id="cursorMacBody" filter="url(#fxMac)">
+    <path id="cursorMacPath"
+          d="M2 2 L18.98 15.26 L13.79 18.28 L10.05 15.82 L10.34 20.29 L5.15 23.31 Z"
+          fill="url(#macGrad)"
+          stroke="#2A2A2A" stroke-width="0.8"
+          stroke-linejoin="round" fill-rule="evenodd"/>
+  </g>
+</svg>

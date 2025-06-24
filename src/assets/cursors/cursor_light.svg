@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="phillos-cursor phillos-cursor--light">
+  <path id="cursorLightCore" d="M2 2 L18.98 15.26 L13.79 18.28 L10.05 15.82 L10.34 20.29 L5.15 23.31 Z" fill="#ffffff" stroke="#000000" stroke-width="0.65" stroke-linejoin="round" fill-rule="evenodd"/>
+  <defs>
+    <linearGradient id="lightGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="45%" stop-color="#f4f7ff"/>
+      <stop offset="100%" stop-color="#dfe9ff"/>
+      <animateTransform attributeName="gradientTransform" type="translate" dur="4s" repeatCount="indefinite" values="0,0;-.15,.15;0,0"/>
+    </linearGradient>
+    <filter id="fxLight" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.8" result="b"/>
+      <feSpecularLighting in="b" surfaceScale="2" specularConstant=".9" specularExponent="20" lighting-color="#ffffff" result="s"/>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="bev"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity=".18"/>
+      <feMerge><feMergeNode in="bev"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g id="cursorLightBody" filter="url(#fxLight)">
+    <path id="cursorLightPath" class="cursor-path" d="M2 2 L18.98 15.26 L13.79 18.28 L10.05 15.82 L10.34 20.29 L5.15 23.31 Z" fill="url(#lightGrad)" stroke="#000000" stroke-width="0.65" stroke-linejoin="round" fill-rule="evenodd"/>
+  </g>
+</svg>

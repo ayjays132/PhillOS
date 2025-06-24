@@ -1,0 +1,203 @@
+# Building the Bootloader & Kernel
+
+This project includes a simple UEFI bootloader and kernel written in C. Building them requires a cross toolchain and several EFI utilities.
+
+## Required Packages
+
+Ensure the following packages are installed on your system:
+
+- `make`
+- `x86_64-elf-gcc` and `x86_64-elf-binutils`
+- `gnu-efi`
+- `dosfstools` (provides `mkfs.fat`)
+- `mtools` (provides `mcopy` and `mmd`)
+- `grub-mkrescue`
+- `nodejs` and `npm`
+- `rustc` and `cargo`
+- `@tauri-apps/cli` (install with `cargo install tauri-cli` or `npm i -g @tauri-apps/cli`)
+- `go` (for the backend server)
+- `python3`
+
+Package names vary by distribution. Example commands:
+
+```bash
+# Debian / Ubuntu
+sudo apt install make mtools dosfstools grub-efi-amd64-bin \
+    grub-common binutils gnu-efi x86_64-elf-gcc
+
+# Arch Linux
+sudo pacman -S make mtools dosfstools grub x86_64-elf-gcc \
+    x86_64-elf-binutils gnu-efi
+
+# Fedora
+sudo dnf install make mtools dosfstools grub2-tools \
+    x86_64-elf-gcc binutils gnu-efi
+```
+
+If your distribution does not provide `x86_64-elf-gcc`, you can build it from source using a standard cross-compiler build script.
+
+## Verifying the Toolchain
+
+After installation, verify that the cross compiler is available in `PATH`:
+
+```bash
+$ x86_64-elf-gcc --version
+$ which x86_64-elf-gcc
+```
+
+Both commands should succeed. If not, review your install steps or adjust your environment.
+
+Before the first build run `./scripts/setup-vkd3d.sh` to fetch the vkd3d-proton sources. They are cached under `external/vkd3d` so subsequent builds work offline.
+
+For offline installations you can also pre-download the Proton runtime. Place a `<version>.tar.gz` archive in the directory specified by `PHILLOS_CACHE_DIR` (defaults to `cache/`) and set `PROTON_DOWNLOAD_URL` to `file://$PHILLOS_CACHE_DIR/<version>.tar.gz`. The launcher will extract the archive without contacting the network. The helper script `./scripts/setup-proton.sh` downloads and verifies the file for you.
+
+If you plan to use the WASM AI models, compile them once before building the
+rest of the project:
+
+```bash
+npm run build-wasm
+```
+
+This step invokes the `onnxruntime-web` and `ggml` toolchains (when installed)
+and places `summarizer.onnx.wasm` and `classifier.ggml.wasm` in `src/wasm/`.
+
+## Building
+
+With the prerequisites installed, run the top-level build script:
+
+```bash
+./scripts/build.sh
+```
+
+Bootloader artifacts are placed in `dist/bootloader` and the web UI build is written directly to `dist/`.
+
+### Embedding the boot animation
+
+`scripts/embed_svg.py` compresses a source SVG and appends the special
+`PHILSVG\x00` trailer the loader checks for.  Run it whenever you update the
+animation:
+
+```bash
+python3 scripts/embed_svg.py bootloader/bootanim.svg dist/bootloader/bootanim.svgz
+```
+
+If Secure Boot is enabled, sign the resulting blob so the firmware will load it:
+
+```bash
+sbsign --key keys/db.key --cert keys/db.crt dist/bootloader/bootanim.svgz
+```
+
+`phill_svg_loader.c` loads this file at boot. When `nomodeset` is present or the
+Graphics Output Protocol is unavailable it falls back to `bootanim_sprite.svgz`.
+If `theme.cfg` contains `light` or `dark` the loader first looks for
+`bootanim_light.svgz` or `bootanim_dark.svgz` respectively:
+
+```c
+load_boot_animation(image, cmdline, boot_info->theme_dark,
+                   &svg_data, &svg_size,
+                   &sprite_data, &sprite_size);  /* from phill_svg_loader.c */
+```
+
+The animation can access metrics updated in `phill_svg_update.c` by calling
+`SVG_BOOT_UPDATE()` from JavaScript.  Metrics such as PCR digest, CPU
+temperature and fan RPM are exposed through this function and updated at key
+points during `main.c`.
+
+When creating the SVG consider the `theme_dark` flag from `boot_info_t` and
+define both light and dark gradients so the loader can toggle them based on the
+`theme.cfg` setting.
+
+### Embedding the boot cursor
+
+Two simple SVGs provide the boot cursor displayed while the React app loads.
+Compress them with `scripts/embed_svg.py` similar to the boot animation:
+
+```bash
+python3 scripts/embed_svg.py bootloader/cursor_light.svg dist/bootloader/cursor_light.svgz
+python3 scripts/embed_svg.py bootloader/cursor_dark.svg dist/bootloader/cursor_dark.svgz
+```
+
+The loader selects `cursor_dark.svgz` or `cursor_light.svgz` based on
+`boot_info.theme_dark` and passes the raw blob to the frontend via
+`boot_info.cursor_base` and `boot_info.cursor_size`.
+
+## Querying Kernel Metrics
+
+After building the bootloader and kernel you can inspect runtime metrics via the
+`phillos-cli` tool. A small helper under `kernel/` issues the signed ioctl
+described in `docs/kernel_cli_api.md`.
+
+Compile the utility:
+
+```bash
+make -C kernel
+```
+
+Query the current heap usage:
+
+```bash
+./dist/phillos-cli kernel query heap
+```
+
+The command prints the number of bytes currently allocated on the kernel heap.
+
+### Testing the Memory Allocator
+
+A small test under `tests/kernel_memory/` links against `heap.c` and `alloc.c`
+to verify allocation and free logic. Build and run it with:
+
+```bash
+make -C tests/kernel_memory
+./tests/kernel_memory/heap_test
+```
+
+If the output is `kernel memory tests passed` the allocator behaved as expected.
+
+## Preparing a Self-Contained USB
+
+To run PhillOS entirely offline you can bundle all required assets on the boot
+media. After running `./scripts/build.sh` copy the contents of `dist/` to a FAT
+formatted USB drive or flash `dist/bootloader/phillos.iso` to the stick with
+`dd` or a graphical tool like balenaEtcher. Optionally pre-populate additional
+components before creating the ISO:
+
+1. Execute `./scripts/setup-vkd3d.sh` to download the `vkd3d-proton` sources so
+   the DirectX 12 translation library is available without a network
+   connection.
+2. Run `./scripts/setup-proton.sh` with the desired version to fetch Proton and
+   place it under `dist/proton/<version>/`. Set `PROTON_SHA256` and
+   `PROTON_DOWNLOAD_URL` if using a local mirror.
+3. If you plan to use the Qwen model offline, invoke `./scripts/setup-ollama.sh`
+   before building. The model files are cached in `cache/` and copied into the
+   boot image.
+
+During the first boot the service worker caches all UI assets from the USB
+drive. Subsequent boots no longer require internet access as long as the cache
+remains intact.
+
+### Troubleshooting Offline Boot Issues
+
+* **Blank screen after the boot animation** – Your GPU may need proprietary
+  firmware not bundled with the image. Copy the required `.bin` files from your
+  Linux distribution into `dist/bootloader/esp/lib/firmware/` before generating
+  the ISO. Passing `nomodeset` on the kernel command line can also bypass GPU
+  initialization.
+* **Service worker not caching files** – Make sure the browser is allowed to
+  register the service worker on the first boot. Clearing the browser storage or
+  using a new profile forces the assets to be fetched again from the USB drive.
+
+## Boot Troubleshooting
+
+Common boot problems and how to resolve them:
+
+* **"Security Violation" at start up** – Secure Boot is rejecting the unsigned
+  loader or kernel. Either disable Secure Boot in your firmware settings or sign
+  `dist/bootloader/phillos.efi` and `dist/kernel.efi` with your own keys using
+  `sbsign`.
+* **Missing EFI drivers** – QEMU and some firmware implementations require
+  additional FAT or storage drivers. Copy the needed `*.efi` files to the ESP or
+  load them from the firmware shell before booting.
+* **Boot hangs with no output** – Enable debug logging to capture early
+  messages. When launching QEMU pass `-debugcon stdio` (or
+  `-debugcon file:boot.log -d guest_errors`) to record the debug stream written
+  by `kernel/debug.c` to I/O port `0xE9`.

@@ -1,0 +1,97 @@
+import { WhisperService } from './whisperService';
+import { storageService } from './storageService';
+import { agentOrchestrator } from './agentOrchestrator';
+
+export type VoiceTranscriptionCallback = (text: string, isFinal: boolean) => void;
+
+export type VoiceMode = 'auto' | 'web' | 'whisper';
+
+
+export class VoiceService {
+  private recognition: SpeechRecognition | null = null;
+  private recorder: MediaRecorder | null = null;
+  private chunks: Blob[] = [];
+  private mode: 'web' | 'whisper';
+  private whisper: WhisperService | null = null;
+
+  constructor(preference: VoiceMode = 'auto') {
+    const stored = storageService.getVoiceEngine();
+    if (stored) preference = stored;
+
+    const SpeechRecognitionImpl =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const webAvailable = !!SpeechRecognitionImpl;
+    const whisperAvailable = WhisperService.isAvailable();
+
+    if (preference === 'whisper') {
+      this.mode = whisperAvailable ? 'whisper' : webAvailable ? 'web' : 'whisper';
+    } else if (preference === 'web') {
+      this.mode = webAvailable ? 'web' : whisperAvailable ? 'whisper' : 'web';
+    } else {
+      this.mode = webAvailable ? 'web' : whisperAvailable ? 'whisper' : 'web';
+    }
+
+    if (this.mode === 'web' && webAvailable) {
+      this.recognition = new SpeechRecognitionImpl();
+      this.recognition.lang = 'en-US';
+      this.recognition.interimResults = true;
+    }
+
+    if (this.mode === 'whisper' && whisperAvailable) {
+      this.whisper = new WhisperService();
+    }
+  }
+
+  start(onResult: VoiceTranscriptionCallback) {
+    if (this.mode === 'web') {
+      if (!this.recognition) return;
+      this.recognition.onresult = (event: SpeechRecognitionEvent) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            onResult(transcript.trim(), true);
+            transcript = '';
+          } else {
+            onResult(transcript.trim(), false);
+          }
+        }
+      };
+      this.recognition.start();
+    } else {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        this.recorder = new MediaRecorder(stream);
+        this.chunks = [];
+        this.recorder.ondataavailable = async e => {
+          this.chunks.push(e.data);
+          if (this.recorder && this.recorder.state === 'recording') {
+            const text = this.whisper ? await this.whisper.transcribe(e.data) : '';
+            if (text) onResult(text.trim(), false);
+          }
+        };
+        this.recorder.onstop = async () => {
+          const blob = new Blob(this.chunks, { type: 'audio/webm' });
+          const text = this.whisper ? await this.whisper.transcribe(blob) : '';
+          if (text) onResult(text.trim(), true);
+          this.chunks = [];
+        };
+        this.recorder.start(2000);
+      }).catch(() => {});
+    }
+  }
+
+  stop() {
+    if (this.mode === 'web') {
+      this.recognition?.stop();
+    } else {
+      this.recorder?.stop();
+    }
+  }
+}
+
+export const speakText = (text: string) => {
+  const utterance = new SpeechSynthesisUtterance(text);
+  window.speechSynthesis.speak(utterance);
+};
+
+agentOrchestrator.registerAction('voice.speak', params => speakText(String(params?.text || '')));
