@@ -1,7 +1,7 @@
 
 # ✨ PhillOS - Living Glass AI-Native OS Concept ✨
 
-[![PhillOS Concept UI](https://user-images.githubusercontent.com/1234567/200000000-placeholder-image.png)](#)
+[![PhillOS Concept UI](docs/screenshots/home_dashboard.svg)](#)
 
 *A bold experiment in AI-driven computing, blending aesthetics with deep learning power.*
 
@@ -21,6 +21,8 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [Introduction](#introduction)
 - [Core Philosophy](#core-philosophy)
 - [The "Living Glass" Design](#the-living-glass-design)
+- [Screenshots](#screenshots)
+- [Quickstart](#quickstart)
 - [Technology Stack](#technology-stack)
 - [Current Prototype Features](#current-prototype-features)
 - [Application Overview](docs/apps.md)
@@ -36,6 +38,31 @@ The core philosophy posits artificial intelligence (AI) not as an add-on feature
 - [Future Vision (Conceptual)](#future-vision-conceptual)
 - [Android Container (Experimental)](#android-container-experimental)
 - [License](#license)
+
+## Quickstart
+
+```bash
+# 1) Install dependencies (matches CI)
+npm install --legacy-peer-deps --ignore-scripts
+
+# 2) Run tests (optional)
+npm test
+
+# 3) Start the backend (API, Proton launcher, etc.)
+npm run server
+
+# 4) In a new terminal, start the phone bridge (optional)
+npm run phone-bridge
+
+# 5) Run the web UI
+echo "VITE_LOCAL_AI_MODEL=qwen3:1.7b" > .env
+npm run dev
+```
+
+- Open the local URL printed by Vite.
+- In Settings you can switch cursor theme and toggle light/dark mode.
+- To use a cloud provider, set your API key at runtime when prompted by the CoPilot widget.
+- For an offline ISO, see Building the Bootloader & Kernel.
 
 ## Introduction
 
@@ -58,6 +85,37 @@ PhillOS is guided by several key principles:
 4.  **Personalized Learning**: The AI refines its understanding of the individual user over time, becoming progressively more accurate and helpful.
 5.  **Privacy-First Design**: Users have granular control over data collection and usage, with transparent opt-outs and prioritization of local AI models for sensitive data.
 
+## 📸 Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="docs/screenshots/home_dashboard.svg" alt="Home Dashboard" width="520"/></td>
+      <td><img src="docs/screenshots/onboarding_flow.svg" alt="Onboarding: Local vs Cloud AI" width="520"/></td>
+    </tr>
+    <tr>
+      <td align="center">Home Dashboard — Living Glass widgets</td>
+      <td align="center">Onboarding — Local vs Cloud AI selection</td>
+    </tr>
+    <tr>
+      <td><img src="docs/screenshots/settings.svg" alt="Conversational Settings" width="520"/></td>
+      <td><img src="docs/screenshots/agent_mode.svg" alt="Agent Mode Orchestration" width="520"/></td>
+    </tr>
+    <tr>
+      <td align="center">Conversational Settings</td>
+      <td align="center">Agent Mode orchestration</td>
+    </tr>
+    <tr>
+      <td><img src="docs/screenshots/phone_app.svg" alt="Phone App & Bridge" width="520"/></td>
+      <td><img src="docs/screenshots/proton_launcher.svg" alt="Proton Launcher" width="520"/></td>
+    </tr>
+    <tr>
+      <td align="center">Phone App & Bridge</td>
+      <td align="center">Proton Launcher</td>
+    </tr>
+  </table>
+</div>
+
 ## 🖼️ The "Living Glass" Design
 
 The "Living Glass" aesthetic is central to PhillOS's identity, emphasizing:
@@ -74,7 +132,7 @@ The "Living Glass" aesthetic is central to PhillOS's identity, emphasizing:
 -   **Tailwind CSS**: A utility-first CSS framework for rapid and responsive UI development, enabling the "Living Glass" aesthetic.
 -   **Lucide React**: For a comprehensive suite of clean, modern, and customizable SVG icons.
 -   **@google/genai** and **openai**: Cloud AI providers used by the AI CoPilot widget when cloud mode is enabled.
--   **React Router (v6, HashRouter)**: For client-side navigation within the single-page application.
+-   **React Router (v7, HashRouter)**: For client-side navigation within the single-page application.
 
 ## 🚧 Current Prototype Features
 
@@ -117,12 +175,35 @@ PhillOS can optionally connect to either Google Gemini or OpenAI's ChatGPT for c
 PhillOS supports running the AI CoPilot entirely on-device using the Qwen3‑1.7B model. This requires [Ollama](https://ollama.com/) to be installed locally. By default the UI connects to the `qwen3:1.7b` model, but you can override this by setting the `VITE_LOCAL_AI_MODEL` environment variable when building or running the app.
 
 1. **Install Ollama**
-    * Follow the instructions for your platform at <https://ollama.com/download> and ensure `ollama` is available on your `PATH`.
+   * Follow the instructions for your platform at <https://ollama.com/download> and ensure `ollama` is available on your `PATH`.
 2. **Prepare the Qwen model**
-    * Run `./scripts/setup-ollama.sh` to download `qwen3:1.7b` and start `ollama serve`. Pass a model name as the first argument to use a different one.
-    * If you pulled a model with a different name, set `VITE_LOCAL_AI_MODEL` to that name when building or running the app.
+   * Run `./scripts/setup-ollama.sh` to download `qwen3:1.7b` and start `ollama serve`. Pass a model name as the first argument to use a different one.
+   * If you pulled a model with a different name, set `VITE_LOCAL_AI_MODEL` to that name when building or running the app.
 
 After the initial download PhillOS can function entirely offline. When you choose the *Local-First AI* option during onboarding, the CoPilot widget will use this local model and no API key is required.
+
+## ⚙️ Configuration & Environment Variables
+
+Create a `.env` (or `.env.local`) in the repo root. Keys must be prefixed with `VITE_` for the frontend to read them.
+
+- VITE_LOCAL_AI_MODEL: Local model name for Ollama (default `qwen3:1.7b`)
+- VITE_TRAINING_ENABLED: Enable background training (default `true`)
+- VITE_TRAINING_FREQUENCY_MS: Training interval in ms (default `3600000`)
+- VITE_CLOUD_SYNC_BACKEND: `webdav`, `s3`, or `api` (default `webdav`)
+- VITE_WEBDAV_URL: WebDAV base URL
+- VITE_WEBDAV_USERNAME / VITE_WEBDAV_PASSWORD: WebDAV credentials
+- VITE_S3_URL: S3 (or compatible) object URL for settings JSON
+- VITE_S3_AUTH_HEADER: Optional Authorization header value for S3
+- VITE_SYNC_API_URL: Custom API endpoint for settings sync
+- VITE_SYNC_API_TOKEN: Optional Bearer token for custom API
+
+Backend/service environment variables:
+
+- PHONE_BRIDGE_URL: Proxy target for phone bridge (default `http://localhost:3002`)
+- PHONE_BRIDGE_PORT: Port the phone bridge listens on (default `3002`)
+- MODEM_DEVICE: Serial device for SMS/calls (e.g. `/dev/ttyUSB0`)
+- PROTON_VERSION / PROTON_DOWNLOAD_URL / PROTON_SHA256: Control Proton bootstrap
+- WHISPER_PYTHON: Python interpreter for Whisper server (default `python3`)
 
 ## 🔄 Cloud Sync
 
@@ -365,49 +446,36 @@ The service worker also caches responses from the `/phonebridge/*` endpoint usin
 
 ```
 /
-├── components/
-│   ├── onboarding/       # Onboarding flow steps
-│   │   ├── AIModelStep.tsx
-│   │   ├── AIPreferencesSurveyStep.tsx
-│   │   ├── GuidedTourStep.tsx
-│   │   ├── OnboardingStepper.tsx
-│   │   ├── PrivacyStep.tsx
-│   │   ├── UserProfileStep.tsx
-│   │   └── WelcomeStep.tsx
-│   ├── settings/         # Settings components
-│   │   └── ConversationalSettingsView.tsx
-│   ├── widgets/          # Dashboard widgets
-│   │   ├── AICoPilotWidget.tsx
-│   │   ├── AIShadowSearchWidget.tsx
-│   │   ├── ContextStreamWidget.tsx
-│   │   ├── GamingModeWidget.tsx
-│   │   ├── PersonalizedNewsWidget.tsx
-│   │   ├── QuickActionsWidget.tsx
-│   │   ├── SystemHealthWidget.tsx
-│   │   └── UserProfileWidget.tsx
-│   ├── Dock.tsx
-│   ├── GlassCard.tsx
-│   ├── HomeDashboard.tsx
-│   ├── MobileBottomNavigationBar.tsx
-│   ├── PlaceholderAppView.tsx
-│   └── StatusBar.tsx
-├── hooks/
-│   ├── useOnboarding.ts    # Manages onboarding state & logic
-│   └── useResponsive.ts    # Handles responsive layout changes
+├── android/
+├── backend/
+├── bootloader/
+├── cli/
+├── docs/
+│   ├── screenshots/           # Project screenshots used in README
+│   └── ...
+├── drivers/
+├── include/
+├── kernel/
+├── models/
+├── scripts/
 ├── services/
-│   └── cloudAIService.ts   # Gemini or ChatGPT integration logic
+│   └── phoneBridge/
 ├── src/
-│   ├── App.tsx             # Main application component, routing
-│   ├── index.tsx           # React entry point
-│   ├── index.css           # Global styles
-│   ├── components/         # UI components
-│   ├── hooks/              # React hooks
-│   ├── contexts/           # React contexts
-│   ├── apps/               # Mini apps (e.g., Vault, ConverseAI, InBoxAI, WebLens)
-│   └── types.ts            # TypeScript type definitions
-├── index.html              # Root HTML file
-├── metadata.json           # Project metadata
-└── README.md               # This file
+│   ├── apps/
+│   ├── components/
+│   ├── contexts/
+│   ├── hooks/
+│   ├── assets/
+│   │   └── cursors/
+│   ├── App.tsx
+│   ├── index.css
+│   └── index.tsx
+├── src-tauri/
+├── tests/
+├── index.html
+├── package.json
+├── vite.config.ts
+└── README.md
 ```
 
 ## 🧠 Key Architectural Components
@@ -417,8 +485,10 @@ The service worker also caches responses from the `/phonebridge/*` endpoint usin
 -   **`OnboardingStepper.tsx`**: Orchestrates the various steps of the user onboarding experience, dynamically rendering the current step.
 -   **`GlassCard.tsx`**: A reusable presentational component that implements the core "Living Glass" visual style (translucency, blur, custom shadows), applied to most UI panes.
 -   **`HomeDashboard.tsx`**: Renders the main dashboard layout, utilizing a "Strata" system to organize different categories of widgets.
--   **`AICoPilotWidget.tsx`**: A key interactive widget that integrates with `cloudAIService.ts` to provide chat via Gemini or ChatGPT.
--   **`cloudAIService.ts`**: Handles communication with the selected cloud AI provider.
+-   **`AICoPilotWidget.tsx`**: A key interactive widget that integrates with `services/cloudAIService.ts` and `services/qwenService.ts` to provide cloud or local chat.
+-   **`src/config/aiConfig.ts`**: Centralizes provider and model selection; defaults can be overridden via env.
+-   **`services/cloudAIService.ts`**: Handles communication with Gemini or OpenAI when cloud mode is enabled.
+-   **`services/qwenService.ts`**: Talks to Ollama for local, offline inference using Qwen models.
 
 ## 🔮 Future Vision (Conceptual)
 
