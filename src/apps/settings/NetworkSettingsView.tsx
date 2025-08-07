@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
 import NetworkSetup from '../../components/NetworkSetup';
 import { Wifi, Bluetooth } from 'lucide-react';
-import { systemSettingsService } from '../../services/systemSettingsService';
+import { systemSettingsService } from '../../../services/systemSettingsService';
 import { useDeviceType } from '../../hooks/useDeviceType';
 
 export const NetworkSettingsView: React.FC = () => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
-import { secureCoreService } from '../../services/secureCoreService';
+import { secureCoreService } from '../../../services/secureCoreService';
 
 export const SecureCore: React.FC = () => {
   const [firewall, setFirewall] = useState(false);

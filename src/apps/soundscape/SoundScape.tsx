@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
-import { soundScapeService } from '../../services/soundScapeService';
-import { moodMixService } from '../../services/moodMixService';
-import { liveInsightsService, AudioInsight } from '../../services/liveInsightsService';
-import { soundAnalyzer, calculateEqForNoise, EQSettings } from '../../services/soundAnalyzer';
+import { soundScapeService } from '../../../services/soundScapeService';
+import { moodMixService } from '../../../services/moodMixService';
+import { liveInsightsService, AudioInsight } from '../../../services/liveInsightsService';
+import { soundAnalyzer, calculateEqForNoise, EQSettings } from '../../../services/soundAnalyzer';
 
 interface Track {
   id: number;

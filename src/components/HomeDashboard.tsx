@@ -28,7 +28,7 @@ import { PersonalizedNewsWidget } from './widgets/PersonalizedNewsWidget';
 import { CacheManagementWidget } from './widgets/CacheManagementWidget';
 import { TrainingPipelineWidget } from './widgets/TrainingPipelineWidget';
 import { MemoryHubWidget } from './widgets/MemoryHubWidget';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useWidgetLayout } from '../hooks/useWidgetLayout';
 
 const strataConfig: StratumConfig[] = [

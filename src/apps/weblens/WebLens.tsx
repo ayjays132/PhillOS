@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { GlassCard } from '../../components/GlassCard';
-import { weblensResearchService, FactCheckResult } from '../../services/weblensResearchService';
-import { trackerScanService } from '../../services/trackerScanService';
+import { weblensResearchService, FactCheckResult } from '../../../services/weblensResearchService';
+import { trackerScanService } from '../../../services/trackerScanService';
 
 interface ArticleMeta {
   title: string;

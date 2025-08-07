@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { GlassCard } from '../../components/GlassCard';
-import { inboxAIService, ScoredInboxMessage } from '../../services/inboxAIService';
-import { inboxPriorityService } from '../../services/inboxPriorityService';
+import { inboxAIService, ScoredInboxMessage } from '../../../services/inboxAIService';
+import { inboxPriorityService } from '../../../services/inboxPriorityService';
 
 export const InBoxAI: React.FC = () => {
   const [messages, setMessages] = useState<ScoredInboxMessage[]>([]);

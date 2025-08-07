@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
 import { Boxes } from 'lucide-react';
-import { systemSettingsService } from '../../services/systemSettingsService';
+import { systemSettingsService } from '../../../services/systemSettingsService';
 
 export const ApplicationsSettingsView: React.FC = () => {
   const [defaultBrowser, setDefaultBrowser] = useState('');

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
-import { workspaceSnapService, WindowLayout } from '../../services/workspaceSnapService';
-import { gestureService } from '../../services/gestureService';
+import { workspaceSnapService, WindowLayout } from '../../../services/workspaceSnapService';
+import { gestureService } from '../../../services/gestureService';
 import useAutoGroup from '../../hooks/useAutoGroup';
 
 export const SpaceManager: React.FC = () => {

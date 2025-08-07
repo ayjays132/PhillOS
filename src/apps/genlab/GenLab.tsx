@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { offlineService } from '../../services/offlineService';
+import { offlineService } from '../../../services/offlineService';
 import Editor from '@monaco-editor/react';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { BrainPadTray } from '../../components/BrainPadTray';
-import { brainPadService } from '../../services/brainPadService';
+import { brainPadService } from '../../../services/brainPadService';
 import { GlassCard } from '../../components/GlassCard';
-import { promptCoachService } from '../../services/promptCoachService';
+import { promptCoachService } from '../../../services/promptCoachService';
 
 export const GenLab: React.FC = () => {
   const [prompt, setPrompt] = useState('');

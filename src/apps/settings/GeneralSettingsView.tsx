@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
 import { Cog } from 'lucide-react';
-import { systemSettingsService } from '../../services/systemSettingsService';
+import { systemSettingsService } from '../../../services/systemSettingsService';
 import { settingsService } from '../../../services/settingsService';
 
 export const GeneralSettingsView: React.FC = () => {

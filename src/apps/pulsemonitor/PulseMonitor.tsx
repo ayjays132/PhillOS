@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
-import { pulseMonitorService } from '../../services/pulseMonitorService';
+import { pulseMonitorService } from '../../../services/pulseMonitorService';
 import { SystemMetrics } from '../../../services/modelManager';
 
 export const PulseMonitor: React.FC = () => {
