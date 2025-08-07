@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#3b0764"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <rect x="40" y="40" width="1120" height="640" rx="18" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.2)"/>
+  <text x="60" y="110" font-family="Inter,ui-sans-serif,system-ui" font-size="40" fill="#a78bfa">PhillOS – Home Dashboard</text>
+  <text x="60" y="160" font-family="Inter,ui-sans-serif,system-ui" font-size="20" fill="#cbd5e1">Living Glass UI · AI CoPilot · Strata Widgets</text>
+  <g>
+    <rect x="60" y="200" width="500" height="240" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)"/>
+    <text x="80" y="240" font-family="Inter" font-size="22" fill="#e2e8f0">AI CoPilot</text>
+    <rect x="80" y="260" width="460" height="160" rx="8" fill="#111827" opacity="0.6"/>
+  </g>
+  <g>
+    <rect x="580" y="200" width="540" height="240" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)"/>
+    <text x="600" y="240" font-family="Inter" font-size="22" fill="#e2e8f0">Context Stream</text>
+    <rect x="600" y="260" width="500" height="160" rx="8" fill="#111827" opacity="0.6"/>
+  </g>
+  <g>
+    <rect x="60" y="460" width="1060" height="200" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)"/>
+    <text x="80" y="500" font-family="Inter" font-size="22" fill="#e2e8f0">Widgets</text>
+    <rect x="80" y="520" width="320" height="120" rx="10" fill="#111827" opacity="0.6"/>
+    <rect x="420" y="520" width="320" height="120" rx="10" fill="#111827" opacity="0.6"/>
+    <rect x="760" y="520" width="320" height="120" rx="10" fill="#111827" opacity="0.6"/>
+  </g>
+</svg>
