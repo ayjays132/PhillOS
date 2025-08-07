@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
-import { mediaSphereService } from '../../services/mediaSphereService';
+import { mediaSphereService } from '../../../services/mediaSphereService';
 
 interface Item { id: number; title: string; }
 interface Chapter { start: number; title: string; }

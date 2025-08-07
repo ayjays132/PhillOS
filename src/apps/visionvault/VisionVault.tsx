@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
-import { visionVaultService } from '../../services/visionVaultService';
+import { visionVaultService } from '../../../services/visionVaultService';
 
 export const VisionVault: React.FC = () => {
   const [images, setImages] = useState<string[]>([]);

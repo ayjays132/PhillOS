@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
-import { appForgeService } from '../../services/appForgeService';
-import { pulseService } from '../../services/pulseService';
+import { appForgeService } from '../../../services/appForgeService';
+import { pulseService } from '../../../services/pulseService';
 import { HealthMonitor } from '../../components/HealthMonitor';
 
 export const AppForge: React.FC = () => {

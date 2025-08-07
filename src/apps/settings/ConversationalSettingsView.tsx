@@ -4,7 +4,7 @@ import { Settings, Send, MessageSquare, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { GlassCard } from '../../components/GlassCard';
 import { CloudSyncToggle } from "./CloudSyncToggle";
-import { settingsCommandService } from '../../services/settingsCommandService';
+import { settingsCommandService } from '../../../services/settingsCommandService';
 
 interface SettingsMessage {
   id: string;

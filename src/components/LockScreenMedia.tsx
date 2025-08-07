@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from './GlassCard';
-import { mediaSphereService } from '../services/mediaSphereService';
-import { soundScapeService } from '../services/soundScapeService';
+import { mediaSphereService } from '../../services/mediaSphereService';
+import { soundScapeService } from '../../services/soundScapeService';
 
 interface Playing {
   title: string;

@@ -6,7 +6,6 @@ import { ChatMessage } from '../../types';
 import { createModelSession, sendModelMessageStream, ModelSession } from '../../../services/modelManager';
 import { CloudProvider } from '../../../services/cloudAIService';
 import { VoiceService, speakText } from '../../../services/voiceService';
-import { WhisperService } from '../../../services/whisperService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -26,7 +25,7 @@ export const AICoPilotWidget: React.FC = () => {
   const [apiKey, setApiKey] = useState('');
   const [isListening, setIsListening] = useState(false);
   const voiceServiceRef = useRef<VoiceService | null>(null);
-  const whisperServiceRef = useRef<WhisperService | null>(null);
+  const whisperServiceRef = useRef<any | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const transcriptRef = useRef('');
@@ -50,7 +49,12 @@ export const AICoPilotWidget: React.FC = () => {
     if (voiceModelPreference === 'browser') {
       voiceServiceRef.current = new VoiceService('web');
     } else {
-      whisperServiceRef.current = new WhisperService();
+      // Lazy import to avoid bundling Node APIs in the browser build
+      import('../../../services/whisperService').then(mod => {
+        whisperServiceRef.current = new mod.WhisperService();
+      }).catch(() => {
+        whisperServiceRef.current = null;
+      });
     }
   }, [voiceModelPreference]);
 

@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { storageService } from '../../services/storageService';
 import { useTheme } from './ThemeContext';
-import lightCursor from '../assets/cursors/arrow_light.svg?url';
-import darkCursor from '../assets/cursors/arrow_dark.svg?url';
+import lightCursor from '../assets/cursors/cursor_light.svg?url';
+import darkCursor from '../assets/cursors/cursor_dark.svg?url';
 
 export type CursorStyle = 'default' | 'svg';
 

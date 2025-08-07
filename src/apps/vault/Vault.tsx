@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/tauri';
 import { readTextFile } from '@tauri-apps/api/fs';
-import { fileTagService } from '../../services/fileTagService';
-import { predictSyncService } from '../../services/predictSyncService';
+import { fileTagService } from '../../../services/fileTagService';
+import { predictSyncService } from '../../../services/predictSyncService';
 import { AppPanel } from '../../components/layout/AppPanel';
 import { GlassCard } from '../../components/GlassCard';
-import { autoCleanService } from '../../services/autoCleanService';
+import { autoCleanService } from '../../../services/autoCleanService';
 
 interface FsEntry {
   name: string;

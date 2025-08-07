@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
-import { brainPadService, BrainPadEntry } from '../../services/brainPadService';
-import { createSummaryWorker, SummaryWorker } from '../../services/modelManager';
-import { VoiceService } from '../../services/voiceService';
-import { noteLinkService } from '../../services/noteLinkService';
+import { brainPadService, BrainPadEntry } from '../../../services/brainPadService';
+import { createSummaryWorker, SummaryWorker } from '../../../services/modelManager';
+import { VoiceService } from '../../../services/voiceService';
+import { noteLinkService } from '../../../services/noteLinkService';
 import { CalendarEvent } from '../../types';
 
 export const BrainPad: React.FC = () => {

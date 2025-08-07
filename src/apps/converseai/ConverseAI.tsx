@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AppPanel } from '../../components/layout/AppPanel';
-import { translationService } from '../../services/translationService';
+import { translationService } from '../../../services/translationService';
 
 interface Msg { role: 'user' | 'ai'; text: string; }
 

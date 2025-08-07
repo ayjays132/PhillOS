@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/GlassCard';
 import { Shield } from 'lucide-react';
-import { systemSettingsService } from '../../services/systemSettingsService';
-import { secureCoreService } from '../../services/secureCoreService';
+import { systemSettingsService } from '../../../services/systemSettingsService';
+import { secureCoreService } from '../../../services/secureCoreService';
 
 export const PrivacySecuritySettingsView: React.FC = () => {
   const [perms, setPerms] = useState<Record<string, boolean>>({});
